@@ -1,20 +1,23 @@
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+API created for onboarding and related services from QITech.
 
 # Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+
+1.	Install Node ***v18.15.0***
+2.	Install dependencies: 
+    - Run command: `npm ci`
+3.  Whe using VSCode:
+    - Install the required extensions for better develpment and code standards
+    - Error Lens
+    - ESlint
+    - Prettier *(Configure this as default formatter for .ts files)*
+    - Prettier ESLint
+    - GitLens
+4.  Create a copy of `.env.example` and rename to `.env`
+5.	Run project: 
+    - Run command: `npm run dev`
+6.  To create a new api key and secret:
+    - Run command: `npm run new:user name_of_user`
 
 # Build and Test
 TODO: Describe and show how to build your code and run the tests. 
-
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
-
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
