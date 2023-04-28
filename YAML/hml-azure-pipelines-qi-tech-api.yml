@@ -12,7 +12,7 @@ trigger:
 #YAML/hml-azure-pipelines-node-js-api.yml
 
 variables:
-  dockerRegistryServiceConnection: 'b97b417f-d324-426e-ba24-adf2eaffeb8d'
+  dockerRegistryServiceConnection: '5f37f5c9-1a9f-45ac-af37-615d4c77bc43'
   containerRegistry: 'crprdvbb02.azurecr.io'
   tag: '$(Build.BuildId)'
   ambiente: 'hml'
