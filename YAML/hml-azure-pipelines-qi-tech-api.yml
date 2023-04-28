@@ -2,7 +2,7 @@
 trigger:
   branches:
     include:
-      - "Development"                 
+      - "Desenvolvimento"                 
 #  paths:
 #    include:
 #      - cnj-monitoring/*
@@ -17,7 +17,7 @@ variables:
   tag: '$(Build.BuildId)'
   ambiente: 'hml'
 # diretorioProjeto: 'ConsentAPI'
-  imageRepository: '$(ambiente)-consent-api'
+  imageRepository: '$(ambiente)-qi-tech-api'
   tagsImage: '$(Get-Date -Format yyyy.MM.dd.hhmm)'
   # comandoNPM: 'RUN yarn env:$(ambiente)'
 # dockerfilePath: '$(Build.SourcesDirectory)/$(diretorioProjeto)/Dockerfile'
