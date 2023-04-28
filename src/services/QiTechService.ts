@@ -1,9 +1,8 @@
 import { HydratedDocument } from 'mongoose'
 import { v4 } from 'uuid'
-import { ValidationError } from 'yup'
 import env from '../config/env'
 import { QITech, QiTechClient } from '../infra'
-import { IOnboardingLegalPerson, IOnboardingNaturalPerson } from '../models'
+import { IOnboardingLegalPerson, IOnboardingNaturalPerson, ValidationError } from '../models'
 import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
 
 export class QiTechService {
@@ -26,23 +25,24 @@ export class QiTechService {
 
     public async createNaturalPerson(data: QITech.INaturalPersonCreate): Promise<HydratedDocument<IOnboardingNaturalPerson>> {
         const repository = OnboardingNaturalPersonRepository.getInstance()
-        data.id = v4()
-        data.registration_id = v4()
-        const personResponse = await this.api.createNaturalPerson(data)
+        const document = data.document_number.replace(/\D/g, '')
 
-        let personModel = await repository.getByDocument(data.document_number)
+        let personModel = await repository.getByDocument(document)
         if (personModel) {
             throw new ValidationError('Found existing onboarding for this document')
         }
 
+        data.id = v4()
+        data.registration_id = v4()
+        const personResponse = await this.api.createNaturalPerson(data)
+
         personModel = await repository.create({
-            document: data.document_number.replace(/\D/g, ''),
+            document: document,
             request: data,
             response: personResponse,
             data: undefined,
         })
-
-        return personModel
+        return await this.updateNaturalPerson(personModel)
     }
 
     public async updateNaturalPerson(naturalPerson: HydratedDocument<IOnboardingNaturalPerson>) {
@@ -63,23 +63,24 @@ export class QiTechService {
 
     public async createLegalPerson(data: QITech.ILegalPersonCreate): Promise<HydratedDocument<IOnboardingLegalPerson>> {
         const repository = OnboardingLegalPersonRepository.getInstance()
-        data.id = v4()
-        data.registration_id = v4()
-        const personResponse = await this.api.createLegalPerson(data)
-
-        let personModel = await repository.getByDocument(data.document_number)
+        const document = data.document_number.replace(/\D/g, '')
+        let personModel = await repository.getByDocument(document)
         if (personModel) {
             throw new ValidationError('Found existing onboarding for this document')
         }
 
+        data.id = v4()
+        data.registration_id = v4()
+        const personResponse = await this.api.createLegalPerson(data)
+
         personModel = await repository.create({
-            document: data.document_number.replace(/\D/g, ''),
+            document: document,
             request: data,
             response: personResponse,
             data: undefined,
         })
 
-        return personModel
+        return await this.updateLegalPerson(personModel)
     }
 
     public async updateLegalPerson(naturalPerson: HydratedDocument<IOnboardingLegalPerson>) {
