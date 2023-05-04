@@ -26,9 +26,10 @@ export class QiTechService {
     public async createNaturalPerson(data: QITech.INaturalPersonCreate): Promise<HydratedDocument<IOnboardingNaturalPerson>> {
         const repository = OnboardingNaturalPersonRepository.getInstance()
         const document = data.document_number.replace(/\D/g, '')
+        const reprovedStatus = [QITech.AnalysisStatus.AUTOMATICALLY_REPROVED, QITech.AnalysisStatus.MANUALLY_REPROVED]
 
         let personModel = await repository.getByDocument(document)
-        if (personModel) {
+        if (personModel && (!personModel.data || (personModel.data && !reprovedStatus.includes(personModel.data.analysis_status)))) {
             throw new ValidationError('Found existing onboarding for this document')
         }
 
@@ -64,8 +65,10 @@ export class QiTechService {
     public async createLegalPerson(data: QITech.ILegalPersonCreate): Promise<HydratedDocument<IOnboardingLegalPerson>> {
         const repository = OnboardingLegalPersonRepository.getInstance()
         const document = data.document_number.replace(/\D/g, '')
+        const reprovedStatus = [QITech.AnalysisStatus.AUTOMATICALLY_REPROVED, QITech.AnalysisStatus.MANUALLY_REPROVED]
+
         let personModel = await repository.getByDocument(document)
-        if (personModel) {
+        if (personModel && (!personModel.data || (personModel.data && !reprovedStatus.includes(personModel.data.analysis_status)))) {
             throw new ValidationError('Found existing onboarding for this document')
         }
 

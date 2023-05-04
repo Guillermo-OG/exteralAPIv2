@@ -10,7 +10,7 @@ export interface IOnboardingNaturalPerson {
 
 const schema = new Schema<IOnboardingNaturalPerson>(
     {
-        document: { type: String, required: true, unique: true },
+        document: { type: String, required: true },
         request: { type: Schema.Types.Mixed, required: true },
         response: { type: Schema.Types.Mixed, required: true },
         data: { type: Schema.Types.Mixed, required: false },
