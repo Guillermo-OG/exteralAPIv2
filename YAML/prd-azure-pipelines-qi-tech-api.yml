@@ -94,4 +94,4 @@ stages:
         targetType: 'inline'
         script: 'Write-Host "##vso[build.updatebuildnumber]$(Build.BuildId)"'
         # workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/'
-        workingDirectory: '$(Build.SourcesDirectory)         
+        workingDirectory: '$(Build.SourcesDirectory)'         
