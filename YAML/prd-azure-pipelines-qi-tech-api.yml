@@ -30,7 +30,15 @@ variables:
 
   name: $(Date:yyyy.MM.dd).$(Hours)$(Minutes)
 
-
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
