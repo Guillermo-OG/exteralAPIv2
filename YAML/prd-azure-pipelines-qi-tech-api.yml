@@ -1,0 +1,88 @@
+#
+trigger:
+  branches:
+    include:
+      - "Master"  
+#  paths:
+#    include:
+#      - cnj-monitoring/*
+
+#resources:
+#- repo: self
+#YAML/hml-azure-pipelines-node-js-api.yml
+
+variables:
+  dockerRegistryServiceConnection: '5f37f5c9-1a9f-45ac-af37-615d4c77bc43'
+  containerRegistry: 'crprdvbb02.azurecr.io'
+  tag: '$(Build.BuildId)'
+  ambiente: 'prd'
+# diretorioProjeto: 'ConsentAPI'
+  imageRepository: '$(ambiente)-qi-tech-api'
+  tagsImage: '$(Get-Date -Format yyyy.MM.dd.hhmm)'
+  # comandoNPM: 'RUN yarn env:$(ambiente)'
+# dockerfilePath: '$(Build.SourcesDirectory)/$(diretorioProjeto)/Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  portNodejs: 'PORT: "80"'  
+  portDockerFile: '80'    
+  
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+  name: $(Date:yyyy.MM.dd).$(Hours)$(Minutes)
+
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          $file_path = '$(Build.SourcesDirectory)/.eslintrc.json'          
+          $content = Get-Content -Path $file_path          
+          $newContent = $content -replace '"windows"', '"unix"'  
+          $newContent | Set-Content -Path $file_path
+      enabled: true
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'Rename-Item ".env.prd" ".env"'
+#        workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/'
+        workingDirectory: '$(Build.SourcesDirectory)/' 
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'type .env'
+#        workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/' 
+        workingDirectory: '$(Build.SourcesDirectory)/' 
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'type .eslintrc.json'
+#        workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/' 
+        workingDirectory: '$(Build.SourcesDirectory)/' 
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'Write-Output  $(tagsImage)'
+#        workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/'                       
+        workingDirectory: '$(Build.SourcesDirectory)/' 
+
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+          latest
+
+## BUILD NUMBER FORMAT
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'Write-Host "##vso[build.updatebuildnumber]$(Build.BuildId)"'
+        workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/' 
