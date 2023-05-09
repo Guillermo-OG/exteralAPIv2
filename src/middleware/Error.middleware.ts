@@ -30,6 +30,8 @@ export class ErrorMiddleware {
                 error: 'Unexpected API Error',
                 details: err.response?.data,
             }
+        } else {
+            console.log(err)
         }
         res.status(status).json(response)
     }
