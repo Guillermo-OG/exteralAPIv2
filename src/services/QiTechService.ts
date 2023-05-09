@@ -1,9 +1,11 @@
+import { format } from 'date-fns'
 import { HydratedDocument } from 'mongoose'
 import { v4 } from 'uuid'
 import env from '../config/env'
 import { QITech, QiTechClient } from '../infra'
 import { IOnboardingLegalPerson, IOnboardingNaturalPerson, ValidationError } from '../models'
 import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
+import { maskCNPJ, maskCPF } from '../utils/masks'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -33,13 +35,12 @@ export class QiTechService {
             throw new ValidationError('Found existing onboarding for this document')
         }
 
-        data.id = v4()
-        data.registration_id = v4()
-        const personResponse = await this.api.createNaturalPerson(data)
+        const formatedData = this.formatNaturalPersonData(data)
+        const personResponse = await this.api.createNaturalPerson(formatedData)
 
         personModel = await repository.create({
             document: document,
-            request: data,
+            request: formatedData,
             response: personResponse,
             data: undefined,
         })
@@ -72,13 +73,12 @@ export class QiTechService {
             throw new ValidationError('Found existing onboarding for this document')
         }
 
-        data.id = v4()
-        data.registration_id = v4()
-        const personResponse = await this.api.createLegalPerson(data)
+        const formatedData = this.formatLegalPersonData(data)
+        const personResponse = await this.api.createLegalPerson(formatedData)
 
         personModel = await repository.create({
             document: document,
-            request: data,
+            request: formatedData,
             response: personResponse,
             data: undefined,
         })
@@ -102,35 +102,32 @@ export class QiTechService {
         return naturalPerson
     }
 
-    // private formatDocument(document: string): string {
-    //     const rawDoc = document.replace(/\D/g, '')
-    //     if (rawDoc.length === 11) {
-    //         return rawDoc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-    //     } else if (rawDoc.length === 14) {
-    //         return rawDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
-    //     }
-    //     return document
-    // }
+    private formatNaturalPersonData(data: QITech.INaturalPersonCreate): QITech.INaturalPersonCreate {
+        data.id = v4()
+        data.registration_id = v4()
+        data.document_number = maskCPF(data.document_number)
+        data.registration_date = this.formatDate(new Date(), true, true)
+        return data
+    }
 
-    // private formatMoney(money: number): number {
-    //     return Math.round(money)
-    // }
+    private formatLegalPersonData(data: QITech.ILegalPersonCreate): QITech.ILegalPersonCreate {
+        data.id = v4()
+        data.registration_id = v4()
+        data.document_number = maskCNPJ(data.document_number)
+        data.registration_date = this.formatDate(new Date(), true, true)
+        return data
+    }
 
-    // private formatDate(date: string, dateTime = false, timeZone = false): string {
-    //     const d = new Date(date)
-    //     if (!dateTime) {
-    //         return format(d, 'yyyy-MM-dd')
-    //     }
-    //     if (timeZone) {
-    //         // eslint-disable-next-line quotes
-    //         return format(d, "yyyy-MM-dd'T'hh:mm:ss.sssXXX")
-    //     }
-    //     // eslint-disable-next-line quotes
-    //     return format(d, "yyyy-MM-dd'T'hh:mm:ss.sss'Z'")
-    // }
-
-    // private formatIp(ip: string): string {
-    //     const rawIp = ip.replace(/\D/, '')
-    //     return rawIp.replace(/(\d{1,3})(\d{1,3})(\d{1,3})(\d{1,3})/, '$1.$2.$3.$4')
-    // }
+    private formatDate(date: string | Date, dateTime = false, timeZone = false): string {
+        const d = new Date(date)
+        if (!dateTime) {
+            return format(d, 'yyyy-MM-dd')
+        }
+        if (timeZone) {
+            // eslint-disable-next-line quotes
+            return format(d, "yyyy-MM-dd'T'hh:mm:ss.sssXXX")
+        }
+        // eslint-disable-next-line quotes
+        return format(d, "yyyy-MM-dd'T'hh:mm:ss.sss'Z'")
+    }
 }
