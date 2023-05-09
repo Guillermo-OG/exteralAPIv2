@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 
 export class HealthRouter {
     public readonly router: Router
+
     constructor() {
         this.router = Router()
         this.config()

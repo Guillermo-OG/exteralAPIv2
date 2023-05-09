@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { Schema } from 'yup'
 
-class ValidationMiddleware {
+export class ValidationMiddleware {
     public validate(schema: Schema) {
         return async (req: Request, _res: Response, next: NextFunction) => {
             try {
@@ -15,5 +15,3 @@ class ValidationMiddleware {
         }
     }
 }
-
-export const validationMiddleware = new ValidationMiddleware()

@@ -195,6 +195,45 @@ export interface INaturalPersonGetResponse extends INaturalPersonCreate {
         analyst_email: null | string
         analyst_key: null | string
     }[]
+    analysis_output?: {
+        reason: 'approved_client'
+        reason_description: 'Cliente aprovado '
+        custom_variables: unknown
+        unsc?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        ofac?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        pep?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        ibama?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        slavery?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        enricher_income?: {
+            monthly_income: {
+                amount: number
+                income_found: boolean
+            }
+        }
+        dafn?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        cnep?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+    }
 }
 
 export interface ILegalPersonCreate {
