@@ -16,8 +16,16 @@ export class OnboardingNaturalPersonRepository {
     }
 
     public async getByDocument(document: string): Promise<HydratedDocument<IOnboardingNaturalPerson> | null> {
-        return await OnboardingNaturalPerson.findOne({
-            document,
-        })
+        return await OnboardingNaturalPerson.findOne(
+            {
+                document,
+            },
+            null,
+            {
+                sort: {
+                    id: -1,
+                },
+            }
+        )
     }
 }

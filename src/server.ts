@@ -27,9 +27,9 @@ class Server {
     }
 
     private routes(): void {
-        this.app.use(new AuthMiddleware().authenticate)
-
         this.app.use('/health', new HealthRouter().router)
+
+        this.app.use(new AuthMiddleware().authenticate)
         this.app.use('/onboarding', new OnboardingRouter().router)
         this.app.use(new ErrorMiddleware().handler)
     }

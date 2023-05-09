@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { ValidationError } from 'yup'
+import { ValidationError } from '../models'
 import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
 import { QiTechService } from '../services'
 
@@ -9,9 +9,9 @@ export class OnboardingController {
             const body = req.body
             const qiTechService = QiTechService.getInstance()
 
-            const response = await qiTechService.createNaturalPerson(body)
+            const naturalPerson = await qiTechService.createNaturalPerson(body)
 
-            res.json(response)
+            res.json(naturalPerson)
         } catch (error) {
             next(error)
         }
@@ -47,9 +47,9 @@ export class OnboardingController {
             const body = req.body
             const qiTechService = QiTechService.getInstance()
 
-            const response = await qiTechService.createLegalPerson(body)
+            const legalPerson = await qiTechService.createLegalPerson(body)
 
-            res.json(response)
+            res.json(legalPerson)
         } catch (error) {
             next(error)
         }

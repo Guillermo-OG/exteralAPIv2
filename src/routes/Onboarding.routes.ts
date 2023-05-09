@@ -16,7 +16,7 @@ export class OnboardingRouter {
 
         this.router.post('/natural_person', this.controller.createNaturalPerson)
         this.router.get('/natural_person', this.controller.getNaturalPersonByDocument)
-        this.router.post('/create_person', this.controller.createLegalPerson)
-        this.router.get('/create_person', this.controller.getLegalPersonByDocument)
+        this.router.post('/legal_person', this.controller.createLegalPerson)
+        this.router.get('/legal_person', this.controller.getLegalPersonByDocument)
     }
 }

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import { UnauthorizedError } from '../models'
 import { AuthService } from '../services'
 
 export class AuthMiddleware {
@@ -7,7 +8,7 @@ export class AuthMiddleware {
             const authHeader = req.headers.authorization
 
             if (!authHeader || !authHeader.startsWith('Basic ')) {
-                throw new Error('Unauthorized')
+                throw new UnauthorizedError('Unauthorized')
             }
 
             const credentials = authHeader.slice('Basic '.length)
