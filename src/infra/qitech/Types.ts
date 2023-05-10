@@ -1,3 +1,9 @@
+export enum RequestStatus {
+    FINISHED = 'FINISHED',
+    ERROR = 'ERROR',
+    PENDING = 'PENDING',
+}
+
 export enum EmailValidationType {
     ZAIG_API = 'zaig_api',
     COMPANY_EMAIL = 'company_email',

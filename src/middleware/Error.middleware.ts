@@ -25,7 +25,7 @@ export class ErrorMiddleware {
                 details: parsedErrors,
             }
         } else if (err instanceof AxiosError) {
-            status = 400
+            status = 500
             response = {
                 error: 'Unexpected API Error',
                 details: err.response?.data,
