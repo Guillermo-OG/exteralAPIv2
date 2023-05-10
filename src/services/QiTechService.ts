@@ -8,7 +8,7 @@ import { QITech, QiTechClient } from '../infra'
 import { IOnboardingLegalPerson, IOnboardingNaturalPerson, NotFoundError, ServerError, ValidationError } from '../models'
 import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
 import { maskCNPJ, maskCPF, unMask } from '../utils/masks'
-import { parseError } from '../utils/schemas'
+import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -57,6 +57,7 @@ export class QiTechService {
         }
 
         try {
+            await naturalPersonSchema.validate(data, { abortEarly: false })
             const personResponse = await this.api.createNaturalPerson(formatedData)
             onboardingModelData.response = personResponse
         } catch (error) {
@@ -163,6 +164,7 @@ export class QiTechService {
         }
 
         try {
+            await legalPersonSchema.validate(data, { abortEarly: false })
             const personResponse = await this.api.createLegalPerson(formatedData)
             onboardingModelData.response = personResponse
         } catch (error) {
