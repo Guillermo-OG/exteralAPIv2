@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { OnboardingController } from '../controllers'
 import { AuthMiddleware, ValidationMiddleware } from '../middleware'
-import { legalPersonSchema, naturalPersonSchema, onboardingPersonListSchema } from '../utils/schemas'
+import { onboardingPersonListSchema } from '../utils/schemas'
 
 export class OnboardingRouter {
     public readonly router: Router
@@ -18,7 +18,7 @@ export class OnboardingRouter {
     private config(): void {
         this.router.use(new AuthMiddleware().authenticate)
 
-        this.router.post('/natural_person', this.validator.validate({ body: naturalPersonSchema }), this.controller.createNaturalPerson)
+        this.router.post('/natural_person', this.controller.createNaturalPerson)
         this.router.get(
             '/natural_person',
             this.validator.validate({ query: onboardingPersonListSchema }),
@@ -27,7 +27,7 @@ export class OnboardingRouter {
         this.router.get('/natural_person/:document', this.controller.getNaturalPersonByDocument)
         this.router.put('/natural_person/retry', this.controller.retryNaturalPersonByDocument)
 
-        this.router.post('/legal_person', this.validator.validate({ body: legalPersonSchema }), this.controller.createLegalPerson)
+        this.router.post('/legal_person', this.controller.createLegalPerson)
         this.router.get('/legal_person', this.validator.validate({ query: onboardingPersonListSchema }), this.controller.listLegalPerson)
         this.router.get('/legal_person/:document', this.controller.getLegalPersonByDocument)
         this.router.put('/legal_person/retry', this.controller.retryLegalPersonByDocument)
