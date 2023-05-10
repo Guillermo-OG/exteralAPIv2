@@ -1,5 +1,7 @@
-import { HydratedDocument } from 'mongoose'
+import { FilterQuery, HydratedDocument } from 'mongoose'
+import { QITech } from '../infra'
 import { IOnboardingLegalPerson, OnboardingLegalPerson } from '../models'
+import { IPaginatedSearch, paginatedSearch } from '../utils/pagination'
 
 export class OnboardingLegalPersonRepository {
     private static instance: OnboardingLegalPersonRepository
@@ -23,9 +25,23 @@ export class OnboardingLegalPersonRepository {
             null,
             {
                 sort: {
-                    id: -1,
+                    _id: -1,
                 },
             }
         )
+    }
+
+    public async list(page: number, status?: QITech.RequestStatus): Promise<IPaginatedSearch<IOnboardingLegalPerson>> {
+        const filter: FilterQuery<IOnboardingLegalPerson> = {}
+        if (status) {
+            filter.status = {
+                $eq: status,
+            }
+        }
+
+        return paginatedSearch(OnboardingLegalPerson, {
+            filter,
+            page,
+        })
     }
 }

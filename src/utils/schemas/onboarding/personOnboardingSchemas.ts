@@ -1,4 +1,5 @@
 import * as yup from 'yup'
+import { QITech } from '../../../infra'
 import { validateCNPJ, validateCPF } from '../../validations'
 
 export const naturalPersonSchema = new yup.ObjectSchema({
@@ -36,4 +37,9 @@ export const legalPersonSchema = new yup.ObjectSchema({
         country: yup.string().length(3).required(),
         validation_type: yup.string().oneOf(['visit']).required(),
     }),
+})
+
+export const onboardingPersonListSchema = new yup.ObjectSchema({
+    page: yup.number().min(1).nullable(),
+    status: yup.string().oneOf(Object.values(QITech.RequestStatus)).nullable(),
 })
