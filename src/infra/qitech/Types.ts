@@ -2,6 +2,7 @@ export enum RequestStatus {
     FINISHED = 'FINISHED',
     ERROR = 'ERROR',
     PENDING = 'PENDING',
+    RETRY = 'RETRY',
 }
 
 export enum EmailValidationType {

@@ -32,6 +32,13 @@ export class QiTechService {
         const repository = OnboardingNaturalPersonRepository.getInstance()
         const document = unMask(data.document_number)
         const reprovedStatus = [QITech.AnalysisStatus.AUTOMATICALLY_REPROVED, QITech.AnalysisStatus.MANUALLY_REPROVED]
+        const onboardingModelData: IOnboardingNaturalPerson = {
+            document: document,
+            request: data,
+            response: undefined,
+            data: undefined,
+            status: QITech.RequestStatus.PENDING,
+        }
 
         let personModel = await repository.getByDocument(document)
         if (personModel) {
@@ -42,27 +49,19 @@ export class QiTechService {
             ) {
                 throw new ValidationError('Found existing valid onboarding for this document')
             }
-            if (personModel.error && personModel.error.status !== 400) {
+            if (personModel.status === QITech.RequestStatus.RETRY) {
                 throw new ValidationError('Found existing onboarding for this document, use retry route')
             }
         }
-
-        const formatedData = this.formatNaturalPersonData(data)
-        const onboardingModelData: IOnboardingNaturalPerson = {
-            document: document,
-            request: formatedData,
-            response: undefined,
-            data: undefined,
-            status: QITech.RequestStatus.PENDING,
-        }
-
         try {
             await naturalPersonSchema.validate(data, { abortEarly: false })
+            const formatedData = this.formatNaturalPersonData(data)
             const personResponse = await this.api.createNaturalPerson(formatedData)
+
             onboardingModelData.response = personResponse
         } catch (error) {
-            onboardingModelData.status = QITech.RequestStatus.ERROR
             onboardingModelData.error = this.errorHandler(error)
+            onboardingModelData.status = onboardingModelData.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
         }
 
         if (personModel) {
@@ -110,25 +109,21 @@ export class QiTechService {
         const naturalPerson = await repository.getByDocument(document)
         if (!naturalPerson) {
             throw new NotFoundError('Onboarding not found')
-        }
-
-        if (naturalPerson.status !== QITech.RequestStatus.ERROR) {
+        } else if (naturalPerson.status === QITech.RequestStatus.ERROR) {
+            throw new ValidationError('Onboarding has invalid data, create a new one')
+        } else if (naturalPerson.status !== QITech.RequestStatus.RETRY) {
             throw new ValidationError('This document have a valid onboarding')
         }
 
-        if (naturalPerson.error && naturalPerson.error.status === 400) {
-            throw new ValidationError('Onboarding has invalid data, create a new one')
-        }
-
         try {
-            const personResponse = await this.api.createNaturalPerson(naturalPerson.request)
+            const personResponse = await this.api.createNaturalPerson(this.formatNaturalPersonData(naturalPerson.request))
             naturalPerson.status = QITech.RequestStatus.PENDING
             naturalPerson.response = personResponse
             naturalPerson.error = undefined
             naturalPerson.markModified('response')
         } catch (error) {
-            naturalPerson.status = QITech.RequestStatus.ERROR
             naturalPerson.error = this.errorHandler(error)
+            naturalPerson.status = naturalPerson.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
         }
         naturalPerson.markModified('error')
 
@@ -139,6 +134,13 @@ export class QiTechService {
         const repository = OnboardingLegalPersonRepository.getInstance()
         const document = unMask(data.document_number)
         const reprovedStatus = [QITech.AnalysisStatus.AUTOMATICALLY_REPROVED, QITech.AnalysisStatus.MANUALLY_REPROVED]
+        const onboardingModelData: IOnboardingLegalPerson = {
+            document: document,
+            request: data,
+            response: undefined,
+            data: undefined,
+            status: QITech.RequestStatus.PENDING,
+        }
 
         let personModel = await repository.getByDocument(document)
         if (personModel) {
@@ -149,27 +151,20 @@ export class QiTechService {
             ) {
                 throw new ValidationError('Found existing valid onboarding for this document')
             }
-            if (personModel.error && personModel.error.status !== 400) {
+            if (personModel.status === QITech.RequestStatus.RETRY) {
                 throw new ValidationError('Found existing onboarding for this document, use retry route')
             }
         }
 
-        const formatedData = this.formatLegalPersonData(data)
-        const onboardingModelData: IOnboardingLegalPerson = {
-            document: document,
-            request: formatedData,
-            response: undefined,
-            data: undefined,
-            status: QITech.RequestStatus.PENDING,
-        }
-
         try {
             await legalPersonSchema.validate(data, { abortEarly: false })
+            const formatedData = this.formatLegalPersonData(data)
             const personResponse = await this.api.createLegalPerson(formatedData)
+
             onboardingModelData.response = personResponse
         } catch (error) {
-            onboardingModelData.status = QITech.RequestStatus.ERROR
             onboardingModelData.error = this.errorHandler(error)
+            onboardingModelData.status = onboardingModelData.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
         }
 
         if (personModel) {
@@ -216,25 +211,21 @@ export class QiTechService {
         const legalPerson = await repository.getByDocument(document)
         if (!legalPerson) {
             throw new NotFoundError('Onboarding not found')
-        }
-
-        if (legalPerson.status !== QITech.RequestStatus.ERROR) {
+        } else if (legalPerson.status === QITech.RequestStatus.ERROR) {
+            throw new ValidationError('Onboarding has invalid data, create a new one')
+        } else if (legalPerson.status !== QITech.RequestStatus.RETRY) {
             throw new ValidationError('This document have a valid onboarding')
         }
 
-        if (legalPerson.error && legalPerson.error.status === 400) {
-            throw new ValidationError('Onboarding has invalid data, create a new one')
-        }
-
         try {
-            const personResponse = await this.api.createLegalPerson(legalPerson.request)
+            const personResponse = await this.api.createLegalPerson(this.formatLegalPersonData(legalPerson.request))
             legalPerson.status = QITech.RequestStatus.FINISHED
             legalPerson.response = personResponse
             legalPerson.error = undefined
             legalPerson.markModified('response')
         } catch (error) {
-            legalPerson.status = QITech.RequestStatus.ERROR
             legalPerson.error = this.errorHandler(error)
+            legalPerson.status = legalPerson.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
         }
         legalPerson.markModified('error')
 
@@ -275,7 +266,7 @@ export class QiTechService {
 
         //* Abstract handler for errors
         if (err instanceof ServerError) {
-            response = { error: err.name, message: err.message, status: 500 }
+            response = { status: 500, error: err.name, message: err.message }
         } else if (err instanceof YupValidationError) {
             const parsedErrors = parseError(err)
             response = {
