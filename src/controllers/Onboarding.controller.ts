@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { QITech } from '../infra'
-import { ValidationError } from '../models'
+import { NotFoundError, ValidationError } from '../models'
 import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
@@ -30,14 +30,12 @@ export class OnboardingController {
             const repository = OnboardingNaturalPersonRepository.getInstance()
             let naturalPerson = await repository.getByDocument(document)
 
-            if (naturalPerson) {
-                naturalPerson = await qiTechService.updateNaturalPerson(naturalPerson)
+            if (!naturalPerson) {
+                throw new NotFoundError('Onboarding not found for this document')
             }
 
-            res.send({
-                found: !!naturalPerson,
-                data: naturalPerson,
-            })
+            naturalPerson = await qiTechService.updateNaturalPerson(naturalPerson)
+            res.json(naturalPerson)
         } catch (error) {
             next(error)
         }
@@ -96,14 +94,12 @@ export class OnboardingController {
             const repository = OnboardingLegalPersonRepository.getInstance()
             let legalPerson = await repository.getByDocument(document)
 
-            if (legalPerson) {
-                legalPerson = await qiTechService.updateLegalPerson(legalPerson)
+            if (!legalPerson) {
+                throw new NotFoundError('Onboarding not found for this document')
             }
 
-            res.send({
-                found: !!legalPerson,
-                data: legalPerson,
-            })
+            legalPerson = await qiTechService.updateLegalPerson(legalPerson)
+            res.json(legalPerson)
         } catch (error) {
             next(error)
         }
