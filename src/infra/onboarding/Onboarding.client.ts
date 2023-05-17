@@ -6,9 +6,9 @@ import {
     INaturalPersonCreate,
     INaturalPersonCreateResponse,
     INaturalPersonGetResponse,
-} from './Types'
+} from './Onboarding.types'
 
-export class QiTechClient {
+export class OnboardingClient {
     private readonly secret: string
     private readonly api: AxiosInstance
 
