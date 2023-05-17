@@ -1,11 +1,13 @@
 import { AxiosError } from 'axios'
+import { createHmac } from 'crypto'
 import { format } from 'date-fns'
+import { Request } from 'express'
 import { HydratedDocument } from 'mongoose'
 import { v4 } from 'uuid'
 import { ValidationError as YupValidationError } from 'yup'
 import env from '../config/env'
 import { QITech, QiTechClient } from '../infra'
-import { IOnboardingLegalPerson, IOnboardingNaturalPerson, NotFoundError, ServerError, ValidationError } from '../models'
+import { IOnboardingLegalPerson, IOnboardingNaturalPerson, ServerError, UnauthorizedError, ValidationError } from '../models'
 import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
 import { maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
@@ -13,11 +15,13 @@ import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/sch
 export class QiTechService {
     private static instance: QiTechService
     private readonly api: QiTechClient
+    private readonly webhookSecret: string
 
     private constructor() {
-        if (!env.QI_TECH_API_SECRET || !env.QI_TECH_BASE_URL) {
+        if (!env.QI_TECH_API_SECRET || !env.QI_TECH_BASE_URL || !env.QI_TECH_WEBHOOK_SECRET) {
             throw new Error('Missing qi tech env variables')
         }
+        this.webhookSecret = env.QI_TECH_WEBHOOK_SECRET
         this.api = new QiTechClient(env.QI_TECH_BASE_URL, env.QI_TECH_API_SECRET)
     }
 
@@ -31,7 +35,6 @@ export class QiTechService {
     public async createNaturalPerson(data: QITech.INaturalPersonCreate): Promise<HydratedDocument<IOnboardingNaturalPerson>> {
         const repository = OnboardingNaturalPersonRepository.getInstance()
         const document = unMask(data.document_number)
-        const reprovedStatus = [QITech.AnalysisStatus.AUTOMATICALLY_REPROVED, QITech.AnalysisStatus.MANUALLY_REPROVED]
         const onboardingModelData: IOnboardingNaturalPerson = {
             document: document,
             request: data,
@@ -42,15 +45,8 @@ export class QiTechService {
 
         let personModel = await repository.getByDocument(document)
         if (personModel) {
-            if (
-                personModel.status !== QITech.RequestStatus.ERROR &&
-                personModel.data &&
-                !reprovedStatus.includes(personModel.data.analysis_status)
-            ) {
+            if ([QITech.RequestStatus.APPROVED, QITech.RequestStatus.PENDING].includes(personModel.status)) {
                 throw new ValidationError('Found existing valid onboarding for this document')
-            }
-            if (personModel.status === QITech.RequestStatus.RETRY) {
-                throw new ValidationError('Found existing onboarding for this document, use retry route')
             }
         }
         try {
@@ -61,7 +57,7 @@ export class QiTechService {
             onboardingModelData.response = personResponse
         } catch (error) {
             onboardingModelData.error = this.errorHandler(error)
-            onboardingModelData.status = onboardingModelData.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
+            onboardingModelData.status = QITech.RequestStatus.ERROR
         }
 
         if (personModel) {
@@ -79,20 +75,14 @@ export class QiTechService {
     }
 
     public async updateNaturalPerson(naturalPerson: HydratedDocument<IOnboardingNaturalPerson>) {
-        const pendingStatus = [
-            QITech.AnalysisStatus.IN_MANUAL_ANALYSIS,
-            QITech.AnalysisStatus.IN_QUEUE,
-            QITech.AnalysisStatus.NOT_ANALYSED,
-            QITech.AnalysisStatus.PENDING,
-        ]
-
         if (naturalPerson.status === QITech.RequestStatus.PENDING && naturalPerson.response) {
             const data = await this.api.getNaturalPerson(naturalPerson.response.id)
-            naturalPerson.data = data
-            if (!pendingStatus.includes(data.analysis_status)) {
-                naturalPerson.status = QITech.RequestStatus.FINISHED
+            const newStatus = this.mapQiTechStatusToVillelaStatus(data.analysis_status)
+            if (naturalPerson.status !== newStatus) {
+                naturalPerson.data = data
+                naturalPerson.status = newStatus
+                naturalPerson.markModified('data')
             }
-            naturalPerson.markModified('data')
         }
 
         if (naturalPerson.isModified()) {
@@ -102,38 +92,9 @@ export class QiTechService {
         return naturalPerson
     }
 
-    public async retryNaturalPerson(documentNumber: string): Promise<HydratedDocument<IOnboardingNaturalPerson>> {
-        const repository = OnboardingNaturalPersonRepository.getInstance()
-        const document = unMask(documentNumber)
-
-        const naturalPerson = await repository.getByDocument(document)
-        if (!naturalPerson) {
-            throw new NotFoundError('Onboarding not found')
-        } else if (naturalPerson.status === QITech.RequestStatus.ERROR) {
-            throw new ValidationError('Onboarding has invalid data, create a new one')
-        } else if (naturalPerson.status !== QITech.RequestStatus.RETRY) {
-            throw new ValidationError('This document have a valid onboarding')
-        }
-
-        try {
-            const personResponse = await this.api.createNaturalPerson(this.formatNaturalPersonData(naturalPerson.request))
-            naturalPerson.status = QITech.RequestStatus.PENDING
-            naturalPerson.response = personResponse
-            naturalPerson.error = undefined
-            naturalPerson.markModified('response')
-        } catch (error) {
-            naturalPerson.error = this.errorHandler(error)
-            naturalPerson.status = naturalPerson.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
-        }
-        naturalPerson.markModified('error')
-
-        return await this.updateNaturalPerson(naturalPerson)
-    }
-
     public async createLegalPerson(data: QITech.ILegalPersonCreate): Promise<HydratedDocument<IOnboardingLegalPerson>> {
         const repository = OnboardingLegalPersonRepository.getInstance()
         const document = unMask(data.document_number)
-        const reprovedStatus = [QITech.AnalysisStatus.AUTOMATICALLY_REPROVED, QITech.AnalysisStatus.MANUALLY_REPROVED]
         const onboardingModelData: IOnboardingLegalPerson = {
             document: document,
             request: data,
@@ -144,15 +105,8 @@ export class QiTechService {
 
         let personModel = await repository.getByDocument(document)
         if (personModel) {
-            if (
-                personModel.status !== QITech.RequestStatus.ERROR &&
-                personModel.data &&
-                !reprovedStatus.includes(personModel.data.analysis_status)
-            ) {
+            if ([QITech.RequestStatus.APPROVED, QITech.RequestStatus.PENDING].includes(personModel.status)) {
                 throw new ValidationError('Found existing valid onboarding for this document')
-            }
-            if (personModel.status === QITech.RequestStatus.RETRY) {
-                throw new ValidationError('Found existing onboarding for this document, use retry route')
             }
         }
 
@@ -164,7 +118,7 @@ export class QiTechService {
             onboardingModelData.response = personResponse
         } catch (error) {
             onboardingModelData.error = this.errorHandler(error)
-            onboardingModelData.status = onboardingModelData.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
+            onboardingModelData.status = QITech.RequestStatus.ERROR
         }
 
         if (personModel) {
@@ -182,19 +136,14 @@ export class QiTechService {
     }
 
     public async updateLegalPerson(legalPerson: HydratedDocument<IOnboardingLegalPerson>) {
-        const pendingStatus = [
-            QITech.AnalysisStatus.IN_MANUAL_ANALYSIS,
-            QITech.AnalysisStatus.IN_QUEUE,
-            QITech.AnalysisStatus.NOT_ANALYSED,
-            QITech.AnalysisStatus.PENDING,
-        ]
         if (legalPerson.status === QITech.RequestStatus.PENDING && legalPerson.response) {
             const data = await this.api.getLegalPerson(legalPerson.response.id)
-            legalPerson.data = data
-            if (!pendingStatus.includes(data.analysis_status)) {
-                legalPerson.status = QITech.RequestStatus.FINISHED
+            const newStatus = this.mapQiTechStatusToVillelaStatus(data.analysis_status)
+            if (legalPerson.status !== newStatus) {
+                legalPerson.data = data
+                legalPerson.status = newStatus
+                legalPerson.markModified('data')
             }
-            legalPerson.markModified('data')
         }
 
         if (legalPerson.isModified()) {
@@ -204,32 +153,50 @@ export class QiTechService {
         return legalPerson
     }
 
-    public async retryLegalPerson(documentNumber: string): Promise<HydratedDocument<IOnboardingLegalPerson>> {
-        const repository = OnboardingLegalPersonRepository.getInstance()
-        const document = unMask(documentNumber)
+    public authenticateWebhook(req: Request): void {
+        const signature = req.headers.signature
+        const payload = JSON.stringify(req.body)
+        const method = req.method
+        const endpoint = req.protocol + '://' + req.get('host') + req.originalUrl
 
-        const legalPerson = await repository.getByDocument(document)
-        if (!legalPerson) {
-            throw new NotFoundError('Onboarding not found')
-        } else if (legalPerson.status === QITech.RequestStatus.ERROR) {
-            throw new ValidationError('Onboarding has invalid data, create a new one')
-        } else if (legalPerson.status !== QITech.RequestStatus.RETRY) {
-            throw new ValidationError('This document have a valid onboarding')
+        const hash = createHmac('sha1', this.webhookSecret)
+            .update(endpoint + method + payload)
+            .digest('hex')
+
+        if (hash !== signature) {
+            throw new UnauthorizedError()
+        }
+    }
+
+    public async handleWebhook(data: QITech.IWebhookBody) {
+        let payload: unknown = null
+        let url: string | null = null
+        if (data.legal_person_id) {
+            const repository = OnboardingLegalPersonRepository.getInstance()
+            const legalPerson = await repository.getByExternalId(data.legal_person_id)
+            if (legalPerson) {
+                payload = await this.updateLegalPerson(legalPerson)
+                // url = legalPerson.webhookUrl
+                url = 'http://localhost:3000/webhook/mock'
+            }
+        } else if (data.natural_person_id) {
+            const repository = OnboardingNaturalPersonRepository.getInstance()
+            const naturalPerson = await repository.getByExternalId(data.natural_person_id)
+            if (naturalPerson) {
+                payload = await this.updateNaturalPerson(naturalPerson)
+                // url = naturalPerson.webhookUrl
+                url = 'http://localhost:3000/webhook/mock'
+            }
         }
 
-        try {
-            const personResponse = await this.api.createLegalPerson(this.formatLegalPersonData(legalPerson.request))
-            legalPerson.status = QITech.RequestStatus.FINISHED
-            legalPerson.response = personResponse
-            legalPerson.error = undefined
-            legalPerson.markModified('response')
-        } catch (error) {
-            legalPerson.error = this.errorHandler(error)
-            legalPerson.status = legalPerson.error.status === 400 ? QITech.RequestStatus.ERROR : QITech.RequestStatus.RETRY
+        if (!payload || !url) {
+            throw new Error('oops payload empty')
         }
-        legalPerson.markModified('error')
 
-        return await this.updateLegalPerson(legalPerson)
+        return {
+            payload,
+            url,
+        }
     }
 
     private formatNaturalPersonData(data: QITech.INaturalPersonCreate): QITech.INaturalPersonCreate {
@@ -259,6 +226,27 @@ export class QiTechService {
         }
         // eslint-disable-next-line quotes
         return format(d, "yyyy-MM-dd'T'hh:mm:ss.sss'Z'")
+    }
+
+    private mapQiTechStatusToVillelaStatus(status: QITech.AnalysisStatus): QITech.RequestStatus {
+        switch (status) {
+            case QITech.AnalysisStatus.AUTOMATICALLY_APPROVED:
+            case QITech.AnalysisStatus.MANUALLY_APPROVED:
+                return QITech.RequestStatus.APPROVED
+
+            case QITech.AnalysisStatus.IN_MANUAL_ANALYSIS:
+            case QITech.AnalysisStatus.IN_QUEUE:
+            case QITech.AnalysisStatus.NOT_ANALYSED:
+            case QITech.AnalysisStatus.PENDING:
+                return QITech.RequestStatus.PENDING
+
+            case QITech.AnalysisStatus.AUTOMATICALLY_REPROVED:
+            case QITech.AnalysisStatus.MANUALLY_REPROVED:
+                return QITech.RequestStatus.REPROVED
+
+            default:
+                return QITech.RequestStatus.ERROR
+        }
     }
 
     private errorHandler(err: unknown) {

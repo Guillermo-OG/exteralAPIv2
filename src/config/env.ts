@@ -7,6 +7,7 @@ const env = {
     DATABASE_NAME: process.env.DATABASE_NAME!,
     QI_TECH_BASE_URL: process.env.QI_TECH_BASE_URL!,
     QI_TECH_API_SECRET: process.env.QI_TECH_API_SECRET!,
+    QI_TECH_WEBHOOK_SECRET: process.env.QI_TECH_WEBHOOK_SECRET!,
 }
 
 export default env

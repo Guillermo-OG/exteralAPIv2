@@ -31,6 +31,20 @@ export class OnboardingNaturalPersonRepository {
         )
     }
 
+    public async getByExternalId(id: string): Promise<HydratedDocument<IOnboardingNaturalPerson> | null> {
+        return await OnboardingNaturalPerson.findOne(
+            {
+                'response.id': id,
+            },
+            null,
+            {
+                sort: {
+                    _id: -1,
+                },
+            }
+        )
+    }
+
     public async list(page: number, status?: QITech.RequestStatus): Promise<IPaginatedSearch<IOnboardingNaturalPerson>> {
         const filter: FilterQuery<IOnboardingNaturalPerson> = {}
         if (status) {

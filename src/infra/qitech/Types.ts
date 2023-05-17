@@ -1,8 +1,8 @@
 export enum RequestStatus {
-    FINISHED = 'FINISHED',
+    APPROVED = 'APPROVED',
+    REPROVED = 'REPROVED',
     ERROR = 'ERROR',
     PENDING = 'PENDING',
-    RETRY = 'RETRY',
 }
 
 export enum EmailValidationType {
@@ -311,4 +311,11 @@ export interface ILegalPersonGetResponse extends ILegalPersonCreate {
         analyst_email: null | string
         analyst_key: null | string
     }[]
+}
+
+export interface IWebhookBody {
+    natural_person_id?: string
+    legal_person_id?: string
+    analysis_status: AnalysisStatus
+    event_date: string
 }
