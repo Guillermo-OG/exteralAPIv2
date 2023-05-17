@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { UnauthorizedError } from '../models'
-import { AuthService, QiTechService } from '../services'
+import { AuthService, OnboardingService } from '../services'
 
 export class AuthMiddleware {
     public async authenticate(req: Request, _res: Response, next: NextFunction): Promise<void> {
@@ -26,7 +26,7 @@ export class AuthMiddleware {
     }
     public async authOnboardingWebhook(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
-            const qiTechService = QiTechService.getInstance()
+            const qiTechService = OnboardingService.getInstance()
             qiTechService.authenticateWebhook(req)
 
             next()

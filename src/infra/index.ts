@@ -1,1 +1,1 @@
-export * from './qitech'
+export * from './onboarding'
