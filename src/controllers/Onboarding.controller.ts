@@ -41,22 +41,6 @@ export class OnboardingController {
         }
     }
 
-    public async retryNaturalPersonByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try {
-            const document = unMask((req.query.document as string) || '')
-            if (!document) {
-                throw new ValidationError('Document required')
-            }
-
-            const qiTechService = QiTechService.getInstance()
-            const naturalPerson = await qiTechService.retryNaturalPerson(document)
-
-            res.json(naturalPerson)
-        } catch (error) {
-            next(error)
-        }
-    }
-
     public async listNaturalPerson(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const page = Number(req.query.page ?? '1')
@@ -99,22 +83,6 @@ export class OnboardingController {
             }
 
             legalPerson = await qiTechService.updateLegalPerson(legalPerson)
-            res.json(legalPerson)
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    public async retryLegalPersonByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try {
-            const document = unMask((req.query.document as string) || '')
-            if (!document) {
-                throw new ValidationError('Document required')
-            }
-
-            const qiTechService = QiTechService.getInstance()
-            const legalPerson = await qiTechService.retryLegalPerson(document)
-
             res.json(legalPerson)
         } catch (error) {
             next(error)
