@@ -16,5 +16,6 @@ export class WebhookRouter {
 
     private config(): void {
         this.router.post('/onboarding', this.authMiddleware.authOnboardingWebhook, this.controller.handleOnboardingWebhook)
+        this.router.post('/account', this.controller.handleAccountWebhook)
     }
 }
