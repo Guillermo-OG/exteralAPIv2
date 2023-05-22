@@ -1,4 +1,6 @@
 export * from './Auth.service'
 export * from './Cron.service'
+export * from './File.service'
 export * from './Notification.service'
 export * from './Onboarding.service'
+export * from './QiTech.service'
