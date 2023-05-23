@@ -17,7 +17,7 @@ export class AccountRepository {
     }
 
     public async getByExternalKey(key: string): Promise<HydratedDocument<IAccount> | null> {
-        return await Account.findOne(
+        return Account.findOne(
             {
                 'response.key': key,
             },
@@ -29,6 +29,21 @@ export class AccountRepository {
             }
         )
     }
+
+    public async getByAccountKey(key: string): Promise<HydratedDocument<IAccount> | null> {
+        return Account.findOne(
+            {
+                'data.account_key': key,
+            },
+            null,
+            {
+                sort: {
+                    _id: -1,
+                },
+            }
+        )
+    }
+
     public async getByDocument(document: string): Promise<HydratedDocument<IAccount> | null> {
         return await Account.findOne(
             {
