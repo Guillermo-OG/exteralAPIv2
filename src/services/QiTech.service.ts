@@ -1,9 +1,12 @@
 import { Request } from 'express'
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
-import { AccountModel, AccountStatus, AccountType, NotFoundError, ValidationError } from '../models'
+import { AccountModel, AccountStatus, AccountType, IAccount, NotFoundError, ValidationError } from '../models'
 import { AccountRepository, FileRepository } from '../repository'
 import { unMask } from '../utils/masks'
+import { PixRepository } from '../repository/Pix.repository'
+import { PixStatus } from '../models/Pix.model'
+import { ICreatePix, IPixKeyStatus, IWebhookPix } from '../infra/qitech/types/Pix.types'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -59,6 +62,60 @@ export class QiTechService {
         }
 
         return account
+    }
+
+    public async createPixKey(payload: ICreatePix) {
+        const pixRepository = PixRepository.getInstance()
+        const accountRepository = AccountRepository.getInstance()
+
+        const account = await accountRepository.getByAccountKey(payload.account_key)
+        if (!account) {
+            throw new ValidationError('No account found for this document')
+        }
+        let pix = await pixRepository.getByDocumentAndKeyType(account.document, payload.pix_key_type)
+
+        if (pix && pix.status !== PixStatus.FAILED && pix.type === payload.pix_key_type) {
+            throw new ValidationError('Existing pix key found for this account and key type')
+        }
+
+        const pixResponse = await this.client.createPixKey(payload)
+        if (pix) {
+            pix.status = PixStatus.PENDING
+            pix.request = payload
+            pix.response = pixResponse
+            pix.type = payload.pix_key_type
+            pix.document = account.document
+            await pix.save()
+        } else {
+            pix = await pixRepository.create({
+                accountId: account.id,
+                document: account.document,
+                request: payload,
+                response: pixResponse,
+                type: payload.pix_key_type,
+            })
+        }
+
+        return pix
+    }
+
+    public async handlePixWebhook(payload: IWebhookPix) {
+        const pixRepository = PixRepository.getInstance()
+
+        const pix = await pixRepository.getByRequestKey(payload.pix_key_request_key)
+        if (!pix) {
+            throw new NotFoundError('Pix not found for this key')
+        }
+
+        if (payload.pix_key_status !== IPixKeyStatus.SUCCESS) {
+            pix.status = PixStatus.FAILED
+        } else {
+            pix.status = PixStatus.SUCCESS
+            pix.key = payload.pix_key
+        }
+        pix.data = payload
+        await pix.save()
+        return pix
     }
 
     public async getAndUpdateAccount(document: string): Promise<AccountModel> {

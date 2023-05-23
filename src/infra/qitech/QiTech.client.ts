@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios'
+import axios, { AxiosError, AxiosInstance } from 'axios'
 import { createHash, createPrivateKey } from 'crypto'
 import FormData from 'form-data'
 import { IncomingHttpHeaders } from 'http'
@@ -204,5 +204,13 @@ export class QiTechClient {
         }
 
         return body as T
+    }
+
+    public async createPixKey(data: any): Promise<string> {
+        const endpoint = '/baas/pix/keys'
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'POST', data, contentType)
+        const res = await this.api.post(endpoint, config.body, { headers: config.headers })
+        return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 }
