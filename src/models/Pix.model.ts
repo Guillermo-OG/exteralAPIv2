@@ -8,6 +8,9 @@ export enum PixStatus {
 
 export enum PixKeyType {
     'RANDOM_KEY' = 'random_key',
+    'EMAIL' = 'email',
+    'CNPJ' = 'cnpj',
+    'PHONE_NUMBER' = 'phone_number'
 }
 
 export interface IPix {
@@ -15,9 +18,9 @@ export interface IPix {
     document: string
     key?: string
     status?: PixStatus
-    request: any
-    response: any
-    data?: any
+    request: unknown
+    response: unknown
+    data?: unknown
     type: PixKeyType
 }
 

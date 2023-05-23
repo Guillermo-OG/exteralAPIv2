@@ -1,9 +1,10 @@
-import axios, { AxiosError, AxiosInstance } from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import { createHash, createPrivateKey } from 'crypto'
 import FormData from 'form-data'
 import { IncomingHttpHeaders } from 'http'
 import { JWTPayload, SignJWT, decodeJwt } from 'jose'
 import { QiTechTypes } from './'
+import { ICreatePix } from './types/Pix.types'
 
 interface IQiTechConfig {
     apiKey: string
@@ -206,7 +207,7 @@ export class QiTechClient {
         return body as T
     }
 
-    public async createPixKey(data: any): Promise<string> {
+    public async createPixKey(data: ICreatePix): Promise<string> {
         const endpoint = '/baas/pix/keys'
         const contentType = 'application/json'
         const config = await this.signMessage(endpoint, 'POST', data, contentType)
