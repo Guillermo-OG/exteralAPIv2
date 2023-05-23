@@ -1,4 +1,6 @@
+import { FilterQuery } from 'mongoose'
 import { IPix, Pix, PixModel } from '../models/Pix.model'
+import { paginatedSearch } from '../utils/pagination'
 
 export class PixRepository {
     private static instance: PixRepository
@@ -41,5 +43,22 @@ export class PixRepository {
                 },
             }
         )
+    }
+
+    public listByDocument(document: string, keyType?: string) {
+        const filter: FilterQuery<IPix> = {}
+        if (keyType) {
+            filter.type = {
+                $eq: keyType,
+            }
+        }
+        filter.document = {
+            $eq: document,
+        }
+
+        return paginatedSearch(Pix, {
+            filter,
+            page: 1,
+        })
     }
 }
