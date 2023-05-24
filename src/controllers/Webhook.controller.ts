@@ -20,14 +20,11 @@ export class WebhookController {
         }
     }
 
-    public async handleAccountWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+    public async handleQITechBaaSWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            console.log(req.headers)
-            console.log(req.body)
-            console.log(await QiTechService.getInstance().decode(req.headers, req.body))
+            await QiTechService.getInstance().handleWebhook(req)
             res.status(200).send('ok')
         } catch (error) {
-            console.log(error)
             next(error)
         }
     }

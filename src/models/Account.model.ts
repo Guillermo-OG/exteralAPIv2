@@ -1,4 +1,4 @@
-import { HydratedDocument, model, Schema } from 'mongoose'
+import { model, Schema } from 'mongoose'
 
 export enum AccountType {
     PF = 'PF',
@@ -15,9 +15,9 @@ export interface IAccount {
     document: string
     type: AccountType
     status: AccountStatus
-    request: any
-    response?: any
-    data?: any
+    request: unknown
+    response?: unknown
+    data?: unknown
 }
 
 const schema = new Schema<IAccount>(
@@ -35,5 +35,4 @@ const schema = new Schema<IAccount>(
     }
 )
 
-export type AccountModel = HydratedDocument<IAccount>
 export const Account = model<IAccount>('Account', schema)

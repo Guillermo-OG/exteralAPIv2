@@ -1,7 +1,6 @@
-import axios, { AxiosInstance } from 'axios'
+import axios, { AxiosInstance, AxiosResponseHeaders, RawAxiosResponseHeaders } from 'axios'
 import { createHash, createPrivateKey } from 'crypto'
 import FormData from 'form-data'
-import { IncomingHttpHeaders } from 'http'
 import { JWTPayload, SignJWT, decodeJwt } from 'jose'
 import { QiTechTypes } from './'
 
@@ -47,21 +46,35 @@ export class QiTechClient {
         return await this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
-    public async createAccount(data: any) {
+    public async createAccount(data: QiTechTypes.Account.ICreate) {
         const endpoint = '/account'
         const body = data
         const contentType = 'application/json'
         const config = await this.signMessage(endpoint, 'POST', body, contentType)
         const res = await this.api.post(endpoint, config.body, { headers: config.headers })
-        return await this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
+        return await this.decodeMessage<QiTechTypes.Account.ICreateResponse>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
-    public async getAccount(document: string): Promise<any> {
-        const endpoint = `/account?account_number=5395909&owner_document_number=${document}&page=1&page_size=10`
+    public async listAccounts(
+        document: string,
+        page = 1,
+        pageSize = 100
+    ): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
+        const urlQueryParams = new URLSearchParams({
+            owner_document_number: document,
+            page: page.toString(),
+            pageSize: pageSize.toString(),
+        })
+        const endpoint = `/account?${urlQueryParams}`
         const contentType = 'application/json'
         const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
         const res = await this.api.get(endpoint, { headers: config.headers })
-        return await this.decodeMessage<string>(endpoint, 'GET', res.headers as IHeaders, res.data)
+        return await this.decodeMessage<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>>(
+            endpoint,
+            'GET',
+            res.headers,
+            res.data
+        )
     }
 
     public async uploadFile(fileName: string, fileBuffer: Buffer): Promise<QiTechTypes.Upload.IResponse> {
@@ -99,10 +112,6 @@ export class QiTechClient {
 
         let md5Body = ''
         let requestBody = null
-        console.log('==========Signing Message===========')
-        console.log('endpoint', endpoint)
-        console.log('method', method)
-        // console.log('body', body)
 
         const date = new Date().toUTCString()
 
@@ -138,16 +147,13 @@ export class QiTechClient {
             }
         }
 
-        console.log('==========Signed Output===========')
-        console.log({ headers: requestHeader, body: requestBody })
-
         return { headers: requestHeader, body: requestBody }
     }
 
     public async decodeMessage<T>(
         endpoint: string,
-        method: 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE',
-        responseHeader: IncomingHttpHeaders,
+        method: 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | string,
+        responseHeader: AxiosResponseHeaders | RawAxiosResponseHeaders,
         responseBody?: IBody
     ) {
         let body = null

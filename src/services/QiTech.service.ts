@@ -1,7 +1,9 @@
+import { AxiosError } from 'axios'
 import { Request } from 'express'
+import { HydratedDocument } from 'mongoose'
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
-import { AccountModel, AccountStatus, AccountType, NotFoundError, ValidationError } from '../models'
+import { AccountStatus, AccountType, IAccount, NotFoundError, UnauthorizedError, ValidationError } from '../models'
 import { AccountRepository, FileRepository } from '../repository'
 import { unMask } from '../utils/masks'
 
@@ -28,11 +30,9 @@ export class QiTechService {
         return QiTechService.instance
     }
 
-    public async createAccount(document: string, payload: unknown) {
+    public async createAccount(document: string, payload: QiTechTypes.Account.ICreate) {
         const accountRepository = AccountRepository.getInstance()
-        console.log('a')
         const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
-        console.log('b')
 
         let account = await accountRepository.getByDocument(document)
         if (account && account.status !== AccountStatus.FAILED) {
@@ -40,7 +40,6 @@ export class QiTechService {
         }
 
         const accountResponse = await this.client.createAccount(payload)
-        console.log(accountResponse)
         if (account) {
             account.request = payload
             account.response = accountResponse
@@ -61,14 +60,13 @@ export class QiTechService {
         return account
     }
 
-    public async getAndUpdateAccount(document: string): Promise<AccountModel> {
-        const account = await AccountRepository.getInstance().getByDocument(document)
-        if (!account) {
-            throw new NotFoundError('Account not found for this document')
-        }
+    public async updateAccountWithQi(account: HydratedDocument<IAccount>): Promise<HydratedDocument<IAccount>> {
+        const updatedAccount = (await this.client.listAccounts(account.document)).data[0]
 
-        const res = await this.client.getAccount(document)
-        console.log(res)
+        if (updatedAccount) {
+            account.data = updatedAccount
+            account.markModified('data')
+        }
 
         return account
     }
@@ -89,26 +87,72 @@ export class QiTechService {
         return doc
     }
 
-    public async handleWebhook(req: Request) {
+    public authenticateWebhook(req: Request): void {
+        const webhookKey = req.headers['villela-key']
+        if (!webhookKey || webhookKey !== env.QITECH_WEBHOOK_SECRET) {
+            throw new UnauthorizedError()
+        }
+    }
+
+    public async handleWebhook(req: Request): Promise<void> {
         const { headers, body } = req
         if (!body.encoded_body) {
             throw new ValidationError('Invalid Body')
         }
 
         const decodedBody = await this.client.decodeMessage<QiTechTypes.Account.IAccountWebhook>('/webhook/account', 'POST', headers, body)
+        switch (decodedBody.webhook_type) {
+            case 'account':
+                await this.handleAccountWebhook(decodedBody)
+                break
+
+            default:
+                break
+        }
+    }
+
+    private async handleAccountWebhook(decodedBody: QiTechTypes.Account.IAccountWebhook) {
         const account = await AccountRepository.getInstance().getByExternalKey(decodedBody.key)
         if (!account) {
             throw new NotFoundError('Account not found for this key')
+        } else if (account.status === AccountStatus.SUCCESS) {
+            return account
         }
 
-        account.status = this.mapStatus(decodedBody.status)
+        const updatedStatus = this.mapStatus(decodedBody.status)
+        account.status = updatedStatus
+
+        if (updatedStatus === AccountStatus.SUCCESS) {
+            await this.updateAccountWithQi(account)
+        }
         await account.save()
 
         return account
     }
 
-    public async decode(headers: any, body: any) {
-        return this.client.decodeMessage('/webhook/account', 'POST', headers, body)
+    public async decodeError(error: unknown) {
+        try {
+            if (!(error instanceof AxiosError)) {
+                return error
+            }
+    
+            if (!error.response) {
+                return error
+            }
+    
+            const { headers, data } = error.response
+            const url = error.config?.url
+            const method = error.config?.method
+            if (!headers || !data || !url ||!method) {
+                return error
+            }
+    
+            const decoded = await this.client.decodeMessage(url, method.toUpperCase(), headers, data)
+            error.response.data = decoded
+            return error
+        } catch (err) {
+            return error
+        }
     }
 
     private mapStatus(status: QiTechTypes.Account.AccountStatus): AccountStatus {
