@@ -74,7 +74,7 @@ export class QiTechService {
         }
         let pix = await pixRepository.getByDocumentAndKeyType(account.document, payload.pix_key_type)
 
-        if (pix && pix.status !== PixStatus.FAILED && pix.type === payload.pix_key_type) {
+        if (pix && pix.status !== PixStatus.FAILED) {
             throw new ValidationError('Existing pix key found for this account and key type')
         }
 
