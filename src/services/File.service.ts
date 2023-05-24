@@ -1,5 +1,5 @@
 import { HydratedDocument } from 'mongoose'
-import { IFile, ValidationError } from '../models'
+import { IFile } from '../models'
 import { FileRepository } from '../repository'
 
 export class FileService {
@@ -18,7 +18,6 @@ export class FileService {
     }
 
     public async create(data: IFile): Promise<HydratedDocument<IFile>> {
-        
         return await this.fileRepository.create(data)
     }
 }

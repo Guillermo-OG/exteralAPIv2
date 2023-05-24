@@ -19,7 +19,7 @@ export class AccountRepository {
     public async getByExternalKey(key: string): Promise<HydratedDocument<IAccount> | null> {
         return await Account.findOne(
             {
-                'response.key': key
+                'response.key': key,
             },
             null,
             {
@@ -43,8 +43,13 @@ export class AccountRepository {
         )
     }
 
-    public async list(page: number, status?: AccountStatus): Promise<IPaginatedSearch<IAccount>> {
+    public async list(page: number, document?: string, status?: AccountStatus): Promise<IPaginatedSearch<IAccount>> {
         const filter: FilterQuery<IAccount> = {}
+        if (document) {
+            filter.document = {
+                $eq: document,
+            }
+        }
         if (status) {
             filter.status = {
                 $eq: status,
