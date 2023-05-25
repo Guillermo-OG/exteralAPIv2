@@ -4,7 +4,7 @@ import { HydratedDocument } from 'mongoose'
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
 import { AccountStatus, AccountType, IAccount, NotFoundError, UnauthorizedError, ValidationError } from '../models'
-import { PixStatus } from '../models/PixKey.model'
+import { PixKeyType, PixStatus } from '../models/PixKey.model'
 import { AccountRepository, FileRepository } from '../repository'
 import { unMask } from '../utils/masks'
 import { PixRepository } from '../repository/Pix.repository'
@@ -99,7 +99,7 @@ export class QiTechService {
         return pix
     }
 
-    public async handlePixWebhook(payload: IWebhookPix) {
+    public async handlePixWebhook(payload: QiTechTypes.Pix.IPixKeyWebhook) {
         const pixRepository = PixRepository.getInstance()
 
         const pix = await pixRepository.getByRequestKey(payload.pix_key_request_key)
@@ -161,10 +161,13 @@ export class QiTechService {
             throw new ValidationError('Invalid Body')
         }
 
-        const decodedBody = await this.client.decodeMessage<QiTechTypes.Account.IAccountWebhook>('/webhook/account', 'POST', headers, body)
+        const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
         switch (decodedBody.webhook_type) {
             case 'account':
-                await this.handleAccountWebhook(decodedBody)
+                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                break
+            case 'key_inclusion':
+                await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
                 break
 
             default:
@@ -173,7 +176,7 @@ export class QiTechService {
     }
 
     private async handleAccountWebhook(decodedBody: QiTechTypes.Account.IAccountWebhook) {
-        const account = await AccountRepository.getInstance().getByExternalKey(decodedBody.key)
+        let account = await AccountRepository.getInstance().getByExternalKey(decodedBody.key)
         if (!account) {
             throw new NotFoundError('Account not found for this key')
         } else if (account.status === AccountStatus.SUCCESS) {
@@ -184,7 +187,13 @@ export class QiTechService {
         account.status = updatedStatus
 
         if (updatedStatus === AccountStatus.SUCCESS) {
-            await this.updateAccountWithQi(account)
+            account = await this.updateAccountWithQi(account)
+            if (account.data) {
+                await this.createPixKey({
+                    account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
+                    pix_key_type: PixKeyType.RANDOM_KEY
+                })
+            }
         }
         await account.save()
 

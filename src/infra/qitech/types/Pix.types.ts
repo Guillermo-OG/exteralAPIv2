@@ -1,6 +1,6 @@
 import { PixKeyType } from '../../../models/PixKey.model'
 
-export interface IWebhookPix {
+export interface IPixKeyWebhook {
     pix_key: string
     account_key: string
     webhook_type: string

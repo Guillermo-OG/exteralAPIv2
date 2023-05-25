@@ -1,5 +1,6 @@
 import { FilterQuery } from 'mongoose'
 import { IPix, PixKey, PixModel } from '../models/PixKey.model'
+import { unMask } from '../utils/masks'
 import { paginatedSearch } from '../utils/pagination'
 
 export class PixRepository {
@@ -19,7 +20,7 @@ export class PixRepository {
     public async getByDocumentAndKeyType(document: string, keyType: string): Promise<PixModel | null> {
         return PixKey.findOne(
             {
-                document: document,
+                document: unMask(document),
                 type: keyType,
             },
             null,
@@ -53,7 +54,7 @@ export class PixRepository {
             }
         }
         filter.document = {
-            $eq: document,
+            $eq: unMask(document),
         }
 
         return paginatedSearch(PixKey, {
