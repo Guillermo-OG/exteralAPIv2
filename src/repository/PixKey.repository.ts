@@ -3,14 +3,14 @@ import { IPix, PixKey, PixModel } from '../models/PixKey.model'
 import { unMask } from '../utils/masks'
 import { paginatedSearch } from '../utils/pagination'
 
-export class PixRepository {
-    private static instance: PixRepository
+export class PixKeyRepository {
+    private static instance: PixKeyRepository
 
-    public static getInstance(): PixRepository {
-        if (!PixRepository.instance) {
-            PixRepository.instance = new PixRepository()
+    public static getInstance(): PixKeyRepository {
+        if (!PixKeyRepository.instance) {
+            PixKeyRepository.instance = new PixKeyRepository()
         }
-        return PixRepository.instance
+        return PixKeyRepository.instance
     }
 
     public async create(data: IPix): Promise<PixModel> {

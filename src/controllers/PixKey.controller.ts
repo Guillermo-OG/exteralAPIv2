@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 import { ValidationError } from 'yup'
-import { PixRepository } from '../repository/Pix.repository'
+import { PixKeyRepository } from '../repository/PixKey.repository'
 
-export class PixController {
+export class PixKeyController {
     public async listByDocument(req: Request, res: Response, next: NextFunction) {
         try {
             const document = req.query.document
@@ -12,7 +12,7 @@ export class PixController {
                 throw new ValidationError('No document specified')
             }
 
-            const pixRepository = PixRepository.getInstance()
+            const pixRepository = PixKeyRepository.getInstance()
             const pixKeys = await pixRepository.listByDocument(document as string, keyType as string)
 
             res.json(pixKeys)
