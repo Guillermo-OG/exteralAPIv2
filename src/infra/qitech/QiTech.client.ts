@@ -208,4 +208,12 @@ export class QiTechClient {
 
         return body as T
     }
+
+    public async createPixKey(data: QiTechTypes.Pix.ICreatePix): Promise<string> {
+        const endpoint = '/baas/pix/keys'
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'POST', data, contentType)
+        const res = await this.api.post(endpoint, config.body, { headers: config.headers })
+        return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
+    }
 }
