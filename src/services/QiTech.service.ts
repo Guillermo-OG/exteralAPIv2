@@ -6,6 +6,7 @@ import { QiTechClient, QiTechTypes } from '../infra'
 import { AccountStatus, AccountType, IAccount, NotFoundError, UnauthorizedError, ValidationError } from '../models'
 import { PixKeyType, PixStatus } from '../models/PixKey.model'
 import { AccountRepository, FileRepository } from '../repository'
+import { PixKeyRepository } from '../repository/PixKey.repository'
 import { unMask } from '../utils/masks'
 import { PixRepository } from '../repository/Pix.repository'
 import { PixStatus } from '../models/Pix.model'
@@ -64,8 +65,8 @@ export class QiTechService {
         return account
     }
 
-    public async createPixKey(payload: ICreatePix) {
-        const pixRepository = PixRepository.getInstance()
+    public async createPixKey(payload: QiTechTypes.Pix.ICreatePix) {
+        const pixRepository = PixKeyRepository.getInstance()
         const accountRepository = AccountRepository.getInstance()
 
         const account = await accountRepository.getByAccountKey(payload.account_key)
@@ -99,8 +100,8 @@ export class QiTechService {
         return pix
     }
 
-    public async handlePixWebhook(payload: QiTechTypes.Pix.IPixKeyWebhook) {
-        const pixRepository = PixRepository.getInstance()
+    public async handlePixWebhook(payload: QiTechTypes.Pix.IWebhookPix) {
+        const pixRepository = PixKeyRepository.getInstance()
 
         const pix = await pixRepository.getByRequestKey(payload.pix_key_request_key)
         if (!pix) {
