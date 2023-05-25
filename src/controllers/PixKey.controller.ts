@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { ValidationError } from 'yup'
-import { PixKeyRepository } from '../repository/PixKey.repository'
+import { PixKeyRepository } from '../repository'
 
 export class PixKeyController {
     public async listByDocument(req: Request, res: Response, next: NextFunction) {
