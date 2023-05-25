@@ -3,12 +3,20 @@ import { Request } from 'express'
 import { HydratedDocument } from 'mongoose'
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
-import { AccountStatus, AccountType, IAccount, NotFoundError, UnauthorizedError, ValidationError, PixKeyType, PixStatus } from '../models'
-import { AccountRepository, FileRepository, PixKeyRepository } from '../repository'
+import {
+    AccountStatus,
+    AccountType,
+    IAccount,
+    IApiUser,
+    NotFoundError,
+    PixKeyType,
+    PixStatus,
+    UnauthorizedError,
+    ValidationError,
+} from '../models'
+import { AccountRepository, ApiUserRepository, FileRepository, PixKeyRepository } from '../repository'
 import { unMask } from '../utils/masks'
-import { PixRepository } from '../repository/Pix.repository'
-import { PixStatus } from '../models/Pix.model'
-import { ICreatePix, IPixKeyStatus, IWebhookPix } from '../infra/qitech/types/Pix.types'
+import { NotificationService } from './Notification.service'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -33,9 +41,11 @@ export class QiTechService {
         return QiTechService.instance
     }
 
-    public async createAccount(document: string, payload: QiTechTypes.Account.ICreate) {
+    public async createAccount(document: string, payload: QiTechTypes.Account.ICreate, apiUser: HydratedDocument<IApiUser>) {
         const accountRepository = AccountRepository.getInstance()
         const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
+        const callbackURL = payload.callbackURL || ''
+        delete payload.callbackURL
 
         let account = await accountRepository.getByDocument(document)
         if (account && account.status !== AccountStatus.FAILED) {
@@ -44,6 +54,7 @@ export class QiTechService {
 
         const accountResponse = await this.client.createAccount(payload)
         if (account) {
+            account.callbackURL = callbackURL
             account.request = payload
             account.response = accountResponse
             account.status = AccountStatus.PENDING
@@ -52,11 +63,13 @@ export class QiTechService {
             await account.save()
         } else {
             account = await accountRepository.create({
+                callbackURL,
                 document: document,
                 request: payload,
                 response: accountResponse,
                 status: AccountStatus.PENDING,
                 type: accountType,
+                apiUserId: apiUser.id,
             })
         }
 
@@ -66,10 +79,16 @@ export class QiTechService {
     public async createPixKey(payload: QiTechTypes.Pix.ICreatePix) {
         const pixRepository = PixKeyRepository.getInstance()
         const accountRepository = AccountRepository.getInstance()
+        const apiUserRepository = ApiUserRepository.getInstance()
 
         const account = await accountRepository.getByAccountKey(payload.account_key)
         if (!account) {
             throw new ValidationError('No account found for this document')
+        }
+
+        const apiUser = await apiUserRepository.getById(account?.apiUserId)
+        if (!apiUser) {
+            throw new ValidationError('No user found for this account')
         }
         let pix = await pixRepository.getByDocumentAndKeyType(account.document, payload.pix_key_type)
 
@@ -95,15 +114,38 @@ export class QiTechService {
             })
         }
 
+        const notificationService = NotificationService.getInstance()
+        const notification = await notificationService.create(
+            {
+                ...account.toJSON(),
+                pixKeys: [pix],
+            },
+            account.callbackURL,
+            apiUser
+        )
+        notificationService.notify(notification)
+
         return pix
     }
 
     public async handlePixWebhook(payload: QiTechTypes.Pix.IWebhookPix) {
         const pixRepository = PixKeyRepository.getInstance()
+        const accountRepository = AccountRepository.getInstance()
+        const apiUserRepository = ApiUserRepository.getInstance()
 
         const pix = await pixRepository.getByRequestKey(payload.pix_key_request_key)
         if (!pix) {
             throw new NotFoundError('Pix not found for this key')
+        }
+
+        const account = await accountRepository.getById(pix.accountId)
+        if (!account) {
+            throw new NotFoundError('Account not found for this key')
+        }
+
+        const apiUser = await apiUserRepository.getById(account.apiUserId)
+        if (!apiUser) {
+            throw new NotFoundError('User not found for this account')
         }
 
         if (payload.pix_key_request_status !== QiTechTypes.Pix.IPixKeyStatus.SUCCESS) {
@@ -114,6 +156,18 @@ export class QiTechService {
         }
         pix.data = payload
         await pix.save()
+
+        const notificationService = NotificationService.getInstance()
+        const notification = await notificationService.create(
+            {
+                ...account.toJSON(),
+                pixKeys: [pix],
+            },
+            account.callbackURL,
+            apiUser
+        )
+        notificationService.notify(notification)
+
         return pix
     }
 
@@ -168,33 +222,47 @@ export class QiTechService {
             case 'key_inclusion':
                 await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
                 break
-
             default:
                 break
         }
     }
 
     private async handleAccountWebhook(decodedBody: QiTechTypes.Account.IAccountWebhook) {
-        let account = await AccountRepository.getInstance().getByExternalKey(decodedBody.key)
+        let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
         if (!account) {
             throw new NotFoundError('Account not found for this key')
         } else if (account.status === AccountStatus.SUCCESS) {
             return account
         }
-
+        const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
+        if (!apiUser) {
+            throw new Error('User not found for Account')
+        }
         const updatedStatus = this.mapStatus(decodedBody.status)
         account.status = updatedStatus
 
         if (updatedStatus === AccountStatus.SUCCESS) {
             account = await this.updateAccountWithQi(account)
-            if (account.data) {
-                await this.createPixKey({
-                    account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
-                    pix_key_type: PixKeyType.RANDOM_KEY
-                })
-            }
         }
         await account.save()
+
+        if (updatedStatus === AccountStatus.SUCCESS && account.data) {
+            await this.createPixKey({
+                account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
+                pix_key_type: PixKeyType.RANDOM_KEY,
+            })
+        }
+
+        const notificationService = NotificationService.getInstance()
+        const notification = await notificationService.create(
+            {
+                ...account.toJSON(),
+                pixKeys: [],
+            },
+            account.callbackURL,
+            apiUser
+        )
+        notificationService.notify(notification)
 
         return account
     }

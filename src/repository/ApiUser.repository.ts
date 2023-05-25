@@ -1,6 +1,6 @@
-import { HydratedDocument } from 'mongoose'
+import { FilterQuery, HydratedDocument, ObjectId } from 'mongoose'
 import { v4 } from 'uuid'
-import { ApiUserModel, IApiUser } from '../models'
+import { ApiUser, IApiUser } from '../models'
 
 export class ApiUserRepository {
     private static instance: ApiUserRepository
@@ -13,7 +13,7 @@ export class ApiUserRepository {
     }
 
     public async createApiUser(name: string): Promise<HydratedDocument<IApiUser>> {
-        const user = await ApiUserModel.create({
+        const user = await ApiUser.create({
             name: name,
             isActive: true,
             apiKey: v4(),
@@ -22,8 +22,20 @@ export class ApiUserRepository {
         return user
     }
 
+    public async getById(id: ObjectId | string, isActive?: boolean): Promise<HydratedDocument<IApiUser> | null> {
+        const whereOptions: FilterQuery<IApiUser> = {
+            _id: id.toString(),
+        }
+
+        if (typeof isActive === 'boolean') {
+            whereOptions.isActive = isActive
+        }
+
+        return await ApiUser.findOne(whereOptions)
+    }
+
     public async getByCredentials(apiKey: string, apiPassword: string): Promise<HydratedDocument<IApiUser> | null> {
-        const user = await ApiUserModel.findOne({
+        const user = await ApiUser.findOne({
             apiKey,
             apiSecret: apiPassword,
         })

@@ -11,7 +11,9 @@ export class WebhookController {
             const notificationService = NotificationService.getInstance()
 
             const { payload, url } = await service.handleWebhook(body)
-            const notification = await notificationService.create(payload, url)
+            if (!req.user) throw new Error('Route unavailable')
+
+            const notification = await notificationService.create(payload, url, req.user)
 
             await notificationService.notify(notification)
             res.send('ok')

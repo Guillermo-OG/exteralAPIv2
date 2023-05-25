@@ -19,6 +19,7 @@ export interface INotification {
     lastAttemp: Date | null
     nextAttemp: Date | null
     attemps: number
+    apiUserId: Schema.Types.ObjectId
 }
 
 const schema = new Schema<INotification>(
@@ -31,6 +32,7 @@ const schema = new Schema<INotification>(
         lastAttemp: { type: Date, required: false },
         nextAttemp: { type: Date, required: false },
         attemps: { type: Number, required: true },
+        apiUserId: { type: Schema.Types.ObjectId, ref: 'ApiUser', required: true },
     },
     {
         collection: 'notification',
