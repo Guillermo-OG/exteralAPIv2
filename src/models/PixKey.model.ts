@@ -42,4 +42,4 @@ const schema = new Schema<IPix>(
 )
 
 export type PixModel = HydratedDocument<IPix>
-export const PixKey = model<IPix>('Pix', schema)
+export const PixKey = model<IPix>('PixKey', schema)
