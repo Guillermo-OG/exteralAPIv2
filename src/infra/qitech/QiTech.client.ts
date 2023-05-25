@@ -81,7 +81,7 @@ export class QiTechClient {
         const endpoint = '/upload'
         const method = 'POST'
         const bodyToSign = fileBuffer.toString('binary')
-        const contentType = 'application/json'
+        const contentType = ''
 
         const body = new FormData()
         body.append('file', fileBuffer, {
@@ -113,19 +113,16 @@ export class QiTechClient {
         let md5Body = ''
         let requestBody = null
 
-        const date = new Date().toUTCString()
-
         if (body) {
             if (isFile) {
-                md5Body = createHash('md5').update(JSON.stringify(body), 'binary').digest('hex')
-                requestBody = null
+                md5Body = createHash('md5').update(body.toString(), 'binary').digest('hex')
             } else {
                 const encoded_body_token = await new SignJWT(body as JWTPayload).setProtectedHeader({ alg: 'ES512' }).sign(privateKey)
                 requestBody = { encoded_body: encoded_body_token }
                 md5Body = createHash('md5').update(encoded_body_token).digest('hex')
             }
         }
-
+        const date = new Date().toUTCString()
         const stringToSign = method + '\n' + md5Body + '\n' + contentType + '\n' + date + '\n' + endpoint
 
         const headers = { alg: 'ES512', typ: 'JWT' }
