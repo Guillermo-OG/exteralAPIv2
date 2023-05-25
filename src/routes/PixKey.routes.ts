@@ -1,15 +1,16 @@
 import { Router } from 'express'
+import { PixKeyController } from '../controllers/PixKey.controller'
 import { AuthMiddleware } from '../middleware'
 import { PixController } from '../controllers/Pix.controller'
 
-export class PixRouter {
+export class PixKeyRouter {
     public readonly router: Router
-    private readonly controller: PixController
+    private readonly controller: PixKeyController
     private readonly authMiddleware: AuthMiddleware
 
     constructor() {
         this.router = Router()
-        this.controller = new PixController()
+        this.controller = new PixKeyController()
         this.authMiddleware = new AuthMiddleware()
         this.config()
     }

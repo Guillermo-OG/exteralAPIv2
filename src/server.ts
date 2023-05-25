@@ -2,7 +2,7 @@ import express, { Express } from 'express'
 import Database from './config/database'
 import env from './config/env'
 import { ErrorMiddleware } from './middleware'
-import { AccountRouter, HealthRouter, OnboardingRouter, PixRouter, WebhookRouter } from './routes'
+import { AccountRouter, HealthRouter, OnboardingRouter, PixKeyRouter, WebhookRouter } from './routes'
 import { CronService } from './services'
 
 class Server {
@@ -35,7 +35,7 @@ class Server {
         this.app.use('/account', new AccountRouter().router)
         this.app.use('/onboarding', new OnboardingRouter().router)
         this.app.use('/webhook', new WebhookRouter().router)
-        this.app.use('/pix', new PixRouter().router)
+        this.app.use('/pix-key', new PixKeyRouter().router)
         this.app.use(new ErrorMiddleware().handler)
     }
 }
