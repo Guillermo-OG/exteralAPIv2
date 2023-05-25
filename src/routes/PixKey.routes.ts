@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { PixKeyController } from '../controllers/PixKey.controller'
 import { AuthMiddleware } from '../middleware'
+import { PixKeyController } from '../controllers'
 
 export class PixKeyRouter {
     public readonly router: Router

@@ -1,7 +1,7 @@
 import { FilterQuery } from 'mongoose'
-import { IPix, PixKey, PixModel } from '../models/PixKey.model'
 import { unMask } from '../utils/masks'
 import { paginatedSearch } from '../utils/pagination'
+import { IPix, PixKey, PixModel } from '../models'
 
 export class PixKeyRepository {
     private static instance: PixKeyRepository
