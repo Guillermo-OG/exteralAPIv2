@@ -103,7 +103,7 @@ export class QiTechService {
             throw new NotFoundError('Pix not found for this key')
         }
 
-        if (payload.pix_key_status !== QiTechTypes.Pix.IPixKeyStatus.SUCCESS) {
+        if (payload.pix_key_request_status !== QiTechTypes.Pix.IPixKeyStatus.SUCCESS) {
             pix.status = PixStatus.FAILED
         } else {
             pix.status = PixStatus.SUCCESS
