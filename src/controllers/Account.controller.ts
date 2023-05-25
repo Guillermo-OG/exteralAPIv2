@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { AccountStatus, ValidationError } from '../models'
+import { AccountStatus, NotFoundError, ValidationError } from '../models'
 import { AccountRepository, FileRepository } from '../repository'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
@@ -24,6 +24,10 @@ export class AccountController {
         try {
             const document = unMask(req.params.document)
             const account = await AccountRepository.getInstance().getByDocument(document)
+            if (!account) {
+                throw new NotFoundError('Account not found for this document')
+            }
+
             res.json(account)
         } catch (error) {
             next(error)
