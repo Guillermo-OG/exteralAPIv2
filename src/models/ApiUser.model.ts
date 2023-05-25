@@ -20,4 +20,4 @@ const apiUserSchema = new Schema<IApiUser>(
     }
 )
 
-export const ApiUserModel = model<IApiUser>('ApiUser', apiUserSchema)
+export const ApiUser = model<IApiUser>('ApiUser', apiUserSchema)

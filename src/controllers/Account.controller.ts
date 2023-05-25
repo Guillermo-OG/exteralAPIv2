@@ -13,7 +13,7 @@ export class AccountController {
                 throw new ValidationError('Missing document')
             }
 
-            const response = await qiTechService.createAccount(document, req.body)
+            const response = await qiTechService.createAccount(document, req.body, req.user)
             res.json(response)
         } catch (error) {
             next(await qiTechService.decodeError(error))

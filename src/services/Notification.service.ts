@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosInstance } from 'axios'
 import { addMinutes } from 'date-fns'
 import { HydratedDocument } from 'mongoose'
-import { INotification, NotificationStatus, NotificationType } from '../models'
-import { NotificationRepository } from '../repository'
+import { IApiUser, INotification, NotificationStatus, NotificationType } from '../models'
+import { ApiUserRepository, NotificationRepository } from '../repository'
 
 export class NotificationService {
     private static instance: NotificationService
@@ -19,7 +19,7 @@ export class NotificationService {
         return NotificationService.instance
     }
 
-    public async create(payload: unknown, url: string): Promise<HydratedDocument<INotification>> {
+    public async create(payload: unknown, url: string, apiUser: HydratedDocument<IApiUser>): Promise<HydratedDocument<INotification>> {
         const notificationRepository = NotificationRepository.getInstance()
         const notification = await notificationRepository.create({
             attemps: 0,
@@ -29,6 +29,7 @@ export class NotificationService {
             type: NotificationType.WEBHOOK,
             status: NotificationStatus.PENDING,
             url: url,
+            apiUserId: apiUser.id,
         })
 
         return notification
@@ -40,10 +41,20 @@ export class NotificationService {
         }
 
         try {
+            const user = await ApiUserRepository.getInstance().getById(notification.apiUserId)
+            if (!user) {
+                throw new Error('User for notification not found')
+            }
+
             notification.lastAttemp = new Date()
             await notification.save()
 
-            await this.api.post(notification.url, notification.payload)
+            await this.api.post(notification.url, notification.payload, {
+                headers: {
+                    Authorization: user.apiSecret,
+                },
+            })
+
             notification.status = NotificationStatus.SUCCESS
             notification.nextAttemp = null
         } catch (err) {
@@ -94,7 +105,7 @@ export class NotificationService {
                 hasNextPage = page <= notifications.totalPages
             } while (hasNextPage)
         } catch (error) {
-            console.log(error)
+            // console.log(error)
         }
     }
 }

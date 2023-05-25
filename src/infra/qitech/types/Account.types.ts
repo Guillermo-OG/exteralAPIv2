@@ -80,6 +80,7 @@ export interface IOwnerPJ {
 }
 
 export interface ICreate {
+    callbackURL?: string
     account_owner: IOwnerPF | IOwnerPJ
     allowed_user?: {
         email: string
