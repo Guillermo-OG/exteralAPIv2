@@ -1,5 +1,5 @@
 import { FilterQuery } from 'mongoose'
-import { IPix, Pix, PixModel } from '../models/Pix.model'
+import { IPix, PixKey, PixModel } from '../models/PixKey.model'
 import { paginatedSearch } from '../utils/pagination'
 
 export class PixRepository {
@@ -13,11 +13,11 @@ export class PixRepository {
     }
 
     public async create(data: IPix): Promise<PixModel> {
-        return Pix.create(data)
+        return PixKey.create(data)
     }
 
     public async getByDocumentAndKeyType(document: string, keyType: string): Promise<PixModel | null> {
-        return Pix.findOne(
+        return PixKey.findOne(
             {
                 document: document,
                 type: keyType,
@@ -32,7 +32,7 @@ export class PixRepository {
     }
 
     public getByRequestKey(requestKey: string): Promise<PixModel | null> {
-        return Pix.findOne(
+        return PixKey.findOne(
             {
                 'response.pix_key_request_key': requestKey,
             },
@@ -56,7 +56,7 @@ export class PixRepository {
             $eq: document,
         }
 
-        return paginatedSearch(Pix, {
+        return paginatedSearch(PixKey, {
             filter,
             page: 1,
         })

@@ -1,4 +1,4 @@
-import { PixKeyType } from '../../../models/Pix.model'
+import { PixKeyType } from '../../../models/PixKey.model'
 
 export interface IWebhookPix {
     pix_key: string

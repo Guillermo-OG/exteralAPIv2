@@ -36,10 +36,10 @@ const schema = new Schema<IPix>(
         type: { type: String, required: true },
     },
     {
-        collection: 'pix',
+        collection: 'pix_key',
         timestamps: true,
     }
 )
 
 export type PixModel = HydratedDocument<IPix>
-export const Pix = model<IPix>('Pix', schema)
+export const PixKey = model<IPix>('Pix', schema)
