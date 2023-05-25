@@ -1,3 +1,7 @@
+export * from './Account.repository'
 export * from './ApiUser.repository'
+export * from './File.repository'
+export * from './Notification.repository'
 export * from './OnboardingLegalPerson.repository'
 export * from './OnboardingNaturalPerson.repository'
+export * from './PixKey.repository'

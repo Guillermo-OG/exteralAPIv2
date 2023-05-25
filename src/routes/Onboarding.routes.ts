@@ -25,11 +25,9 @@ export class OnboardingRouter {
             this.controller.listNaturalPerson
         )
         this.router.get('/natural_person/:document', this.controller.getNaturalPersonByDocument)
-        this.router.put('/natural_person/retry', this.controller.retryNaturalPersonByDocument)
 
         this.router.post('/legal_person', this.controller.createLegalPerson)
         this.router.get('/legal_person', this.validator.validate({ query: onboardingPersonListSchema }), this.controller.listLegalPerson)
         this.router.get('/legal_person/:document', this.controller.getLegalPersonByDocument)
-        this.router.put('/legal_person/retry', this.controller.retryLegalPersonByDocument)
     }
 }
