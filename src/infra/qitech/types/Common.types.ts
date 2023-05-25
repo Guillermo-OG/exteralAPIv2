@@ -12,3 +12,7 @@ export interface IPaginatedSearch<T> {
         total_rows: number
     }
 }
+
+export interface IWebhook {
+    webhook_type: string
+}
