@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { AuthMiddleware, ValidationMiddleware } from '../middleware'
 import { AccountController } from '../controllers'
 import multer, { Multer, memoryStorage } from 'multer'
-import { fileCreateSchema } from '../utils/schemas'
+import { PfCreateSchema, PjCreateSchema, fileCreateSchema } from '../utils/schemas'
 
 export class AccountRouter {
     public readonly router: Router
@@ -22,8 +22,12 @@ export class AccountRouter {
 
     private config(): void {
         this.router.use(this.authMiddleware.authenticate)
-        this.router.post('/', this.controller.createAccount)
         this.router.get('/file', this.controller.listFiles)
+        this.router.post(
+            '/',
+            this.validationMiddleware.validate({}, { PF: PfCreateSchema, PJ: PjCreateSchema }),
+            this.controller.createAccount
+        )
         this.router.get('/:document', this.controller.getByDocument)
         this.router.post(
             '/file',

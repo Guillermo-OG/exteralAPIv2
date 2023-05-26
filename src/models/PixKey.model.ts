@@ -17,7 +17,7 @@ export interface IPix {
     accountId: Schema.Types.ObjectId
     document: string
     key?: string
-    status?: PixStatus
+    status: PixStatus
     request: unknown
     response: unknown
     data?: unknown
