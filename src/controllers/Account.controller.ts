@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { AccountStatus, NotFoundError, ValidationError } from '../models'
+import { AccountStatus, AccountType, NotFoundError, ValidationError } from '../models'
 import { AccountRepository, FileRepository } from '../repository'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
@@ -8,12 +8,13 @@ export class AccountController {
     public async createAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
         const qiTechService = QiTechService.getInstance()
         try {
-            const document = req.body.account_owner.individual_document_number || req.body.account_owner.company_document_number
+            const payload = qiTechService.mapPayloadToCreateAccount(req.body)
+            const document = payload.document
             if (!document) {
                 throw new ValidationError('Missing document')
             }
 
-            const response = await qiTechService.createAccount(document, req.body, req.user)
+            const response = await qiTechService.createAccount(document, payload.account, req.user)
             res.json(response)
         } catch (error) {
             next(await qiTechService.decodeError(error))
