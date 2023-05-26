@@ -1,8 +1,9 @@
+import { unMask } from '../masks'
+
 export function validateCPF(cpf?: string): boolean {
     if (!cpf) {
         return false
     }
-
     cpf = cpf.replace(/[^\d]/g, '') // remove any non-digits
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
         return false // CPF must have exactly 11 digits and not be all the same digit
@@ -19,6 +20,8 @@ export function validateCNPJ(cnpj?: string): boolean {
     if (!cnpj) {
         return false
     }
+
+    cnpj = unMask(cnpj)
     // Remove any non-numeric characters
     cnpj = cnpj.replace(/\D/g, '')
 
@@ -69,4 +72,15 @@ export function validateIPv4(ip: string): boolean {
 
     // if all checks pass, return true
     return true
+}
+export function isEmailValid(email: string): boolean {
+    const emailRegex =
+        /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
+    return emailRegex.test(email)
+}
+
+export function isPhoneValid(phone: string): boolean {
+    phone = unMask(phone)
+    const phoneRegex = /^\(?\d{2}\)?[- ]?\d{5}[- ]?\d{4}$/
+    return phoneRegex.test(phone)
 }
