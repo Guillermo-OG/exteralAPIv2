@@ -1,19 +1,19 @@
 import * as yup from 'yup'
 
 const addressSchema = yup.object().shape({
-    estado: yup
+    state: yup
         .string()
         .required()
         .matches(/^[A-Z]{2}$/),
-    cidade: yup.string().required(),
-    cep: yup
+    city: yup.string().required(),
+    postal_code: yup
         .string()
         .required()
         .matches(/^\d{8}$/),
-    bairro: yup.string().required(),
-    rua: yup.string().required(),
-    numero: yup.string().required(),
-    complemento: yup.string().required(),
+    neighborhood: yup.string().required(),
+    street: yup.string().required(),
+    number: yup.string().required(),
+    complement: yup.string().required(),
 })
 
 export default addressSchema

@@ -1,21 +1,17 @@
 import * as yup from 'yup'
 import { unMask } from '../../masks'
-import { isEmailValid, isPhoneValid, validateCNPJ, validateCPF } from '../../validations'
+import { isEmailValid, validateCNPJ, validateCPF } from '../../validations'
 import { isValid } from 'date-fns'
 import addressSchema from './addressSchema'
 
 export const PjCreateSchema = new yup.ObjectSchema({
-    conta: yup.object().shape({
-        endereco: addressSchema,
-        cpfCnpj: yup
+    account_owner: yup.object().shape({
+        address: addressSchema,
+        cnae_code: yup
             .string()
             .required()
             .test(value => {
-                const raw = unMask(value)
-                if (raw.length > 11) {
-                    return validateCNPJ(value)
-                }
-                return validateCPF(value)
+                return unMask(value).length == 7
             }),
         email: yup
             .string()
@@ -23,95 +19,104 @@ export const PjCreateSchema = new yup.ObjectSchema({
             .test(value => {
                 return isEmailValid(value)
             }),
-        dataAbertura: yup
+        foundation_date: yup
             .string()
             .required()
             .test(value => {
                 return isValid(new Date(value))
             }),
-        razaoSocial: yup.string().required(),
-    }),
-    usuario: yup.object().shape({
-        celular: yup
+        company_statute: yup.string().required(),
+        company_document_number: yup
             .string()
             .required()
             .test(value => {
-                return isPhoneValid(value)
+                return validateCNPJ(value)
             }),
+        person_type: yup.string().required().oneOf(['legal']),
+        phone: yup.object().shape({
+            area_code: yup
+                .string()
+                .required()
+                .matches(/^\d{2}$/),
+            country_code: yup
+                .string()
+                .required()
+                .matches(/^\d{2}$/),
+            number: yup
+                .string()
+                .required()
+                .matches(/^\d{9}$/),
+        }),
+        trading_name: yup.string().required(),
+        company_representatives: yup.array().of(
+            yup.object().shape({
+                address: addressSchema,
+                birth_date: yup
+                    .string()
+                    .required()
+                    .test(value => {
+                        return isValid(new Date(value))
+                    }),
+                document_identification_number: yup.string().required(),
+                document_identification: yup.string().required(),
+                email: yup.string().required(),
+                individual_document_number: yup
+                    .string()
+                    .required()
+                    .test(value => {
+                        return validateCPF(value)
+                    }),
+                is_pep: yup.boolean().required(),
+                marital_status: yup.string().required(),
+                mother_name: yup.string().required(),
+                name: yup.string().required(),
+                nationality: yup.string().required(),
+                person_type: yup.string().required().oneOf(['natural']),
+                phone: yup.object().shape({
+                    area_code: yup
+                        .string()
+                        .required()
+                        .matches(/^\d{2}$/),
+                    country_code: yup
+                        .string()
+                        .required()
+                        .matches(/^\d{2}$/),
+                    number: yup
+                        .string()
+                        .required()
+                        .matches(/^\d{9}$/),
+                }),
+            })
+        ),
+    }),
+    allowed_user: yup.object().shape({
         email: yup
             .string()
             .required()
             .test(value => {
                 return isEmailValid(value)
             }),
-        cpf: yup
+        individual_document_number: yup
             .string()
             .required()
             .test(value => {
                 return validateCPF(value)
             }),
-        nome: yup.string().required(),
-        conta: yup.object().shape({
-            subconta: yup.object().shape({
-                cnae: yup.string().required(),
-                nomeFantasia: yup.string().required(),
-                nomeMae: yup.string().required(),
-                nacionalidade: yup.string().required(),
-                rgNumero: yup
-                    .string()
-                    .required()
-                    .matches(/^\d{9}$/),
-            }),
-            socios: yup.array().of(
-                yup.object().shape({
-                    contaSocio: yup.object().shape({
-                        endereco: addressSchema,
-                        cpfCnpj: yup
-                            .string()
-                            .required()
-                            .test(value => {
-                                const raw = unMask(value)
-                                if (raw.length > 11) {
-                                    return validateCNPJ(value)
-                                }
-                                return validateCPF(value)
-                            }),
-                        usuarios: yup.array().of(
-                            yup.object().shape({
-                                email: yup
-                                    .string()
-                                    .required()
-                                    .test(value => {
-                                        return isEmailValid(value)
-                                    }),
-                                nome: yup.string().required(),
-                                pep: yup.boolean().required(),
-                                dataNascimento: yup
-                                    .string()
-                                    .required()
-                                    .test(value => {
-                                        return isValid(new Date(value))
-                                    }),
-                                cpf: yup
-                                    .string()
-                                    .required()
-                                    .test(value => {
-                                        return validateCPF(value)
-                                    }),
-                                celular: yup
-                                    .string()
-                                    .test(value => {
-                                        if (value) {
-                                            return isPhoneValid(value)
-                                        }
-                                        return true
-                                    })
-                                    .nullable(),
-                            })
-                        ),
-                    }),
-                })
-            ),
+        name: yup.string().required(),
+        person_type: yup.string().required().oneOf(['natural']),
+        phone: yup.object().shape({
+            area_code: yup
+                .string()
+                .required()
+                .matches(/^\d{2}$/),
+            country_code: yup
+                .string()
+                .required()
+                .matches(/^\d{2}$/),
+            number: yup
+                .string()
+                .required()
+                .matches(/^\d{9}$/),
         }),
     }),
     callbackURL: yup.string().required(),
