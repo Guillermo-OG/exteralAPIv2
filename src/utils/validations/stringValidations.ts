@@ -78,9 +78,3 @@ export function isEmailValid(email: string): boolean {
         /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
     return emailRegex.test(email)
 }
-
-export function isPhoneValid(phone: string): boolean {
-    phone = unMask(phone)
-    const phoneRegex = /^\(?\d{2}\)?[- ]?\d{5}[- ]?\d{4}$/
-    return phoneRegex.test(phone)
-}

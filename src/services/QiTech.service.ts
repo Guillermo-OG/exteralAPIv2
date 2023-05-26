@@ -17,9 +17,6 @@ import {
 import { AccountRepository, ApiUserRepository, FileRepository, PixKeyRepository } from '../repository'
 import { unMask } from '../utils/masks'
 import { NotificationService } from './Notification.service'
-import { IAllowedUser, ICreate, IOwnerPF, IOwnerPJ, PfPayload, PjPayload } from '../infra/qitech/types/Account.types'
-import { areaCodeAndNumberFromPhone } from '../utils/stringUtils'
-import { format } from 'date-fns'
 
 export class QiTechService {
     private static instance: QiTechService
