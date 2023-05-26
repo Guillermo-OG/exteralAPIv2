@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { AccountStatus, AccountType, NotFoundError, ValidationError } from '../models'
+import { AccountStatus, NotFoundError, ValidationError } from '../models'
 import { AccountRepository, FileRepository } from '../repository'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
