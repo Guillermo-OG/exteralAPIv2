@@ -8,11 +8,11 @@ export class AccountController {
     public async createAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
         const qiTechService = QiTechService.getInstance()
         try {
-            const document = req.body.account_owner.individual_document_number || req.body.account_owner.company_document_number
+            const document = req.body?.account_owner?.individual_document_number || req.body?.account_owner?.company_document_number
             if (!document) {
                 throw new ValidationError('Missing document')
             }
-
+            
             const response = await qiTechService.createAccount(document, req.body, req.user)
             res.json(response)
         } catch (error) {

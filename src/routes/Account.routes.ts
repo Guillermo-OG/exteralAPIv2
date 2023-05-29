@@ -3,6 +3,7 @@ import { AuthMiddleware, ValidationMiddleware } from '../middleware'
 import { AccountController } from '../controllers'
 import multer, { Multer, memoryStorage } from 'multer'
 import { fileCreateSchema } from '../utils/schemas'
+import { CreateAccountSchema } from '../utils/schemas/account/createAccountSchema'
 
 export class AccountRouter {
     public readonly router: Router
@@ -22,8 +23,12 @@ export class AccountRouter {
 
     private config(): void {
         this.router.use(this.authMiddleware.authenticate)
-        this.router.post('/', this.controller.createAccount)
         this.router.get('/file', this.controller.listFiles)
+        this.router.post(
+            '/',
+            this.validationMiddleware.validate({body: CreateAccountSchema}),
+            this.controller.createAccount
+        )
         this.router.get('/:document', this.controller.getByDocument)
         this.router.post(
             '/file',

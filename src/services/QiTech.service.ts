@@ -111,6 +111,7 @@ export class QiTechService {
                 request: payload,
                 response: pixResponse,
                 type: payload.pix_key_type,
+                status: PixStatus.PENDING,
             })
         }
 

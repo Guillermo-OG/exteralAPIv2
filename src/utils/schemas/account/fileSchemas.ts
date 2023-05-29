@@ -10,8 +10,8 @@ export const fileCreateSchema = new yup.ObjectSchema({
         .test(value => {
             const raw = unMask(value)
             if (raw.length > 11) {
-                return validateCNPJ(raw)
+                return validateCNPJ(value)
             }
-            return validateCPF(raw)
+            return validateCPF(value)
         }),
 })

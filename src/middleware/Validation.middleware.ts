@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
 import { Schema } from 'yup'
-
 export interface ISchemas {
     body?: Schema
     query?: Schema

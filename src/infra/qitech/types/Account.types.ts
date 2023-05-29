@@ -49,7 +49,7 @@ export enum CompanyType {
 
 export interface IOwnerPF {
     address: IAddress
-    phone: IPhone
+    phone?: IPhone
     email: string
     name: string
     person_type: 'natural' | 'legal'
@@ -58,41 +58,40 @@ export interface IOwnerPF {
     mother_name: string
     is_pep: boolean
     individual_document_number: string
-    document_identification: string
-    document_identification_type: 'cnh' | 'rg'
-    revenue_amount: number
-    profession: string
+    document_identification?: string
+    document_identification_type?: 'cnh' | 'rg'
 }
 
 export interface IOwnerPJ {
     address: IAddress
     cnae_code: string
-    company_statute: string
-    company_document_number: string
-    company_type: CompanyType
+    company_statute?: string
+    company_document_number?: string
+    company_type?: CompanyType
     email: string
     foundation_date: string
     name: string
     person_type: 'legal'
-    phone: IPhone
+    phone?: IPhone
     trading_name: string
     company_representatives: IOwnerPF[]
+}
+export interface IAllowedUser {
+    email:string,
+    individual_document_number: string
+    name: string
+    person_type: 'natural',
+    phone?: {
+        country_code: string,
+        area_code: string,
+        number: string
+    }
 }
 
 export interface ICreate {
     callbackURL?: string
     account_owner: IOwnerPF | IOwnerPJ
-    allowed_user?: {
-        email: string
-        individual_document_number: string
-        name: string
-        person_type: 'natural'
-        phone: {
-            country_code: string
-            area_code: string
-            number: string
-        }
-    }
+    allowed_user?: IAllowedUser
 }
 
 export interface ICreateResponse {
