@@ -90,11 +90,7 @@ export const PjCreateSchema = new yup.ObjectSchema({
                     }),
                 })
             )
-            .test({
-                test: arr => {
-                    return arr?.length !== 0
-                },
-            })
+            .min(1)
             .required(),
     }),
     allowed_user: yup.object().shape({
