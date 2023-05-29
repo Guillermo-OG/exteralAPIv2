@@ -48,46 +48,54 @@ export const PjCreateSchema = new yup.ObjectSchema({
                 .matches(/^\d{9}$/),
         }),
         trading_name: yup.string().required(),
-        company_representatives: yup.array().of(
-            yup.object().shape({
-                address: addressSchema,
-                birth_date: yup
-                    .string()
-                    .required()
-                    .test(value => {
-                        return isValid(new Date(value))
+        company_representatives: yup
+            .array()
+            .of(
+                yup.object().shape({
+                    address: addressSchema,
+                    birth_date: yup
+                        .string()
+                        .required()
+                        .test(value => {
+                            return isValid(new Date(value))
+                        }),
+                    document_identification_number: yup.string().required(),
+                    document_identification: yup.string().required(),
+                    email: yup.string().required(),
+                    individual_document_number: yup
+                        .string()
+                        .required()
+                        .test(value => {
+                            return validateCPF(value)
+                        }),
+                    is_pep: yup.boolean().required(),
+                    marital_status: yup.string().required(),
+                    mother_name: yup.string().required(),
+                    name: yup.string().required(),
+                    nationality: yup.string().required(),
+                    person_type: yup.string().required().oneOf(['natural']),
+                    phone: yup.object().shape({
+                        area_code: yup
+                            .string()
+                            .required()
+                            .matches(/^\d{2}$/),
+                        country_code: yup
+                            .string()
+                            .required()
+                            .matches(/^\d{2}$/),
+                        number: yup
+                            .string()
+                            .required()
+                            .matches(/^\d{9}$/),
                     }),
-                document_identification_number: yup.string().required(),
-                document_identification: yup.string().required(),
-                email: yup.string().required(),
-                individual_document_number: yup
-                    .string()
-                    .required()
-                    .test(value => {
-                        return validateCPF(value)
-                    }),
-                is_pep: yup.boolean().required(),
-                marital_status: yup.string().required(),
-                mother_name: yup.string().required(),
-                name: yup.string().required(),
-                nationality: yup.string().required(),
-                person_type: yup.string().required().oneOf(['natural']),
-                phone: yup.object().shape({
-                    area_code: yup
-                        .string()
-                        .required()
-                        .matches(/^\d{2}$/),
-                    country_code: yup
-                        .string()
-                        .required()
-                        .matches(/^\d{2}$/),
-                    number: yup
-                        .string()
-                        .required()
-                        .matches(/^\d{9}$/),
-                }),
+                })
+            )
+            .test({
+                test: arr => {
+                    return arr?.length !== 0
+                },
             })
-        ),
+            .required(),
     }),
     allowed_user: yup.object().shape({
         email: yup
