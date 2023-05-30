@@ -22,7 +22,7 @@ export class AccountRouter {
     }
 
     private config(): void {
-        // this.router.use(this.authMiddleware.authenticate)
+        this.router.use(this.authMiddleware.authenticate)
         this.router.get('/file', this.controller.listFiles)
         this.router.post(
             '/',
