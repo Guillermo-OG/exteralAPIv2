@@ -172,11 +172,10 @@ export class QiTechService {
         return pix
     }
 
-    public async getAndUpdateAccount(document: string): Promise<AccountModel> {
-        const account = await AccountRepository.getInstance().getByDocument(document)
-        if (!account) {
-            throw new NotFoundError('Account not found for this document')
-        }
+    public async updateAccountWithQi(account: HydratedDocument<IAccount>): Promise<HydratedDocument<IAccount>> {
+        const updatedAccount = (await this.client.listAccounts(account.document)).data.find(
+            acc => acc.account_number === account.response?.data.account_info.account_number
+        )
 
         if (updatedAccount) {
             account.data = updatedAccount
