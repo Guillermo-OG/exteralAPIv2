@@ -173,7 +173,9 @@ export class QiTechService {
     }
 
     public async updateAccountWithQi(account: HydratedDocument<IAccount>): Promise<HydratedDocument<IAccount>> {
-        const updatedAccount = (await this.client.listAccounts(account.document)).data[0]
+        const updatedAccount = (await this.client.listAccounts(account.document)).data.find(
+            acc => acc.account_number === account.response?.data.account_info.account_number
+        )
 
         if (updatedAccount) {
             account.data = updatedAccount
