@@ -1,19 +1,27 @@
 import { model, Schema } from 'mongoose'
-import { QITech } from '../infra'
+import { Onboarding } from '../infra'
+
+interface IUnknownError {
+    [attr: string]: unknown
+}
 
 export interface IOnboardingLegalPerson {
     document: string
-    request: QITech.ILegalPersonCreate
-    response: QITech.ILegalPersonCreateResponse
-    data?: QITech.ILegalPersonGetResponse
+    status: Onboarding.RequestStatus
+    request: Onboarding.ILegalPersonCreate
+    response?: Onboarding.ILegalPersonCreateResponse
+    data?: Onboarding.ILegalPersonGetResponse
+    error?: IUnknownError
 }
 
 const schema = new Schema<IOnboardingLegalPerson>(
     {
         document: { type: String, required: true },
+        status: { type: String, required: true, default: Onboarding.RequestStatus.PENDING },
         request: { type: Schema.Types.Mixed, required: true },
-        response: { type: Schema.Types.Mixed, required: true },
+        response: { type: Schema.Types.Mixed, required: false },
         data: { type: Schema.Types.Mixed, required: false },
+        error: { type: Schema.Types.Mixed, required: false },
     },
     {
         collection: 'onboarding_legal_person',

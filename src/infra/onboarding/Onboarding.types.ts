@@ -1,3 +1,10 @@
+export enum RequestStatus {
+    APPROVED = 'APPROVED',
+    REPROVED = 'REPROVED',
+    ERROR = 'ERROR',
+    PENDING = 'PENDING',
+}
+
 export enum EmailValidationType {
     ZAIG_API = 'zaig_api',
     COMPANY_EMAIL = 'company_email',
@@ -195,6 +202,45 @@ export interface INaturalPersonGetResponse extends INaturalPersonCreate {
         analyst_email: null | string
         analyst_key: null | string
     }[]
+    analysis_output?: {
+        reason: 'approved_client'
+        reason_description: 'Cliente aprovado '
+        custom_variables: unknown
+        unsc?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        ofac?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        pep?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        ibama?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        slavery?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        enricher_income?: {
+            monthly_income: {
+                amount: number
+                income_found: boolean
+            }
+        }
+        dafn?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+        cnep?: {
+            result: 'positive' | 'negative'
+            description: string
+        }
+    }
 }
 
 export interface ILegalPersonCreate {
@@ -265,4 +311,11 @@ export interface ILegalPersonGetResponse extends ILegalPersonCreate {
         analyst_email: null | string
         analyst_key: null | string
     }[]
+}
+
+export interface IWebhookBody {
+    natural_person_id?: string
+    legal_person_id?: string
+    analysis_status: AnalysisStatus
+    event_date: string
 }

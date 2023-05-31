@@ -1,2 +1,2 @@
-export * from './QITechClient'
-export * as QITech from './Types'
+export * as QiTechTypes from './types/index'
+export * from './QiTech.client'

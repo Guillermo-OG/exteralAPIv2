@@ -1,5 +1,7 @@
-import { HydratedDocument } from 'mongoose'
+import { FilterQuery, HydratedDocument } from 'mongoose'
+import { Onboarding } from '../infra'
 import { IOnboardingLegalPerson, OnboardingLegalPerson } from '../models'
+import { IPaginatedSearch, paginatedSearch } from '../utils/pagination'
 
 export class OnboardingLegalPersonRepository {
     private static instance: OnboardingLegalPersonRepository
@@ -23,9 +25,37 @@ export class OnboardingLegalPersonRepository {
             null,
             {
                 sort: {
-                    id: -1,
+                    _id: -1,
                 },
             }
         )
+    }
+
+    public async getByExternalId(id: string): Promise<HydratedDocument<IOnboardingLegalPerson> | null> {
+        return await OnboardingLegalPerson.findOne(
+            {
+                'response.id': id,
+            },
+            null,
+            {
+                sort: {
+                    _id: -1,
+                },
+            }
+        )
+    }
+
+    public async list(page: number, status?: Onboarding.RequestStatus): Promise<IPaginatedSearch<IOnboardingLegalPerson>> {
+        const filter: FilterQuery<IOnboardingLegalPerson> = {}
+        if (status) {
+            filter.status = {
+                $eq: status,
+            }
+        }
+
+        return paginatedSearch(OnboardingLegalPerson, {
+            filter,
+            page,
+        })
     }
 }
