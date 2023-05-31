@@ -13,7 +13,7 @@ export const PfCreateSchema = new yup.ObjectSchema({
             .test(value => {
                 return isEmailValid(value)
             }),
-        person_type: yup.string().required().oneOf(['legal']),
+        person_type: yup.string().required().oneOf(['natural']),
         phone: yup.object().shape({
             area_code: yup
                 .string()
