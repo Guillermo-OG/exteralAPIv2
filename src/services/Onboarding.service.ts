@@ -7,7 +7,7 @@ import { v4 } from 'uuid'
 import { ValidationError as YupValidationError } from 'yup'
 import env from '../config/env'
 import { Onboarding, OnboardingClient } from '../infra'
-import { IOnboardingLegalPerson, IOnboardingNaturalPerson, ServerError, UnauthorizedError, ValidationError } from '../models'
+import { IOnboardingLegalPerson, IOnboardingNaturalPerson, NotFoundError, ServerError, UnauthorizedError, ValidationError } from '../models'
 import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
 import { maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
@@ -155,7 +155,7 @@ export class OnboardingService {
 
     public authenticateWebhook(req: Request): void {
         const signature = req.headers.signature
-        const payload = JSON.stringify(req.body)
+        const payload = req.body
         const method = req.method
         const endpoint = req.protocol + '://' + req.get('host') + req.originalUrl
 
@@ -190,7 +190,7 @@ export class OnboardingService {
         }
 
         if (!payload || !url) {
-            throw new Error('oops payload empty')
+            throw new NotFoundError('Onboarding not found')
         }
 
         return {
