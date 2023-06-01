@@ -5,16 +5,14 @@ import { NotificationService, OnboardingService, QiTechService } from '../servic
 export class WebhookController {
     public async handleOnboardingWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const body = req.body as Onboarding.IWebhookBody
+            const body = JSON.parse(req.body as string) as Onboarding.IWebhookBody
 
             const service = OnboardingService.getInstance()
             const notificationService = NotificationService.getInstance()
 
             const { payload, url } = await service.handleWebhook(body)
-            if (!req.user) throw new Error('Route unavailable')
 
             const notification = await notificationService.create(payload, url, req.user)
-
             await notificationService.notify(notification)
             res.send('ok')
         } catch (error) {

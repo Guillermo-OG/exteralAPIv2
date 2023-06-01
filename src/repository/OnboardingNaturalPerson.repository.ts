@@ -34,7 +34,7 @@ export class OnboardingNaturalPersonRepository {
     public async getByExternalId(id: string): Promise<HydratedDocument<IOnboardingNaturalPerson> | null> {
         return await OnboardingNaturalPerson.findOne(
             {
-                'response.id': id,
+                'response.natural_person_key': id,
             },
             null,
             {
