@@ -26,6 +26,10 @@ export const PjCreateSchema = new yup.ObjectSchema({
                 return isValid(new Date(value))
             }),
         company_statute: yup.string().required(),
+        annual_revenue_amount: yup
+            .string()
+            .required()
+            .matches(/^[.\d]*$/, {message: 'annual_revenue_amount may only have digits and point'}),
         company_document_number: yup
             .string()
             .required()
@@ -78,15 +82,15 @@ export const PjCreateSchema = new yup.ObjectSchema({
                         area_code: yup
                             .string()
                             .required()
-                            .matches(/^\d{2}$/),
+                            .matches(/^\d{2}$/, {message: 'area_code may only have two digits'}),
                         country_code: yup
                             .string()
                             .required()
-                            .matches(/^\d{2}$/),
+                            .matches(/^\d{2}$/, {message: 'country_code may only have two digits'}),
                         number: yup
                             .string()
                             .required()
-                            .matches(/^\d{9}$/),
+                            .matches(/^\d{9}$/, {message: 'number may only have 9 digits'}),
                     }),
                 })
             )
@@ -112,15 +116,15 @@ export const PjCreateSchema = new yup.ObjectSchema({
             area_code: yup
                 .string()
                 .required()
-                .matches(/^\d{2}$/),
+                .matches(/^\d{2}$/, {message: 'area_code may only have two digits'}),
             country_code: yup
                 .string()
                 .required()
-                .matches(/^\d{2}$/),
+                .matches(/^\d{2}$/, {message: 'country_code may only have two digits'}),
             number: yup
                 .string()
                 .required()
-                .matches(/^\d{9}$/),
+                .matches(/^\d{9}$/, {message: 'number may only have 9 digits'}),
         }),
     }),
     callbackURL: yup.string().required(),

@@ -1,4 +1,5 @@
 import { model, Schema } from 'mongoose'
+import { QiTechTypes } from '../infra'
 
 export enum AccountType {
     PF = 'PF',
@@ -17,7 +18,7 @@ export interface IAccount {
     status: AccountStatus
     callbackURL: string
     request: unknown
-    response?: unknown
+    response?: QiTechTypes.Account.ICreateResponse
     data?: unknown
     apiUserId: Schema.Types.ObjectId
 }
