@@ -2,13 +2,12 @@ import { AxiosError } from 'axios'
 import { createHmac } from 'crypto'
 import { format } from 'date-fns'
 import { Request } from 'express'
-import { HydratedDocument } from 'mongoose'
 import { v4 } from 'uuid'
 import { ValidationError as YupValidationError } from 'yup'
 import env from '../config/env'
-import { Onboarding, OnboardingClient } from '../infra'
-import { IOnboardingLegalPerson, IOnboardingNaturalPerson, NotFoundError, ServerError, UnauthorizedError, ValidationError } from '../models'
-import { OnboardingLegalPersonRepository, OnboardingNaturalPersonRepository } from '../repository'
+import { OnboardingClient, Onboarding as OnboardingTypes } from '../infra'
+import { IOnboarding, NotFoundError, OnboardingModel, ServerError, UnauthorizedError, ValidationError } from '../models'
+import { OnboardingRepository } from '../repository'
 import { maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
 
@@ -32,32 +31,40 @@ export class OnboardingService {
         return OnboardingService.instance
     }
 
-    public async createNaturalPerson(data: Onboarding.INaturalPersonCreate): Promise<HydratedDocument<IOnboardingNaturalPerson>> {
-        const repository = OnboardingNaturalPersonRepository.getInstance()
+    public async createPerson(data: OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate): Promise<OnboardingModel> {
+        const repository = OnboardingRepository.getInstance()
         const document = unMask(data.document_number)
-        const onboardingModelData: IOnboardingNaturalPerson = {
+
+        const onboardingModelData: IOnboarding = {
             document: document,
             request: data,
             response: undefined,
             data: undefined,
-            status: Onboarding.RequestStatus.PENDING,
+            status: OnboardingTypes.RequestStatus.PENDING,
         }
 
         let personModel = await repository.getByDocument(document)
         if (personModel) {
-            if ([Onboarding.RequestStatus.APPROVED, Onboarding.RequestStatus.PENDING].includes(personModel.status)) {
+            if ([OnboardingTypes.RequestStatus.APPROVED, OnboardingTypes.RequestStatus.PENDING].includes(personModel.status)) {
                 throw new ValidationError('Found existing valid onboarding for this document')
             }
         }
         try {
-            await naturalPersonSchema.validate(data, { abortEarly: false })
-            const formatedData = this.formatNaturalPersonData(data)
-            const personResponse = await this.api.createNaturalPerson(formatedData)
+            let personResponse: OnboardingTypes.INaturalPersonCreateResponse | OnboardingTypes.ILegalPersonCreateResponse
+            if ('legal_name' in data) {
+                await legalPersonSchema.validate(data, { abortEarly: false })
+                const formatedData = this.formatLegalPersonData(data)
+                personResponse = await this.api.createLegalPerson(formatedData)
+            } else {
+                await naturalPersonSchema.validate(data, { abortEarly: false })
+                const formatedData = this.formatNaturalPersonData(data)
+                personResponse = await this.api.createNaturalPerson(formatedData)
+            }
 
             onboardingModelData.response = personResponse
         } catch (error) {
             onboardingModelData.error = this.errorHandler(error)
-            onboardingModelData.status = Onboarding.RequestStatus.ERROR
+            onboardingModelData.status = OnboardingTypes.RequestStatus.ERROR
         }
 
         if (personModel) {
@@ -71,86 +78,30 @@ export class OnboardingService {
             personModel = await repository.create(onboardingModelData)
         }
 
-        return await this.updateNaturalPerson(personModel)
+        return await this.updateOnboarding(personModel)
     }
 
-    public async updateNaturalPerson(naturalPerson: HydratedDocument<IOnboardingNaturalPerson>) {
-        if (naturalPerson.status === Onboarding.RequestStatus.PENDING && naturalPerson.response) {
-            const data = await this.api.getNaturalPerson(naturalPerson.response.id)
-            const newStatus = this.mapQiTechStatusToVillelaStatus(data.analysis_status)
-            if (naturalPerson.status !== newStatus) {
-                naturalPerson.data = data
-                naturalPerson.status = newStatus
-                naturalPerson.markModified('data')
+    public async updateOnboarding(onboarding: OnboardingModel) {
+        if (onboarding.status === OnboardingTypes.RequestStatus.PENDING && onboarding.response) {
+            let udaptedData: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
+            if ('legal_name' in onboarding.request) {
+                udaptedData = await this.api.getLegalPerson(onboarding.response.id)
+            } else {
+                udaptedData = await this.api.getNaturalPerson(onboarding.response.id)
+            }
+            const newStatus = this.mapQiTechStatusToVillelaStatus(udaptedData.analysis_status)
+            if (onboarding.status !== newStatus) {
+                onboarding.data = udaptedData
+                onboarding.status = newStatus
+                onboarding.markModified('data')
             }
         }
 
-        if (naturalPerson.isModified()) {
-            await naturalPerson.save()
+        if (onboarding.isModified()) {
+            await onboarding.save()
         }
 
-        return naturalPerson
-    }
-
-    public async createLegalPerson(data: Onboarding.ILegalPersonCreate): Promise<HydratedDocument<IOnboardingLegalPerson>> {
-        const repository = OnboardingLegalPersonRepository.getInstance()
-        const document = unMask(data.document_number)
-        const onboardingModelData: IOnboardingLegalPerson = {
-            document: document,
-            request: data,
-            response: undefined,
-            data: undefined,
-            status: Onboarding.RequestStatus.PENDING,
-        }
-
-        let personModel = await repository.getByDocument(document)
-        if (personModel) {
-            if ([Onboarding.RequestStatus.APPROVED, Onboarding.RequestStatus.PENDING].includes(personModel.status)) {
-                throw new ValidationError('Found existing valid onboarding for this document')
-            }
-        }
-
-        try {
-            await legalPersonSchema.validate(data, { abortEarly: false })
-            const formatedData = this.formatLegalPersonData(data)
-            const personResponse = await this.api.createLegalPerson(formatedData)
-
-            onboardingModelData.response = personResponse
-        } catch (error) {
-            onboardingModelData.error = this.errorHandler(error)
-            onboardingModelData.status = Onboarding.RequestStatus.ERROR
-        }
-
-        if (personModel) {
-            personModel.request = onboardingModelData.request
-            personModel.response = onboardingModelData.response
-            personModel.data = onboardingModelData.data
-            personModel.status = onboardingModelData.status
-            personModel.error = onboardingModelData.error
-            await personModel.save()
-        } else {
-            personModel = await repository.create(onboardingModelData)
-        }
-
-        return await this.updateLegalPerson(personModel)
-    }
-
-    public async updateLegalPerson(legalPerson: HydratedDocument<IOnboardingLegalPerson>) {
-        if (legalPerson.status === Onboarding.RequestStatus.PENDING && legalPerson.response) {
-            const data = await this.api.getLegalPerson(legalPerson.response.id)
-            const newStatus = this.mapQiTechStatusToVillelaStatus(data.analysis_status)
-            if (legalPerson.status !== newStatus) {
-                legalPerson.data = data
-                legalPerson.status = newStatus
-                legalPerson.markModified('data')
-            }
-        }
-
-        if (legalPerson.isModified()) {
-            await legalPerson.save()
-        }
-
-        return legalPerson
+        return onboarding
     }
 
     public authenticateWebhook(req: Request): void {
@@ -168,25 +119,22 @@ export class OnboardingService {
         }
     }
 
-    public async handleWebhook(data: Onboarding.IWebhookBody) {
+    public async handleWebhook(data: OnboardingTypes.IWebhookBody) {
+        const repository = OnboardingRepository.getInstance()
         let payload: unknown = null
         let url: string | null = null
+        let onboarding: OnboardingModel | null = null
+
         if (data.legal_person_id) {
-            const repository = OnboardingLegalPersonRepository.getInstance()
-            const legalPerson = await repository.getByExternalId(data.legal_person_id)
-            if (legalPerson) {
-                payload = await this.updateLegalPerson(legalPerson)
-                // url = legalPerson.webhookUrl
-                url = 'http://localhost:3000/webhook/mock'
-            }
+            onboarding = await repository.getByExternalId(data.legal_person_id)
         } else if (data.natural_person_id) {
-            const repository = OnboardingNaturalPersonRepository.getInstance()
-            const naturalPerson = await repository.getByExternalId(data.natural_person_id)
-            if (naturalPerson) {
-                payload = await this.updateNaturalPerson(naturalPerson)
-                // url = naturalPerson.webhookUrl
-                url = 'http://localhost:3000/webhook/mock'
-            }
+            onboarding = await repository.getByExternalId(data.natural_person_id)
+        }
+
+        if (onboarding) {
+            payload = await this.updateOnboarding(onboarding)
+            // url = legalPerson.webhookUrl
+            url = 'http://localhost:3000/webhook/mock'
         }
 
         if (!payload || !url) {
@@ -199,7 +147,7 @@ export class OnboardingService {
         }
     }
 
-    private formatNaturalPersonData(data: Onboarding.INaturalPersonCreate): Onboarding.INaturalPersonCreate {
+    private formatNaturalPersonData(data: OnboardingTypes.INaturalPersonCreate): OnboardingTypes.INaturalPersonCreate {
         data.id = v4()
         data.registration_id = v4()
         data.document_number = maskCPF(data.document_number)
@@ -207,7 +155,7 @@ export class OnboardingService {
         return data
     }
 
-    private formatLegalPersonData(data: Onboarding.ILegalPersonCreate): Onboarding.ILegalPersonCreate {
+    private formatLegalPersonData(data: OnboardingTypes.ILegalPersonCreate): OnboardingTypes.ILegalPersonCreate {
         data.id = v4()
         data.registration_id = v4()
         data.document_number = maskCNPJ(data.document_number)
@@ -228,24 +176,24 @@ export class OnboardingService {
         return format(d, "yyyy-MM-dd'T'hh:mm:ss.sss'Z'")
     }
 
-    private mapQiTechStatusToVillelaStatus(status: Onboarding.AnalysisStatus): Onboarding.RequestStatus {
+    private mapQiTechStatusToVillelaStatus(status: OnboardingTypes.AnalysisStatus): OnboardingTypes.RequestStatus {
         switch (status) {
-            case Onboarding.AnalysisStatus.AUTOMATICALLY_APPROVED:
-            case Onboarding.AnalysisStatus.MANUALLY_APPROVED:
-                return Onboarding.RequestStatus.APPROVED
+            case OnboardingTypes.AnalysisStatus.AUTOMATICALLY_APPROVED:
+            case OnboardingTypes.AnalysisStatus.MANUALLY_APPROVED:
+                return OnboardingTypes.RequestStatus.APPROVED
 
-            case Onboarding.AnalysisStatus.IN_MANUAL_ANALYSIS:
-            case Onboarding.AnalysisStatus.IN_QUEUE:
-            case Onboarding.AnalysisStatus.NOT_ANALYSED:
-            case Onboarding.AnalysisStatus.PENDING:
-                return Onboarding.RequestStatus.PENDING
+            case OnboardingTypes.AnalysisStatus.IN_MANUAL_ANALYSIS:
+            case OnboardingTypes.AnalysisStatus.IN_QUEUE:
+            case OnboardingTypes.AnalysisStatus.NOT_ANALYSED:
+            case OnboardingTypes.AnalysisStatus.PENDING:
+                return OnboardingTypes.RequestStatus.PENDING
 
-            case Onboarding.AnalysisStatus.AUTOMATICALLY_REPROVED:
-            case Onboarding.AnalysisStatus.MANUALLY_REPROVED:
-                return Onboarding.RequestStatus.REPROVED
+            case OnboardingTypes.AnalysisStatus.AUTOMATICALLY_REPROVED:
+            case OnboardingTypes.AnalysisStatus.MANUALLY_REPROVED:
+                return OnboardingTypes.RequestStatus.REPROVED
 
             default:
-                return Onboarding.RequestStatus.ERROR
+                return OnboardingTypes.RequestStatus.ERROR
         }
     }
 
