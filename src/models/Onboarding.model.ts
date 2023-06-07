@@ -1,5 +1,5 @@
 import { HydratedDocument, model, Schema } from 'mongoose'
-import { Onboarding as OnboardingTypes } from '../infra'
+import { OnboardingTypes } from '../infra'
 
 interface IUnknownError {
     [attr: string]: unknown
@@ -12,6 +12,7 @@ export interface IOnboarding {
     response?: OnboardingTypes.ILegalPersonCreateResponse | OnboardingTypes.INaturalPersonCreateResponse
     data?: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
     error?: IUnknownError
+    accountId: Schema.Types.ObjectId
 }
 
 const schema = new Schema<IOnboarding>(
@@ -22,9 +23,10 @@ const schema = new Schema<IOnboarding>(
         response: { type: Schema.Types.Mixed, required: false },
         data: { type: Schema.Types.Mixed, required: false },
         error: { type: Schema.Types.Mixed, required: false },
+        accountId: { type: Schema.Types.ObjectId, ref: 'Account', required: true },
     },
     {
-        collection: 'onboarding_legal_person',
+        collection: 'onboarding',
         timestamps: true,
     }
 )

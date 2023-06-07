@@ -1,5 +1,5 @@
 import { FilterQuery } from 'mongoose'
-import { Onboarding as OnboardingTypes } from '../infra'
+import { OnboardingTypes } from '../infra'
 import { IOnboarding, Onboarding, OnboardingModel } from '../models'
 import { IPaginatedSearch, paginatedSearch } from '../utils/pagination'
 

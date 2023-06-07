@@ -49,6 +49,20 @@ export class AccountRepository {
     }
 
     public async getByDocument(document: string): Promise<HydratedDocument<IAccount> | null> {
+        return Account.findOne(
+            {
+                document,
+            },
+            null,
+            {
+                sort: {
+                    _id: -1,
+                },
+            }
+        )
+    }
+
+    public async eagerGetByDocument(document: string): Promise<HydratedDocument<IAccount> | null> {
         const where: FilterQuery<IAccount> = {
             document,
         }
@@ -62,7 +76,21 @@ export class AccountRepository {
                 },
             },
             {
+                $lookup: {
+                    as: 'onboarding',
+                    from: 'onboarding',
+                    localField: '_id',
+                    foreignField: 'accountId',
+                },
+            },
+            {
                 $match: where,
+            },
+            {
+                $unwind: {
+                    path: '$onboarding',
+                    preserveNullAndEmptyArrays: true,
+                },
             },
         ]).exec()
         return accounts[0]

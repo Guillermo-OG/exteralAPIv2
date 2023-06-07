@@ -1,12 +1,13 @@
+import { isValid } from 'date-fns'
 import * as yup from 'yup'
 import { unMask } from '../../masks'
 import { isEmailValid, validateCNPJ, validateCPF } from '../../validations'
-import { isValid } from 'date-fns'
 import addressSchema from './addressSchema'
 
 export const PjCreateSchema = new yup.ObjectSchema({
     account_owner: yup.object().shape({
         address: addressSchema,
+        name: yup.string().required(),
         cnae_code: yup
             .string()
             .required()
@@ -29,7 +30,7 @@ export const PjCreateSchema = new yup.ObjectSchema({
         annual_revenue_amount: yup
             .string()
             .required()
-            .matches(/^[.\d]*$/, {message: 'annual_revenue_amount may only have digits and point'}),
+            .matches(/^[.\d]*$/, { message: 'annual_revenue_amount may only have digits and point' }),
         company_document_number: yup
             .string()
             .required()
@@ -82,15 +83,15 @@ export const PjCreateSchema = new yup.ObjectSchema({
                         area_code: yup
                             .string()
                             .required()
-                            .matches(/^\d{2}$/, {message: 'area_code may only have two digits'}),
+                            .matches(/^\d{2}$/, { message: 'area_code may only have two digits' }),
                         country_code: yup
                             .string()
                             .required()
-                            .matches(/^\d{2}$/, {message: 'country_code may only have two digits'}),
+                            .matches(/^\d{2}$/, { message: 'country_code may only have two digits' }),
                         number: yup
                             .string()
                             .required()
-                            .matches(/^\d{9}$/, {message: 'number may only have 9 digits'}),
+                            .matches(/^\d{9}$/, { message: 'number may only have 9 digits' }),
                     }),
                 })
             )
@@ -116,15 +117,15 @@ export const PjCreateSchema = new yup.ObjectSchema({
             area_code: yup
                 .string()
                 .required()
-                .matches(/^\d{2}$/, {message: 'area_code may only have two digits'}),
+                .matches(/^\d{2}$/, { message: 'area_code may only have two digits' }),
             country_code: yup
                 .string()
                 .required()
-                .matches(/^\d{2}$/, {message: 'country_code may only have two digits'}),
+                .matches(/^\d{2}$/, { message: 'country_code may only have two digits' }),
             number: yup
                 .string()
                 .required()
-                .matches(/^\d{9}$/, {message: 'number may only have 9 digits'}),
+                .matches(/^\d{9}$/, { message: 'number may only have 9 digits' }),
         }),
     }),
     callbackURL: yup.string().required(),

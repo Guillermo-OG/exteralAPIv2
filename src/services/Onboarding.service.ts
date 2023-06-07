@@ -2,13 +2,14 @@ import { AxiosError } from 'axios'
 import { createHmac } from 'crypto'
 import { format } from 'date-fns'
 import { Request } from 'express'
+import { ObjectId } from 'mongoose'
 import { v4 } from 'uuid'
 import { ValidationError as YupValidationError } from 'yup'
 import env from '../config/env'
-import { OnboardingClient, Onboarding as OnboardingTypes } from '../infra'
-import { IOnboarding, NotFoundError, OnboardingModel, ServerError, UnauthorizedError, ValidationError } from '../models'
+import { OnboardingClient, OnboardingTypes, QiTechTypes } from '../infra'
+import { IOnboarding, NotFoundError, OnboardingModel, ServerError, UnauthorizedError } from '../models'
 import { OnboardingRepository } from '../repository'
-import { maskCNPJ, maskCPF, unMask } from '../utils/masks'
+import { maskCEP, maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
 
 export class OnboardingService {
@@ -31,7 +32,10 @@ export class OnboardingService {
         return OnboardingService.instance
     }
 
-    public async createPerson(data: OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate): Promise<OnboardingModel> {
+    public async createOnboarding(
+        data: OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate,
+        accountId: ObjectId
+    ): Promise<OnboardingModel> {
         const repository = OnboardingRepository.getInstance()
         const document = unMask(data.document_number)
 
@@ -41,12 +45,13 @@ export class OnboardingService {
             response: undefined,
             data: undefined,
             status: OnboardingTypes.RequestStatus.PENDING,
+            accountId: accountId,
         }
 
-        let personModel = await repository.getByDocument(document)
-        if (personModel) {
-            if ([OnboardingTypes.RequestStatus.APPROVED, OnboardingTypes.RequestStatus.PENDING].includes(personModel.status)) {
-                throw new ValidationError('Found existing valid onboarding for this document')
+        let onboarding = await repository.getByDocument(document)
+        if (onboarding) {
+            if ([OnboardingTypes.RequestStatus.APPROVED, OnboardingTypes.RequestStatus.PENDING].includes(onboarding.status)) {
+                return onboarding
             }
         }
         try {
@@ -67,18 +72,18 @@ export class OnboardingService {
             onboardingModelData.status = OnboardingTypes.RequestStatus.ERROR
         }
 
-        if (personModel) {
-            personModel.request = onboardingModelData.request
-            personModel.response = onboardingModelData.response
-            personModel.data = onboardingModelData.data
-            personModel.status = onboardingModelData.status
-            personModel.error = onboardingModelData.error
-            await personModel.save()
+        if (onboarding) {
+            onboarding.request = onboardingModelData.request
+            onboarding.response = onboardingModelData.response
+            onboarding.data = onboardingModelData.data
+            onboarding.status = onboardingModelData.status
+            onboarding.error = onboardingModelData.error
+            await onboarding.save()
         } else {
-            personModel = await repository.create(onboardingModelData)
+            onboarding = await repository.create(onboardingModelData)
         }
 
-        return await this.updateOnboarding(personModel)
+        return await this.updateOnboarding(onboarding)
     }
 
     public async updateOnboarding(onboarding: OnboardingModel) {
@@ -144,6 +149,43 @@ export class OnboardingService {
         return {
             payload,
             url,
+        }
+    }
+
+    public mapQiTechPayload(data: QiTechTypes.Account.ICreate): OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate {
+        if ('allowed_user' in data && data.allowed_user) {
+            const owner = data.account_owner as QiTechTypes.Account.IOwnerPJ
+            return {
+                foundation_date: owner.foundation_date,
+                id: v4(),
+                registration_date: this.formatDate(new Date(), true, true),
+                registration_id: v4(),
+                document_number: maskCNPJ(owner.company_document_number),
+                address: {
+                    neighborhood: owner.address.neighborhood,
+                    number: owner.address.number,
+                    street: owner.address.street,
+                    complement: owner.address.complement,
+                    city: owner.address.city,
+                    postal_code: maskCEP(owner.address.postal_code),
+                    validation_type: OnboardingTypes.AddressValidationType.VISIT,
+                    country: 'BRA',
+                    uf: owner.address.state,
+                },
+                legal_name: owner.name,
+                trading_name: owner.trading_name,
+            }
+        } else {
+            const owner = data.account_owner as QiTechTypes.Account.IOwnerPF
+            return {
+                birthdate: owner.birth_date,
+                document_number: maskCPF(owner.individual_document_number),
+                id: v4(),
+                registration_date: this.formatDate(new Date(), true, true),
+                registration_id: v4(),
+                mother_name: owner.mother_name,
+                name: owner.name,
+            }
         }
     }
 
