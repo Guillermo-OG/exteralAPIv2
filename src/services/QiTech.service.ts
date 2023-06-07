@@ -15,7 +15,7 @@ import {
     ValidationError,
 } from '../models'
 import { AccountRepository, ApiUserRepository, FileRepository, PixKeyRepository } from '../repository'
-import { unMask } from '../utils/masks'
+import { maskCNAE, unMask } from '../utils/masks'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
 
@@ -49,6 +49,7 @@ export class QiTechService {
         const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
         const callbackURL = payload.callbackURL || ''
         delete payload.callbackURL
+        this.formatPayload(payload)
 
         let account = await accountRepository.getByDocument(document)
         if (account && account.status !== AccountStatus.FAILED) {
@@ -81,9 +82,15 @@ export class QiTechService {
             throw new ValidationError('Onboarding failed or is pending')
         }
 
-        account.response = await this.client.createAccount(payload)
-        account.markModified('response')
-        await account.save()
+        try {
+            account.response = await this.client.createAccount(payload)
+            account.markModified('response')
+            await account.save()
+        } catch (error) {
+            account.status = AccountStatus.FAILED
+            await account.save()
+            throw error
+        }
 
         return account
     }
@@ -302,6 +309,12 @@ export class QiTechService {
             return error
         } catch (err) {
             return error
+        }
+    }
+
+    private formatPayload(payload: QiTechTypes.Account.ICreate): void {
+        if ('trading_name' in payload.account_owner) {
+            payload.account_owner.cnae_code = maskCNAE(payload.account_owner.cnae_code)
         }
     }
 
