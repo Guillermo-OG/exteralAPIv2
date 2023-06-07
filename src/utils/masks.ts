@@ -16,3 +16,8 @@ export function maskCEP(value: string): string {
     const regex = /(\d{5})(\d{3})/
     return unMask(value).replace(regex, '$1-$2')
 }
+
+export function maskCNAE(value: string): string {
+    const rawValue = unMask(value)
+    return rawValue.replace(/^(\d{4})(\d{1})(\d{2})$/, '$1-$2/$3')
+}
