@@ -5,6 +5,7 @@ interface IAddress {
     city: string
     state: string
     postal_code: string
+    complement: string
 }
 
 interface IPhone {
@@ -66,7 +67,7 @@ export interface IOwnerPJ {
     address: IAddress
     cnae_code: string
     company_statute?: string
-    company_document_number?: string
+    company_document_number: string
     company_type?: CompanyType
     email: string
     foundation_date: string
@@ -77,13 +78,13 @@ export interface IOwnerPJ {
     company_representatives: IOwnerPF[]
 }
 export interface IAllowedUser {
-    email:string,
+    email: string
     individual_document_number: string
     name: string
-    person_type: 'natural',
+    person_type: 'natural'
     phone?: {
-        country_code: string,
-        area_code: string,
+        country_code: string
+        area_code: string
         number: string
     }
 }

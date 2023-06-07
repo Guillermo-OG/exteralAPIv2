@@ -1,5 +1,5 @@
 import * as yup from 'yup'
-import { Onboarding } from '../../../infra'
+import { OnboardingTypes } from '../../../infra'
 import { validateCNPJ, validateCPF } from '../../validations'
 
 export const naturalPersonSchema = new yup.ObjectSchema({
@@ -41,5 +41,5 @@ export const legalPersonSchema = new yup.ObjectSchema({
 
 export const onboardingPersonListSchema = new yup.ObjectSchema({
     page: yup.number().min(1).nullable(),
-    status: yup.string().oneOf(Object.values(Onboarding.RequestStatus)).nullable(),
+    status: yup.string().oneOf(Object.values(OnboardingTypes.RequestStatus)).nullable(),
 })

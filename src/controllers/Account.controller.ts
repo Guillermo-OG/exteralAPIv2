@@ -12,7 +12,7 @@ export class AccountController {
             if (!document) {
                 throw new ValidationError('Missing document')
             }
-            
+
             const response = await qiTechService.createAccount(document, req.body, req.user)
             res.json(response)
         } catch (error) {
@@ -23,7 +23,7 @@ export class AccountController {
     public async getByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const document = unMask(req.params.document)
-            const account = await AccountRepository.getInstance().getByDocument(document)
+            const account = await AccountRepository.getInstance().eagerGetByDocument(document)
             if (!account) {
                 throw new NotFoundError('Account not found for this document')
             }

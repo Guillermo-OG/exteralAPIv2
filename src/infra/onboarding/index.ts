@@ -1,2 +1,2 @@
 export * from './Onboarding.client'
-export * as Onboarding from './Onboarding.types'
+export * as OnboardingTypes from './Onboarding.types'
