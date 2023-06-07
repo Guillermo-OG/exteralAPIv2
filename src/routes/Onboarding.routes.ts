@@ -18,7 +18,6 @@ export class OnboardingRouter {
     private config(): void {
         this.router.use(new AuthMiddleware().authenticate)
 
-        this.router.post('/', this.controller.createOnboarding)
         this.router.get('/', this.validator.validate({ query: onboardingPersonListSchema }), this.controller.listOnboarding)
         this.router.get('/:document', this.controller.getByDocument)
     }

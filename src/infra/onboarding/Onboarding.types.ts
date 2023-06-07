@@ -65,7 +65,7 @@ interface IAddress {
     postal_code: string // with hifen
     country: string // ISO 3166-1 alfa-3
     validation_type: AddressValidationType
-    ocr_key: string //GUID
+    ocr_key?: string //GUID
 }
 
 interface INaturalDocuments {
@@ -111,25 +111,25 @@ interface IFace {
 
 export interface INaturalPersonCreate {
     id: string
-    registration_id: string
+    registration_id?: string
     name: string
-    registration_date: string // yyyy-MM-dd
-    client_category: string
+    registration_date?: string // yyyy-MM-dd
+    client_category?: string
     document_number: string // masked
     birthdate: string // yyyy-MM-dd
-    gender: Gender
-    nationality: string // ISO 3166-1 alfa-3
+    gender?: Gender
+    nationality?: string // ISO 3166-1 alfa-3
     mother_name: string
-    father_name: string
-    monthly_income: number // cents
-    declared_assets: number // cents
-    occupation: string
-    emails: IEmail[]
-    phones: IPhone[]
-    source: ISource
-    address: IAddress
-    documents: INaturalDocuments
-    face: IFace
+    father_name?: string
+    monthly_income?: number // cents
+    declared_assets?: number // cents
+    occupation?: string
+    emails?: IEmail[]
+    phones?: IPhone[]
+    source?: ISource
+    address?: IAddress
+    documents?: INaturalDocuments
+    face?: IFace
 }
 
 export interface INaturalPersonCreateResponse {
@@ -245,26 +245,26 @@ export interface INaturalPersonGetResponse extends INaturalPersonCreate {
 
 export interface ILegalPersonCreate {
     id: string
-    registration_id: string
-    registration_date: string // datetime
-    client_category: string
+    registration_id?: string
+    registration_date?: string // datetime
+    client_category?: string
     legal_name: string
     trading_name: string
     document_number: string // masked
     foundation_date: string // date
-    website: string
-    activity: string
-    activity_code: string // CNAE
-    merchant_category_code: string // MCC
-    tier: string
-    annual_revenues: number //cents
-    emails: IEmail[]
-    documents: ILegalDocuments
+    website?: string
+    activity?: string
+    activity_code?: string // CNAE
+    merchant_category_code?: string // MCC
+    tier?: string
+    annual_revenues?: number //cents
+    emails?: IEmail[]
+    documents?: ILegalDocuments
     address: IAddress
-    phones: IPhone[]
-    source: ISource
-    partners: IPartner[]
-    legal_representatives: {
+    phones?: IPhone[]
+    source?: ISource
+    partners?: IPartner[]
+    legal_representatives?: {
         name: string
         document_number: string // Masked
         birthdate: string // date

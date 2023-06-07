@@ -2,7 +2,7 @@ import { AxiosError } from 'axios'
 import { Request } from 'express'
 import { HydratedDocument } from 'mongoose'
 import env from '../config/env'
-import { QiTechClient, QiTechTypes } from '../infra'
+import { OnboardingTypes, QiTechClient, QiTechTypes } from '../infra'
 import {
     AccountStatus,
     AccountType,
@@ -17,6 +17,7 @@ import {
 import { AccountRepository, ApiUserRepository, FileRepository, PixKeyRepository } from '../repository'
 import { unMask } from '../utils/masks'
 import { NotificationService } from './Notification.service'
+import { OnboardingService } from './Onboarding.service'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -43,6 +44,8 @@ export class QiTechService {
 
     public async createAccount(document: string, payload: QiTechTypes.Account.ICreate, apiUser: HydratedDocument<IApiUser>) {
         const accountRepository = AccountRepository.getInstance()
+        const onboardingService = OnboardingService.getInstance()
+
         const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
         const callbackURL = payload.callbackURL || ''
         delete payload.callbackURL
@@ -52,26 +55,35 @@ export class QiTechService {
             throw new ValidationError('Existing account found for this document')
         }
 
-        const accountResponse = await this.client.createAccount(payload)
         if (account) {
             account.callbackURL = callbackURL
             account.request = payload
-            account.response = accountResponse
             account.status = AccountStatus.PENDING
             account.markModified('request')
             account.markModified('data')
-            await account.save()
         } else {
             account = await accountRepository.create({
                 callbackURL,
                 document: document,
                 request: payload,
-                response: accountResponse,
                 status: AccountStatus.PENDING,
                 type: accountType,
                 apiUserId: apiUser.id,
             })
         }
+
+        const onboardingData = onboardingService.mapQiTechPayload(payload)
+        const onboarding = await onboardingService.createOnboarding(onboardingData, account.id)
+
+        if (onboarding.status !== OnboardingTypes.RequestStatus.APPROVED) {
+            account.status = AccountStatus.FAILED
+            await account.save()
+            throw new ValidationError('Onboarding failed or is pending')
+        }
+
+        account.response = await this.client.createAccount(payload)
+        account.markModified('response')
+        await account.save()
 
         return account
     }
@@ -279,8 +291,9 @@ export class QiTechService {
     
             const { headers, data } = error.response
             const url = error.config?.url
+            const baseURL = error.config?.baseURL
             const method = error.config?.method
-            if (!headers || !data || !url ||!method) {
+            if (!headers || !data || !url || !method || baseURL !== env.QITECH_BASE_URL) {
                 return error
             }
     
