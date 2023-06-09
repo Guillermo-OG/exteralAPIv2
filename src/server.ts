@@ -25,6 +25,7 @@ class Server {
         await Database.getInstance().start()
         new CronService().setup()
 
+        this.app.use(express.text())
         this.app.use(express.json())
         this.routes()
     }

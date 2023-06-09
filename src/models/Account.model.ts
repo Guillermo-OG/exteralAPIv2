@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose'
 import { QiTechTypes } from '../infra'
+import { IOnboarding } from './Onboarding.model'
 
 export enum AccountType {
     PF = 'PF',
@@ -21,6 +22,7 @@ export interface IAccount {
     response?: QiTechTypes.Account.ICreateResponse
     data?: unknown
     apiUserId: Schema.Types.ObjectId
+    onboarding?: IOnboarding
 }
 
 const schema = new Schema<IAccount>(
