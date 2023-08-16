@@ -12,6 +12,8 @@ export default class Database {
         return Database.instance
     }
 
+    //comentario teste
+
     public async start(): Promise<void> {
         console.log('Database: Connecting...')
         try {
