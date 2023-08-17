@@ -1,3 +1,4 @@
+import * as appInsights from 'applicationinsights'
 import express, { Express } from 'express'
 import Database from './config/database'
 import env from './config/env'
@@ -28,6 +29,8 @@ class Server {
         this.app.use(express.text())
         this.app.use(express.json())
         this.routes()
+        console.log(env)
+        appInsights.setup(env.INSIGHTS_CONNECTION_STRING).setAutoCollectConsole(true, true).start()
     }
 
     private routes(): void {

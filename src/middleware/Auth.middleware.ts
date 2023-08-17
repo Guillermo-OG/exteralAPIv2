@@ -40,7 +40,8 @@ export class AuthMiddleware {
         try {
             const qiTechService = QiTechService.getInstance()
             // qiTechService.authenticateWebhook(req)
-            console.log(qiTechService, req.body)
+            console.log(qiTechService, req)
+            console.log({ headers: req.headers, body: req.body })
 
             next()
         } catch (error) {
