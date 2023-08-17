@@ -235,8 +235,6 @@ export class QiTechService {
 
         const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
 
-        console.log({ type: 'ACCOUNT', webhooktype: req.headers['webhook-type'], headers: req.headers, body: decodedBody })
-
         switch (decodedBody.webhook_type) {
             case 'account':
                 await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
