@@ -4,6 +4,7 @@ dotenv.config()
 const env = {
     MONGO_URL: process.env.MONGO_URL!,
     SERVER_PORT: process.env.SERVER_PORT!,
+    INSIGHTS_CONNECTION_STRING: process.env.INSIGHTS_CONNECTION_STRING!,
     DATABASE_NAME: process.env.DATABASE_NAME!,
     ONBOARDING_BASE_URL: process.env.ONBOARDING_BASE_URL!,
     ONBOARDING_API_SECRET: process.env.ONBOARDING_API_SECRET!,
