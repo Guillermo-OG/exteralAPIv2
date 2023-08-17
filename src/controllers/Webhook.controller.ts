@@ -7,8 +7,6 @@ export class WebhookController {
         try {
             const body = JSON.parse(req.body as string) as OnboardingTypes.IWebhookBody
 
-            console.log({ type: 'ONBOARDING', webhooktype: req.headers['webhook-type'], headers: req.headers, body: req.body })
-
             const service = OnboardingService.getInstance()
             const notificationService = NotificationService.getInstance()
 
