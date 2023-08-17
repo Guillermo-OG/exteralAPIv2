@@ -39,9 +39,7 @@ export class AuthMiddleware {
     public async authQiTechWebhook(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
             const qiTechService = QiTechService.getInstance()
-            // qiTechService.authenticateWebhook(req)
-            console.log(qiTechService, req)
-            console.log({ headers: req.headers, body: req.body })
+            qiTechService.authenticateWebhook(req)
 
             next()
         } catch (error) {
