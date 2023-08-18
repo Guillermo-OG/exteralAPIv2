@@ -232,6 +232,9 @@ export class QiTechService {
             case 'key_inclusion':
                 await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
                 break
+            case 'account_transaction':
+                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                break
             default:
                 break
         }
@@ -320,5 +323,9 @@ export class QiTechService {
             default:
                 return AccountStatus.FAILED
         }
+    }
+
+    public async listAllAccounts(page: number, pageSize: number): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
+        return await this.client.listAllAccounts(page, pageSize)
     }
 }
