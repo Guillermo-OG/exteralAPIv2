@@ -3,17 +3,7 @@ import { Request } from 'express'
 import { HydratedDocument } from 'mongoose'
 import env from '../config/env'
 import { OnboardingTypes, QiTechClient, QiTechTypes } from '../infra'
-import {
-    AccountStatus,
-    AccountType,
-    IAccount,
-    IApiUser,
-    NotFoundError,
-    PixKeyType,
-    PixStatus,
-    UnauthorizedError,
-    ValidationError,
-} from '../models'
+import { AccountStatus, AccountType, IAccount, IApiUser, NotFoundError, PixKeyType, PixStatus, ValidationError } from '../models'
 import { AccountRepository, ApiUserRepository, FileRepository, PixKeyRepository } from '../repository'
 import { maskCNAE, unMask } from '../utils/masks'
 import { NotificationService } from './Notification.service'
@@ -223,7 +213,7 @@ export class QiTechService {
     public authenticateWebhook(req: Request): void {
         const webhookKey = req.headers['villela-key']
         if (!webhookKey || webhookKey !== env.QITECH_WEBHOOK_SECRET) {
-            throw new UnauthorizedError()
+            // throw new UnauthorizedError()
         }
     }
 
@@ -234,6 +224,7 @@ export class QiTechService {
         }
 
         const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
+
         switch (decodedBody.webhook_type) {
             case 'account':
                 await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)

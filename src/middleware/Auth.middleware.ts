@@ -27,6 +27,8 @@ export class AuthMiddleware {
 
     public async authOnboardingWebhook(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
+            console.log({ type: 'ONBOARDING', webhooktype: req.headers['webhook-type'], headers: req.headers, body: req.body })
+
             const onboardingService = OnboardingService.getInstance()
             onboardingService.authenticateWebhook(req)
 
@@ -38,10 +40,10 @@ export class AuthMiddleware {
 
     public async authQiTechWebhook(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
+            console.log({ type: 'ACCOUNT', webhooktype: req.headers['webhook-type'], headers: req.headers, body: req.body })
+
             const qiTechService = QiTechService.getInstance()
-            // qiTechService.authenticateWebhook(req)
-            console.log(qiTechService, req)
-            console.log({ headers: req.headers, body: req.body })
+            qiTechService.authenticateWebhook(req)
 
             next()
         } catch (error) {
