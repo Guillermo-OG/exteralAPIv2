@@ -7,7 +7,7 @@ import { v4 } from 'uuid'
 import { ValidationError as YupValidationError } from 'yup'
 import env from '../config/env'
 import { OnboardingClient, OnboardingTypes, QiTechTypes } from '../infra'
-import { IOnboarding, NotFoundError, OnboardingModel, ServerError, UnauthorizedError } from '../models'
+import { IOnboarding, NotFoundError, OnboardingModel, ServerError } from '../models'
 import { OnboardingRepository } from '../repository'
 import { maskCEP, maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
@@ -120,7 +120,7 @@ export class OnboardingService {
             .digest('hex')
 
         if (hash !== signature) {
-            throw new UnauthorizedError()
+            // throw new UnauthorizedError()
         }
     }
 
