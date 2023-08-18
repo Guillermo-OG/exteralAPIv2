@@ -78,6 +78,23 @@ export class QiTechClient {
         )
     }
 
+    public async listAllAccounts(page = 1, pageSize = 100): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
+        const urlQueryParams = new URLSearchParams({
+            page: page.toString(),
+            pageSize: pageSize.toString(),
+        })
+        const endpoint = `/account?${urlQueryParams}`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
+        const res = await this.api.get(endpoint, { headers: config.headers })
+        return await this.decodeMessage<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>>(
+            endpoint,
+            'GET',
+            res.headers,
+            res.data
+        )
+    }
+
     public async uploadFile(fileName: string, fileBuffer: Buffer): Promise<QiTechTypes.Upload.IResponse> {
         const endpoint = '/upload'
         const method = 'POST'
