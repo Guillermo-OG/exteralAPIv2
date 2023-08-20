@@ -85,6 +85,49 @@ export class QiTechService {
         return account
     }
 
+    public async createAccountOnBoardingOk(document: string, payload: QiTechTypes.Account.ICreate, apiUser: HydratedDocument<IApiUser>) {
+        const accountRepository = AccountRepository.getInstance()
+
+        const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
+        const callbackURL = payload.callbackURL || ''
+        delete payload.callbackURL
+        this.formatPayload(payload)
+
+        let account = await accountRepository.getByDocument(document)
+        // if (account && account.status !== AccountStatus.FAILED) {
+        //     throw new ValidationError('Existing account found for this document')
+        // }
+
+        if (account) {
+            account.callbackURL = callbackURL
+            account.request = payload
+            account.status = AccountStatus.PENDING
+            account.markModified('request')
+            // account.markModified('data')
+        } else {
+            account = await accountRepository.create({
+                callbackURL,
+                document: document,
+                request: payload,
+                status: AccountStatus.PENDING,
+                type: accountType,
+                apiUserId: apiUser.id,
+            })
+        }
+
+        try {
+            account.response = await this.client.createAccount(payload)
+            account.markModified('response')
+            await account.save()
+        } catch (error) {
+            account.status = AccountStatus.FAILED
+            await account.save()
+            throw error
+        }
+
+        return account
+    }
+
     public async createPixKey(payload: QiTechTypes.Pix.ICreatePix) {
         const pixRepository = PixKeyRepository.getInstance()
         const accountRepository = AccountRepository.getInstance()
