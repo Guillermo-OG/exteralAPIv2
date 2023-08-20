@@ -5,6 +5,8 @@ import { AuthService, OnboardingService, QiTechService } from '../services'
 export class AuthMiddleware {
     public async authenticate(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
+            console.log('ACCOUNT', req)
+
             const authHeader = req.headers.authorization
 
             if (!authHeader || !authHeader.startsWith('Basic ')) {
@@ -27,6 +29,7 @@ export class AuthMiddleware {
 
     public async authOnboardingWebhook(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
+            console.log('ONBOARDING', req)
             const onboardingService = OnboardingService.getInstance()
             onboardingService.authenticateWebhook(req)
 
@@ -39,8 +42,7 @@ export class AuthMiddleware {
     public async authQiTechWebhook(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
             const qiTechService = QiTechService.getInstance()
-            // qiTechService.authenticateWebhook(req)
-            console.log(qiTechService, req.body)
+            qiTechService.authenticateWebhook(req)
 
             next()
         } catch (error) {
