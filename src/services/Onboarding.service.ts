@@ -86,6 +86,25 @@ export class OnboardingService {
         return await this.updateOnboarding(onboarding)
     }
 
+    public async getAnalysis(
+        onboarding: OnboardingModel
+    ): Promise<OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse> {
+        try {
+            let analysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
+
+            if ('legal_name' in onboarding.request) {
+                analysis = await this.api.getLegalPerson(onboarding.response?.id ?? '0')
+            } else {
+                analysis = await this.api.getNaturalPerson(onboarding.response?.id ?? '0')
+            }
+
+            return analysis
+        } catch (error) {
+            console.log('Error on get analysis: ', error)
+            throw new Error('Error on get analysis')
+        }
+    }
+
     public async updateOnboarding(onboarding: OnboardingModel) {
         if (onboarding.status === OnboardingTypes.RequestStatus.PENDING && onboarding.response) {
             let udaptedData: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse

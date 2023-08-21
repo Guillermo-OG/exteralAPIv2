@@ -6,6 +6,29 @@ import { OnboardingService } from '../services'
 import { unMask } from '../utils/masks'
 
 export class OnboardingController {
+    public async getAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const document = unMask(req.params.document)
+            if (!document) {
+                throw new ValidationError('Document required')
+            }
+
+            const repository = OnboardingRepository.getInstance()
+            let onboarding = await repository.getByDocument(document)
+
+            if (!onboarding) {
+                throw new NotFoundError('Onboarding not found for this document')
+            }
+
+            const qiTechService = OnboardingService.getInstance()
+            let analysis = await qiTechService.getAnalysis(onboarding)
+
+            res.json(analysis)
+        } catch (error) {
+            next(error)
+        }
+    }
+
     public async getByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const document = unMask(req.params.document)
@@ -21,8 +44,8 @@ export class OnboardingController {
                 throw new NotFoundError('Onboarding not found for this document')
             }
 
-            onboarding = await qiTechService.updateOnboarding(onboarding)
-            res.json(onboarding)
+            let analysis = await qiTechService.getAnalysis(onboarding)
+            res.json(analysis)
         } catch (error) {
             next(error)
         }
