@@ -74,4 +74,15 @@ export class AccountController {
             next(error)
         }
     }
+
+    public async handleListAllAccounts(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const page = Number(req.query.page) || 1
+            const pageSize = Number(req.query.pageSize) || 100
+            const accounts = await QiTechService.getInstance().listAllAccounts(page, pageSize)
+            res.status(200).json(accounts)
+        } catch (error) {
+            next(error)
+        }
+    }
 }
