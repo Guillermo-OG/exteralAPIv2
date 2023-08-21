@@ -101,15 +101,15 @@ export class QiTechService {
         if (account) {
             account.callbackURL = callbackURL
             account.request = payload
-            account.status = AccountStatus.PENDING
-            account.markModified('request')
+            account.status = AccountStatus.SUCCESS
+            // account.markModified('request')
             // account.markModified('data')
         } else {
             account = await accountRepository.create({
                 callbackURL,
                 document: document,
                 request: payload,
-                status: AccountStatus.PENDING,
+                status: AccountStatus.SUCCESS,
                 type: accountType,
                 apiUserId: apiUser.id,
             })
@@ -117,7 +117,26 @@ export class QiTechService {
 
         try {
             account.response = await this.client.createAccount(payload)
+            account = await this.updateAccountWithQi(account)
             account.markModified('response')
+            await account.save()
+
+            await this.createPixKey({
+                account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
+                pix_key_type: PixKeyType.RANDOM_KEY,
+            })
+
+            const notificationService = NotificationService.getInstance()
+            const notification = await notificationService.create(
+                {
+                    ...account.toJSON(),
+                    pixKeys: [],
+                },
+                account.callbackURL,
+                apiUser
+            )
+            notificationService.notify(notification)
+
             await account.save()
         } catch (error) {
             account.status = AccountStatus.FAILED
