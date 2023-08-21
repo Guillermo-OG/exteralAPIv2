@@ -24,7 +24,7 @@ export class AccountRouter {
     private config(): void {
         this.router.use(this.authMiddleware.authenticate)
 
-        this.router.get('/:document', this.controller.getByDocument)
+        this.router.get('/list/:document', this.controller.getByDocument)
         this.router.get('/', this.controller.handleListAllAccounts)
         this.router.post('/', this.validationMiddleware.validate({ body: CreateAccountSchema }), this.controller.createAccount)
 

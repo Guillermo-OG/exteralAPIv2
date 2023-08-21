@@ -14,14 +14,14 @@ export class OnboardingController {
             }
 
             const repository = OnboardingRepository.getInstance()
-            let onboarding = await repository.getByDocument(document)
+            const onboarding = await repository.getByDocument(document)
 
             if (!onboarding) {
                 throw new NotFoundError('Onboarding not found for this document')
             }
 
             const qiTechService = OnboardingService.getInstance()
-            let analysis = await qiTechService.getAnalysis(onboarding)
+            const analysis = await qiTechService.getAnalysis(onboarding)
 
             res.json(analysis)
         } catch (error) {
@@ -38,13 +38,13 @@ export class OnboardingController {
 
             const qiTechService = OnboardingService.getInstance()
             const repository = OnboardingRepository.getInstance()
-            let onboarding = await repository.getByDocument(document)
+            const onboarding = await repository.getByDocument(document)
 
             if (!onboarding) {
                 throw new NotFoundError('Onboarding not found for this document')
             }
 
-            let analysis = await qiTechService.getAnalysis(onboarding)
+            const analysis = await qiTechService.getAnalysis(onboarding)
             res.json(analysis)
         } catch (error) {
             next(error)
