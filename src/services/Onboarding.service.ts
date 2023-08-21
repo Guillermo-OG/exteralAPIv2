@@ -2,12 +2,12 @@ import { AxiosError } from 'axios'
 import { createHmac } from 'crypto'
 import { format } from 'date-fns'
 import { Request } from 'express'
-import { HydratedDocument, ObjectId } from 'mongoose'
+import { ObjectId } from 'mongoose'
 import { v4 } from 'uuid'
 import { ValidationError as YupValidationError } from 'yup'
 import env from '../config/env'
 import { OnboardingClient, OnboardingTypes, QiTechTypes } from '../infra'
-import { IOnboarding, NotFoundError, OnboardingModel, ServerError, IAccount, IApiUser } from '../models'
+import { IAccount, IOnboarding, NotFoundError, OnboardingModel, ServerError } from '../models'
 import { AccountRepository, ApiUserRepository, OnboardingRepository } from '../repository'
 import { maskCEP, maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
@@ -87,6 +87,25 @@ export class OnboardingService {
         return await this.updateOnboarding(onboarding)
     }
 
+    public async getAnalysis(
+        onboarding: OnboardingModel
+    ): Promise<OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse> {
+        try {
+            let analysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
+
+            if ('legal_name' in onboarding.request) {
+                analysis = await this.api.getLegalPerson(onboarding.response?.id ?? '0')
+            } else {
+                analysis = await this.api.getNaturalPerson(onboarding.response?.id ?? '0')
+            }
+
+            return analysis
+        } catch (error) {
+            console.log('Error on get analysis: ', error)
+            throw new Error('Error on get analysis')
+        }
+    }
+
     public async updateOnboarding(onboarding: OnboardingModel) {
         if (onboarding.status === OnboardingTypes.RequestStatus.PENDING && onboarding.response) {
             let udaptedData: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
@@ -162,35 +181,27 @@ export class OnboardingService {
     }
 
     private async createAccountIfNecessary(onboarding: OnboardingModel) {
-        // Remover caracteres especiais do número do documento
         const document = unMask(onboarding.request.document_number)
-
-        // Buscar o objeto IAccount correspondente ao documento
         const account = await AccountRepository.getInstance().eagerGetByDocument(document)
 
-        // Verifique se o objetoIAccount foi encontrado
         if (!account) {
             throw new Error('Account not found for the given document')
         }
 
-        // O payload é o campo request do objeto IAccount
-        let payload = account.request as any
+        const payload = account.request as QiTechTypes.Account.ICreate
 
         payload.callbackURL = account.callbackURL
-        payload.data = account.data
+        // payload.data = account.data
 
-        // Obter o apiUser usando o apiUserId do objetoIAccount
         const apiUserRepository = ApiUserRepository.getInstance()
         const apiUser = await apiUserRepository.getById(account.apiUserId)
 
-        // Verificar se o apiUser foi encontrado
         if (!apiUser) {
             throw new Error('API User not found for the given apiUserId')
         }
 
-        // Obter a instância do serviço QiTech e criar a conta
         const qiTechService = QiTechService.getInstance()
-        return await qiTechService.createAccountOnBoardingOk(document, payload as QiTechTypes.Account.ICreate, apiUser)
+        return await qiTechService.createAccountOnBoardingOk(document, payload, account?.apiUserId)
     }
 
     public mapQiTechPayload(data: QiTechTypes.Account.ICreate): OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate {
