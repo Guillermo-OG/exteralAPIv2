@@ -20,6 +20,15 @@ export class WebhookController {
         }
     }
 
+    public async handlePendingAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            await QiTechService.getInstance().handlePendingAnalysis()
+            res.status(200).send('ok')
+        } catch (error) {
+            next(error)
+        }
+    }
+
     public async handleQITechBaaSWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             await QiTechService.getInstance().handleWebhook(req)
