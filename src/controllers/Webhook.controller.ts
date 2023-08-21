@@ -26,6 +26,7 @@ export class WebhookController {
 
     public async handlePendingAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            console.log(req)
             await QiTechService.getInstance().handlePendingAnalysis()
             res.status(200).send('ok')
         } catch (error) {
