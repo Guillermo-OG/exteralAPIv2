@@ -85,4 +85,18 @@ export class AccountController {
             next(error)
         }
     }
+
+    public async cancelAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const accountKey = req.params.accountKey
+            if (!accountKey) {
+                throw new ValidationError('Missing accountKey')
+            }
+            const response = await qiTechService.cancelAccount(accountKey)
+            res.status(200).json(response)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
 }

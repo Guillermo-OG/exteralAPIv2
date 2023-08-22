@@ -11,6 +11,7 @@ export enum AccountStatus {
     PENDING = 'PENDING',
     SUCCESS = 'SUCCESS',
     FAILED = 'FAILED',
+    CLOSED = 'CLOSED',
 }
 
 export interface IAccount {
