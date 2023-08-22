@@ -18,6 +18,7 @@ export enum AccountStatus {
     PENDING = 'pending_kyc_analysis',
     SUCCESS = 'account_opened',
     ERROR = 'account_rejected',
+    CLOSED = 'closed',
 }
 
 export enum CompanyType {
