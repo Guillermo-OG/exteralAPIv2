@@ -35,5 +35,6 @@ export class AccountRouter {
             this.validationMiddleware.validate({ body: fileCreateSchema }),
             this.controller.uploadFile
         )
+        this.router.patch('/cancel/:accountKey', this.controller.cancelAccount)
     }
 }

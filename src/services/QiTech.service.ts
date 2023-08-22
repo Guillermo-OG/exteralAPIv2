@@ -118,7 +118,7 @@ export class QiTechService {
 
             if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
                 const account = await accountRepository.getByDocument(onboarding.document)
-                
+
                 if (!account) {
                     throw new NotFoundError('Account not found for this document')
                 }
@@ -128,11 +128,7 @@ export class QiTechService {
         }
     }
 
-    public async createAccountOnBoardingOk(
-        document: string,
-        payload: QiTechTypes.Account.ICreate,
-        apiUserId: Schema.Types.ObjectId
-    ) {
+    public async createAccountOnBoardingOk(document: string, payload: QiTechTypes.Account.ICreate, apiUserId: Schema.Types.ObjectId) {
         const userRepository = ApiUserRepository.getInstance()
 
         const apiUser = await userRepository.getById(apiUserId)
@@ -437,12 +433,49 @@ export class QiTechService {
                 return AccountStatus.PENDING
             case QiTechTypes.Account.AccountStatus.SUCCESS:
                 return AccountStatus.SUCCESS
+            case QiTechTypes.Account.AccountStatus.CLOSED:
+                return AccountStatus.CLOSED
             default:
                 return AccountStatus.FAILED
         }
     }
 
-    public async listAllAccounts(page: number, pageSize: number): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
-        return await this.client.listAllAccounts(page, pageSize)
+    public async listAllAccounts(page: number, pageSize: number): Promise<any> {
+        const result = await this.client.listAllAccounts(page, pageSize)
+
+        const mappedData = result.data.map(account => ({
+            account_key: account.account_key,
+            owner_name: account.owner_name,
+            owner_document_number: account.owner_document_number,
+            created_at: account.created_at,
+        }))
+
+        const sortedData = mappedData.sort((a, b) => {
+            if (a.created_at < b.created_at) return -1
+            if (a.created_at > b.created_at) return 1
+
+            return a.owner_name.localeCompare(b.owner_name)
+        })
+
+        // Retorna o objeto formatado com a nova estrutura
+        return {
+            total: sortedData.length,
+            data: sortedData,
+            pagination: result.pagination,
+        }
+    }
+
+    public async cancelAccount(accountKey: string): Promise<any> {
+        const result = await this.client.cancelAccount(accountKey)
+        // const account = await AccountRepository.getInstance().getByAccountKey(accountKey)
+        // if (!account) {
+        //     throw new NotFoundError('Account not found for this key')
+        // }
+        // account.status = AccountStatus.CLOSED
+        // await account.save()
+        return {
+            message: 'Account successfully canceled',
+            data: result,
+        }
     }
 }
