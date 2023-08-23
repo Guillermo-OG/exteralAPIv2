@@ -1,4 +1,5 @@
 export * from './Account.controller'
+export * from './Status.controller'
 export * from './Onboarding.controller'
 export * from './PixKey.controller'
 export * from './Webhook.controller'
