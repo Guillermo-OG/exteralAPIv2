@@ -83,7 +83,7 @@ export class QiTechService {
         const onboarding = await onboardingService.createOnboarding(onboardingData, account.id)
 
         if (onboarding.status !== OnboardingTypes.RequestStatus.APPROVED) {
-            account.status = AccountStatus.FAILED
+            account.status = AccountStatus.PENDING
             await account.save()
             throw new ValidationError('Onboarding failed or is pending')
         }
@@ -99,6 +99,47 @@ export class QiTechService {
         }
 
         return account
+    }
+
+    public async handleAccountCreation() {
+        const accountRepository = AccountRepository.getInstance()
+        const userRepository = ApiUserRepository.getInstance()
+
+        const accounts: IPaginatedSearch<IAccount> = await accountRepository.list(1, '', AccountStatus.PENDING)
+
+        if (accounts.count == 0) return
+
+        for (let index = 0; index < accounts.count; index++) {
+            try {
+                let account = accounts.data[index]
+                if (!account) throw new NotFoundError('Account not found for this document')
+
+                account = await this.updateAccountWithQi(account)
+
+                if (!account?.data) throw new Error('Account data not found')
+
+                await this.createPixKey({
+                    account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
+                    pix_key_type: PixKeyType.RANDOM_KEY,
+                })
+
+                const apiUser = await userRepository.getById(account.apiUserId)
+                if (!apiUser) throw new NotFoundError('User not found for this account')
+
+                const notificationService = NotificationService.getInstance()
+                const notification = await notificationService.create(
+                    {
+                        ...account.toJSON(),
+                        pixKeys: [],
+                    },
+                    account.callbackURL,
+                    apiUser
+                )
+                notificationService.notify(notification)
+            } catch (error) {
+                console.log(error)
+            }
+        }
     }
 
     public async handlePendingAnalysis() {
@@ -118,85 +159,50 @@ export class QiTechService {
 
             if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
                 const account = await accountRepository.getByDocument(onboarding.document)
-                
+
                 if (!account) {
                     throw new NotFoundError('Account not found for this document')
                 }
 
-                this.createAccountOnBoardingOk(onboarding.document, account?.request as QiTechTypes.Account.ICreate, account.apiUserId)
+                await this.createAccountOnboardingOk(
+                    onboarding.document,
+                    account?.request as QiTechTypes.Account.ICreate,
+                    account.apiUserId
+                )
+                await onboardingService.updateOnboarding(onboarding)
             }
         }
     }
 
-    public async createAccountOnBoardingOk(
-        document: string,
-        payload: QiTechTypes.Account.ICreate,
-        apiUserId: Schema.Types.ObjectId
-    ) {
+    public async createAccountOnboardingOk(document: string, payload: QiTechTypes.Account.ICreate, apiUserId: Schema.Types.ObjectId) {
         const userRepository = ApiUserRepository.getInstance()
-
         const apiUser = await userRepository.getById(apiUserId)
-
-        if (!apiUser) {
-            throw new NotFoundError('User not found for this account')
-        }
+        if (!apiUser) throw new NotFoundError('User not found for this account')
 
         const accountRepository = AccountRepository.getInstance()
 
-        const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
-        const callbackURL = payload.callbackURL || ''
-        delete payload.callbackURL
         this.formatPayload(payload)
 
-        let account = await accountRepository.getByDocument(document)
-        // if (account && account.status !== AccountStatus.FAILED) {
-        //     throw new ValidationError('Existing account found for this document')
-        // }
-
-        if (account) {
-            account.callbackURL = callbackURL
-            account.request = payload
-            account.status = AccountStatus.SUCCESS
-            // account.markModified('request')
-            // account.markModified('data')
-        } else {
-            account = await accountRepository.create({
-                callbackURL,
-                document: document,
-                request: payload,
-                status: AccountStatus.SUCCESS,
-                type: accountType,
-                apiUserId: apiUser?.id,
-            })
-        }
+        const account = await accountRepository.getByDocument(document)
+        if (account == null) throw new ValidationError('Existing account found for this document')
 
         try {
-            account.response = await this.client.createAccount(payload)
-            account = await this.updateAccountWithQi(account)
+            const response = await this.client.createAccount(payload)
+
+            if (response) {
+                account.response = response
+                account.request = payload
+            }
+
             account.markModified('response')
             await account.save()
-
-            await this.createPixKey({
-                account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
-                pix_key_type: PixKeyType.RANDOM_KEY,
-            })
-
-            const notificationService = NotificationService.getInstance()
-            const notification = await notificationService.create(
-                {
-                    ...account.toJSON(),
-                    pixKeys: [],
-                },
-                account.callbackURL,
-                apiUser
-            )
-            notificationService.notify(notification)
-
-            await account.save()
         } catch (error) {
+            const qiTechService = QiTechService.getInstance()
+            const erroDecodificado = await qiTechService.decodeError(error)
+
             account.status = AccountStatus.FAILED
             await account.save()
-            throw error
+            throw erroDecodificado
         }
 
         return account
@@ -305,8 +311,11 @@ export class QiTechService {
 
         if (updatedAccount) {
             account.data = updatedAccount
+            account.status = AccountStatus.SUCCESS
             account.markModified('data')
         }
+
+        await account.save()
 
         return account
     }
