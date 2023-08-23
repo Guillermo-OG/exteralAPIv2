@@ -62,4 +62,19 @@ export class PixKeyRepository {
             page: 1,
         })
     }
+
+    public listAllByDocument(document: string, keyType?: string): Promise<PixModel[]> {
+        const filter: FilterQuery<IPix> = {
+            document: {
+                $eq: unMask(document),
+            },
+        }
+        if (keyType) {
+            filter.type = {
+                $eq: keyType,
+            }
+        }
+
+        return PixKey.find(filter).sort({ _id: -1 }).exec()
+    }
 }
