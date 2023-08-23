@@ -234,11 +234,11 @@ export class QiTechClient {
         return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
-    public async cancelAccount(accountKey: string): Promise<any> {
+    public async cancelAccount(accountKey: string): Promise<string> {
         const endpoint = `/account/${accountKey}/cancel`
         const contentType = 'application/json'
         const config = await this.signMessage(endpoint, 'PATCH', null, contentType)
         const res = await this.api.patch(endpoint, null, { headers: config.headers })
-        return await this.decodeMessage<any>(endpoint, 'PATCH', res.headers as IHeaders, res.data)
+        return await this.decodeMessage<string>(endpoint, 'PATCH', res.headers as IHeaders, res.data)
     }
 }
