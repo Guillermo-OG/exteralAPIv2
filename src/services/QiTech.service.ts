@@ -440,7 +440,7 @@ export class QiTechService {
         }
     }
 
-    public async listAllAccounts(page: number, pageSize: number): Promise<any> {
+    public async listAllAccounts(page: number, pageSize: number) {
         const result = await this.client.listAllAccounts(page, pageSize)
 
         const mappedData = result.data.map(account => ({
@@ -465,7 +465,7 @@ export class QiTechService {
         }
     }
 
-    public async cancelAccount(accountKey: string): Promise<any> {
+    public async cancelAccount(accountKey: string) {
         const result = await this.client.cancelAccount(accountKey)
         // const account = await AccountRepository.getInstance().getByAccountKey(accountKey)
         // if (!account) {

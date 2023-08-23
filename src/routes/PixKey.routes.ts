@@ -17,5 +17,6 @@ export class PixKeyRouter {
     private config(): void {
         this.router.use(this.authMiddleware.authenticate)
         this.router.get('/', this.controller.listByDocument)
+        this.router.post('/create', this.controller.createPixKey)
     }
 }
