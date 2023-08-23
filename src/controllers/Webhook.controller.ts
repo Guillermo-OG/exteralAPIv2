@@ -5,7 +5,6 @@ import { NotificationService, OnboardingService, QiTechService } from '../servic
 export class WebhookController {
     public async handleOnboardingWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            // const body = JSON.parse(req.body as string) as OnboardingTypes.IWebhookBody
             const body = req.body as OnboardingTypes.IWebhookBody
             const service = OnboardingService.getInstance()
             const notificationService = NotificationService.getInstance()
@@ -24,10 +23,19 @@ export class WebhookController {
         }
     }
 
-    public async handlePendingAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
+    public async handlePendingAnalysis(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            console.log(req)
             await QiTechService.getInstance().handlePendingAnalysis()
+            res.status(200).send('ok')
+        } catch (error) {
+            console.error(error)
+            next(error)
+        }
+    }
+
+    public async handleAccountCreation(_req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            await QiTechService.getInstance().handleAccountCreation()
             res.status(200).send('ok')
         } catch (error) {
             next(error)
