@@ -101,7 +101,6 @@ export class OnboardingService {
 
             return analysis
         } catch (error) {
-            console.log('Error on get analysis: ', error)
             throw new Error('Error on get analysis')
         }
     }
@@ -165,6 +164,9 @@ export class OnboardingService {
             // Verifique se o onboarding foi aprovado
             if (onboarding.status === OnboardingTypes.RequestStatus.APPROVED) {
                 createdAccount = await this.createAccountIfNecessary(onboarding)
+
+                if (!createdAccount) throw new Error('Account not created')
+
                 url = createdAccount.callbackURL
             }
         }
@@ -201,7 +203,7 @@ export class OnboardingService {
         }
 
         const qiTechService = QiTechService.getInstance()
-        return await qiTechService.createAccountOnBoardingOk(document, payload, account?.apiUserId)
+        return await qiTechService.createAccountOnboardingOk(document, payload, account?.apiUserId)
     }
 
     public mapQiTechPayload(data: QiTechTypes.Account.ICreate): OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate {
