@@ -458,6 +458,8 @@ export class QiTechService {
 
         const mappedData = result.data.map(account => ({
             account_key: account.account_key,
+            account_number: account.account_number,
+            account_digit: account.account_digit,
             owner_name: account.owner_name,
             owner_document_number: account.owner_document_number,
             created_at: account.created_at,
