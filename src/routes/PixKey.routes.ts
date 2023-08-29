@@ -18,5 +18,8 @@ export class PixKeyRouter {
         this.router.use(this.authMiddleware.authenticate)
         this.router.get('/', this.controller.listByDocument)
         this.router.post('/create', this.controller.createPixKey)
+        this.router.get('/limits/:document', this.controller.getLimitsByDocument)
+        this.router.patch('/limits/:document', this.controller.updatePixLimits)
+        this.router.get('/limits_request/:document', this.controller.getPixLimitsRequest)
     }
 }
