@@ -472,7 +472,6 @@ export class QiTechService {
             return a.owner_name.localeCompare(b.owner_name)
         })
 
-        // Retorna o objeto formatado com a nova estrutura
         return {
             total: sortedData.length,
             data: sortedData,
@@ -492,5 +491,61 @@ export class QiTechService {
             message: 'Account successfully canceled',
             data: result,
         }
+    }
+
+    public async getAccountQITech(accountKey: string, page: number, pageSize: number) {
+        const result = await this.client.getAccountsByKey(accountKey, page, pageSize)
+
+        return {
+            data: result,
+        }
+    }
+
+    public async getPixLimitsByDocument(document: string) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('No account found for this document')
+        }
+
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+
+        const limits = await this.client.getLimitsByAccountKey(accountKey)
+        return limits
+    }
+
+    public async updatePixLimits(document: string, pixLimits: Partial<QiTechTypes.Pix.IPixLimits>) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('No account found for this document')
+        }
+
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+
+        const requestBody = {
+            ...pixLimits,
+        }
+
+        const response = await this.client.updatePixLimits(accountKey, requestBody)
+        return response
+    }
+
+    public async getPixLimitsRequestByDocument(
+        document: string,
+        requestStatus: QiTechTypes.Pix.IPixRequestStatus,
+        page = 1,
+        pageSize = 10
+    ) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+
+        if (!account) {
+            throw new Error('No account found for this document.')
+        }
+
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+
+        return await this.client.getPixLimitsRequest(accountKey, requestStatus, page, pageSize)
     }
 }

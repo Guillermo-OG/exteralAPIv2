@@ -95,6 +95,28 @@ export class QiTechClient {
         )
     }
 
+    public async getAccountsByKey(
+        accountKey: string,
+        page = 1,
+        pageSize = 100
+    ): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
+        const urlQueryParams = new URLSearchParams({
+            account_key: accountKey,
+            page: page.toString(),
+            pageSize: pageSize.toString(),
+        })
+        const endpoint = `/account?${urlQueryParams}`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
+        const res = await this.api.get(endpoint, { headers: config.headers })
+        return await this.decodeMessage<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>>(
+            endpoint,
+            'GET',
+            res.headers,
+            res.data
+        )
+    }
+
     public async uploadFile(fileName: string, fileBuffer: Buffer): Promise<QiTechTypes.Upload.IResponse> {
         const endpoint = '/upload'
         const method = 'POST'
@@ -241,5 +263,42 @@ export class QiTechClient {
         const config = await this.signMessage(endpoint, 'PATCH', null, contentType)
         const res = await this.api.patch(endpoint, null, { headers: config.headers })
         return await this.decodeMessage<string>(endpoint, 'PATCH', res.headers as IHeaders, res.data)
+    }
+
+    public async getLimitsByAccountKey(accountKey: string): Promise<QiTechTypes.Pix.IPixLimits> {
+        const endpoint = `/baas/pix/limits/${accountKey}/usage`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
+        const res = await this.api.get(endpoint, { headers: config.headers })
+        return await this.decodeMessage<QiTechTypes.Pix.IPixLimits>(endpoint, 'GET', res.headers as IHeaders, res.data)
+    }
+
+    public async updatePixLimits(accountKey: string, data: Partial<QiTechTypes.Pix.IPixLimits>) {
+        const endpoint = `/baas/pix/limits/${accountKey}`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'POST', data, contentType)
+
+        const res = await this.api.post(endpoint, config.body, { headers: config.headers })
+        return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
+    }
+
+    public async getPixLimitsRequest(accountKey: string, requestStatus: QiTechTypes.Pix.IPixRequestStatus, page = 1, pageSize = 10) {
+        const urlQueryParams = new URLSearchParams({
+            account_key: accountKey,
+            request_status: requestStatus,
+            page: page.toString(),
+            page_size: pageSize.toString(),
+        })
+        const endpoint = `/baas/pix/limits_request?${urlQueryParams}`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
+
+        const res = await this.api.get(endpoint, { headers: config.headers })
+        return await this.decodeMessage<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Pix.IPixLimitUpdateRequest>>(
+            endpoint,
+            'GET',
+            res.headers as IHeaders,
+            res.data
+        )
     }
 }
