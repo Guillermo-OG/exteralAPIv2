@@ -12,7 +12,7 @@ export interface IPixKeyWebhook {
 
 export enum IPixKeyStatus {
     'PENDING' = 'pending',
-    'SUCCESS' = 'approved'
+    'SUCCESS' = 'approved',
 }
 
 export interface ICreatePix {
@@ -21,3 +21,35 @@ export interface ICreatePix {
     pix_key?: string
 }
 
+export interface IPixLimits {
+    daily_amount_limit: string
+    daily_amount_percentage: string | null
+    daily_amount_used: string
+    nightly_amount_limit: string
+    nightly_amount_percentage: string | null
+    nightly_amount_used: string
+    self_daily_amount_limit: string
+    self_daily_amount_percentage: string | null
+    self_daily_amount_used: string
+    self_nightly_amount_limit: string
+    self_nightly_amount_percentage: string | null
+    self_nightly_amount_used: string
+}
+
+export interface IPixLimitUpdateRequest {
+    account_key: string
+    amount_limit: number
+    created_at: string
+    limit_type: string
+    request_key: string
+    request_status: IPixRequestStatus
+    routine_key: string | null
+}
+
+export enum IPixRequestStatus {
+    PENDING_APPROVAL = 'pending_approval',
+    APPROVED = 'approved',
+    REJECTED = 'rejected',
+    EXECUTED = 'executed',
+    ALL = 'pending_approval,approved,rejected,executed',
+}
