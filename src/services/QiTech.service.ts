@@ -304,6 +304,10 @@ export class QiTechService {
         return pix
     }
 
+    public async handlePixLimitWebhook(payload: QiTechTypes.Pix.IPixLimitRequestWebhook) {
+        console.log(payload.data.pix_transfer_limit_config)
+    }
+
     public async updateAccountWithQi(account: HydratedDocument<IAccount>): Promise<HydratedDocument<IAccount>> {
         const updatedAccount = (await this.client.listAccounts(account.document)).data.find(
             acc => acc.account_number === account.response?.data.account_info.account_number
@@ -360,6 +364,10 @@ export class QiTechService {
                 break
             case 'account_transaction':
                 await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                break
+            case 'baas.pix.limits.account_limit_config.updated':
+                await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
+
                 break
             default:
                 break
