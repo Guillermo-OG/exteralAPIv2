@@ -305,7 +305,33 @@ export class QiTechService {
     }
 
     public async handlePixLimitWebhook(payload: QiTechTypes.Pix.IPixLimitRequestWebhook) {
-        console.log(payload.data.pix_transfer_limit_config)
+        const accountRepository = AccountRepository.getInstance()
+        const apiUserRepository = ApiUserRepository.getInstance()
+
+        const account = await accountRepository.getById(payload.origin_key)
+        if (!account) {
+            throw new NotFoundError('Account not found for this key')
+        }
+
+        const apiUser = await apiUserRepository.getById(account.apiUserId)
+        if (!apiUser) {
+            throw new NotFoundError('User not found for this account')
+        }
+
+        // Você pode fazer mais lógica aqui, se necessário
+        const notificationService = NotificationService.getInstance()
+        const notification = await notificationService.create(
+            {
+                ...account.toJSON(),
+                pixLimits: payload.data.pix_transfer_limit_config,
+            },
+            account.callbackURL,
+            apiUser
+        )
+
+        notificationService.notify(notification)
+
+        console.log('Pix Limit Webhook Payload:', payload.data.pix_transfer_limit_config)
     }
 
     public async updateAccountWithQi(account: HydratedDocument<IAccount>): Promise<HydratedDocument<IAccount>> {
@@ -367,7 +393,6 @@ export class QiTechService {
                 break
             case 'baas.pix.limits.account_limit_config.updated':
                 await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
-
                 break
             default:
                 break
