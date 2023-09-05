@@ -7,7 +7,7 @@ export const fileCreateSchema = new yup.ObjectSchema({
     document: yup
         .string()
         .required()
-        .test(value => {
+        .test('valid-document', 'Documento inválido', value => {
             const raw = unMask(value)
             if (raw.length > 11) {
                 return validateCNPJ(value)
