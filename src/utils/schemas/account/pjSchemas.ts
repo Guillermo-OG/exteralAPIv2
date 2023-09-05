@@ -7,50 +7,50 @@ import addressSchema from './addressSchema'
 export const PjCreateSchema = new yup.ObjectSchema({
     account_owner: yup.object().shape({
         address: addressSchema,
-        name: yup.string().required(),
+        name: yup.string().required('Nome é obrigatório'),
         cnae_code: yup
             .string()
-            .required()
-            .test(value => {
-                return unMask(value).length == 7
+            .required('Código CNAE é obrigatório')
+            .test('Validação de comprimento do CNAE', 'CNAE deve ter 7 dígitos', value => {
+                return unMask(value).length === 7
             }),
         email: yup
             .string()
-            .required()
-            .test(value => {
+            .required('E-mail é obrigatório')
+            .test('Validação de E-mail', 'E-mail inválido', value => {
                 return isEmailValid(value)
             }),
         foundation_date: yup
             .string()
-            .required()
-            .test(value => {
+            .required('Data de fundação é obrigatória')
+            .test('Validação de data', 'Data inválida', value => {
                 return isValid(new Date(value))
             }),
-        company_statute: yup.string().required(),
+        company_statute: yup.string().required('Estatuto da empresa é obrigatório'),
         annual_revenue_amount: yup
             .string()
-            .required()
-            .matches(/^[.\d]*$/, { message: 'annual_revenue_amount may only have digits and point' }),
+            .required('Receita anual é obrigatória')
+            .matches(/^[.\d]*$/, { message: 'Receita anual deve conter apenas dígitos e ponto' }),
         company_document_number: yup
             .string()
-            .required()
-            .test(value => {
+            .required('Número de documento da empresa é obrigatório')
+            .test('Validação de CNPJ', 'CNPJ inválido', value => {
                 return validateCNPJ(value)
             }),
         person_type: yup.string().required().oneOf(['legal']),
         phone: yup.object().shape({
             area_code: yup
                 .string()
-                .required()
-                .matches(/^\d{2}$/),
+                .required('DDD é obrigatório')
+                .matches(/^\d{2}$/, 'DDD deve ter dois dígitos'),
             country_code: yup
                 .string()
-                .required()
+                .required('Código do país é obrigatório')
                 .matches(/^\d{2}$/),
             number: yup
                 .string()
-                .required()
-                .matches(/^\d{9}$/),
+                .required('Número de telefone é obrigatório')
+                .matches(/^\d{9}$/, 'Telefone deve ter nove dígitos'),
         }),
         trading_name: yup.string().required(),
         company_representatives: yup
@@ -60,73 +60,73 @@ export const PjCreateSchema = new yup.ObjectSchema({
                     address: addressSchema,
                     birth_date: yup
                         .string()
-                        .required()
-                        .test(value => {
+                        .required('Data de nascimento é obrigatória')
+                        .test('Validação de data', 'Data inválida', value => {
                             return isValid(new Date(value))
                         }),
-                    document_identification_number: yup.string().required(),
-                    document_identification: yup.string().required(),
-                    email: yup.string().required(),
+                    document_identification_number: yup.string().required('Número de identificação do documento é obrigatório'),
+                    document_identification: yup.string().required('Identificação do documento é obrigatória'),
+                    email: yup.string().required('E-mail é obrigatório'),
                     individual_document_number: yup
                         .string()
-                        .required()
-                        .test(value => {
+                        .required('Número de documento individual é obrigatório')
+                        .test('Validação de CPF', 'CPF inválido', value => {
                             return validateCPF(value)
                         }),
-                    is_pep: yup.boolean().required(),
-                    marital_status: yup.string().required(),
-                    mother_name: yup.string().required(),
-                    name: yup.string().required(),
-                    nationality: yup.string().required(),
-                    person_type: yup.string().required().oneOf(['natural']),
+                    is_pep: yup.boolean().required('Informação PEP é obrigatória'),
+                    marital_status: yup.string().required('Estado civil é obrigatório'),
+                    mother_name: yup.string().required('Nome da mãe é obrigatório'),
+                    name: yup.string().required('Nome é obrigatório'),
+                    nationality: yup.string().required('Nacionalidade é obrigatória'),
+                    person_type: yup.string().required('Tipo de pessoa é obrigatório').oneOf(['natural'], 'Tipo de pessoa inválido'),
                     phone: yup.object().shape({
                         area_code: yup
                             .string()
-                            .required()
-                            .matches(/^\d{2}$/, { message: 'area_code may only have two digits' }),
+                            .required('DDD é obrigatório')
+                            .matches(/^\d{2}$/, { message: 'DDD deve ter dois dígitos' }),
                         country_code: yup
                             .string()
-                            .required()
-                            .matches(/^\d{2}$/, { message: 'country_code may only have two digits' }),
+                            .required('Codigo do país é obrigatório')
+                            .matches(/^\d{2}$/, { message: 'Codigo do país deve ter dois dígitos' }),
                         number: yup
                             .string()
-                            .required()
-                            .matches(/^\d{9}$/, { message: 'number may only have 9 digits' }),
+                            .required('Número de telefone é obrigatório')
+                            .matches(/^\d{9}$/, { message: 'Número de telefone deve ter 9 dígitos' }),
                     }),
                 })
             )
-            .min(1)
-            .required(),
+            .min(1, 'Pelo menos um representante da empresa é necessário')
+            .required('Representantes da empresa são obrigatórios'),
     }),
     allowed_user: yup.object().shape({
         email: yup
             .string()
-            .required()
-            .test(value => {
+            .required('E-mail é obrigatório')
+            .test('Validação de E-mail', 'E-mail inválido', value => {
                 return isEmailValid(value)
             }),
         individual_document_number: yup
             .string()
-            .required()
-            .test(value => {
+            .required('Número de documento individual é obrigatório')
+            .test('Validação de CPF', 'CPF inválido', value => {
                 return validateCPF(value)
             }),
-        name: yup.string().required(),
-        person_type: yup.string().required().oneOf(['natural']),
+        name: yup.string().required('Nome é obrigatório'),
+        person_type: yup.string().required('Tipo de pessoa é obrigatório').oneOf(['natural'], 'Tipo de pessoa inválido'),
         phone: yup.object().shape({
             area_code: yup
                 .string()
-                .required()
-                .matches(/^\d{2}$/, { message: 'area_code may only have two digits' }),
+                .required('DDD é obrigatório')
+                .matches(/^\d{2}$/, { message: 'DDD deve ter dois dígitos' }),
             country_code: yup
                 .string()
-                .required()
-                .matches(/^\d{2}$/, { message: 'country_code may only have two digits' }),
+                .required('Código do país é obrigatório')
+                .matches(/^\d{2}$/, { message: 'Código do país deve ter dois dígitos' }),
             number: yup
                 .string()
-                .required()
-                .matches(/^\d{9}$/, { message: 'number may only have 9 digits' }),
+                .required('Número de telefone é obrigatório')
+                .matches(/^\d{9}$/, { message: 'Número de telefone deve ter 9 dígitos' }),
         }),
     }),
-    callbackURL: yup.string().required(),
+    callbackURL: yup.string().required('URL de retorno é obrigatório'),
 })

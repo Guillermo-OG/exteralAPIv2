@@ -1,3 +1,5 @@
+import './utils/validations/yupConfig'
+
 import * as appInsights from 'applicationinsights'
 import express, { Express } from 'express'
 import Database from './config/database'
