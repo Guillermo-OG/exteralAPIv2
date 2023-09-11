@@ -11,8 +11,8 @@ export class PixKeyController {
             const document = req.query.document
             const keyType = req.query.pixKeyType
 
-            if(!document) {
-                throw new ValidationError('No document specified')
+            if (!document) {
+                throw new ValidationError('Não foi encontrado o documento')
             }
 
             const pixRepository = PixKeyRepository.getInstance()
@@ -42,7 +42,7 @@ export class PixKeyController {
         try {
             const document = unMask(req.params.document)
             if (!document) {
-                throw new ValidationError('No document specified')
+                throw new ValidationError('Não foi encontrado o documento')
             }
             const qiTechService = QiTechService.getInstance()
             const limits = await qiTechService.getPixLimitsByDocument(document as string)

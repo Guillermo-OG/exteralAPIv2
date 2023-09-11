@@ -21,6 +21,6 @@ export class OnboardingRouter {
         this.router.get('/', this.validator.validate({ query: onboardingPersonListSchema }), this.controller.listOnboarding)
         this.router.get('/:document', this.controller.getByDocument)
         this.router.get('/analysis/:document', this.controller.getAnalysis)
-        // this.router.patch('/update-phone/:document', this.controller.updatePhoneNumber); endpoint incompleto
+        // this.router.patch('/update-person/:document', this.controller.updatePerson)
     }
 }

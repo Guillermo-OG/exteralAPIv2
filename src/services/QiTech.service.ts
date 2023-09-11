@@ -59,7 +59,7 @@ export class QiTechService {
 
         let account = await accountRepository.getByDocument(document)
         if (account && account.status !== AccountStatus.FAILED) {
-            throw new ValidationError('Existing account found for this document')
+            throw new ValidationError('Conta existente encontrada para este documento')
         }
 
         if (account) {
@@ -85,7 +85,7 @@ export class QiTechService {
         if (onboarding.status !== OnboardingTypes.RequestStatus.APPROVED) {
             account.status = AccountStatus.PENDING
             await account.save()
-            throw new ValidationError('Onboarding failed or is pending')
+            throw new ValidationError('Onboarding falhou ou está pendente')
         }
 
         try {
@@ -112,11 +112,11 @@ export class QiTechService {
         for (let index = 0; index < accounts.count; index++) {
             try {
                 let account = accounts.data[index]
-                if (!account) throw new NotFoundError('Account not found for this document')
+                if (!account) throw new NotFoundError('Conta existente encontrada para este documento')
 
                 account = await this.updateAccountWithQi(account)
 
-                if (!account?.data) throw new Error('Account data not found')
+                if (!account?.data) throw new Error('Dados da Conta não encontrados')
 
                 await this.createPixKey({
                     account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
@@ -124,7 +124,7 @@ export class QiTechService {
                 })
 
                 const apiUser = await userRepository.getById(account.apiUserId)
-                if (!apiUser) throw new NotFoundError('User not found for this account')
+                if (!apiUser) throw new NotFoundError('Nenhum usuário encontrado para esta conta')
 
                 const notificationService = NotificationService.getInstance()
                 const notification = await notificationService.create(
@@ -161,7 +161,7 @@ export class QiTechService {
                 const account = await accountRepository.getByDocument(onboarding.document)
 
                 if (!account) {
-                    throw new NotFoundError('Account not found for this document')
+                    throw new NotFoundError('Nenhuma conta encontrada para este documento')
                 }
 
                 await this.createAccountOnboardingOk(
@@ -177,14 +177,14 @@ export class QiTechService {
     public async createAccountOnboardingOk(document: string, payload: QiTechTypes.Account.ICreate, apiUserId: Schema.Types.ObjectId) {
         const userRepository = ApiUserRepository.getInstance()
         const apiUser = await userRepository.getById(apiUserId)
-        if (!apiUser) throw new NotFoundError('User not found for this account')
+        if (!apiUser) throw new NotFoundError('Nenhum usuário encontrado para esta conta')
 
         const accountRepository = AccountRepository.getInstance()
 
         this.formatPayload(payload)
 
         const account = await accountRepository.getByDocument(document)
-        if (account == null) throw new ValidationError('Existing account found for this document')
+        if (account == null) throw new ValidationError('Conta existente encontrada para este documento')
 
         try {
             const response = await this.client.createAccount(payload)
@@ -215,17 +215,17 @@ export class QiTechService {
 
         const account = await accountRepository.getByAccountKey(payload.account_key)
         if (!account) {
-            throw new ValidationError('No account found for this document')
+            throw new ValidationError('Nenhuma conta encontrada para este documento')
         }
 
         const apiUser = await apiUserRepository.getById(account?.apiUserId)
         if (!apiUser) {
-            throw new ValidationError('No user found for this account')
+            throw new ValidationError('Nenhum usuário encontrado para esta conta')
         }
         let pix = await pixRepository.getByDocumentAndKeyType(account.document, payload.pix_key_type)
 
         if (pix && pix.status !== PixStatus.FAILED) {
-            throw new ValidationError('Existing pix key found for this account and key type')
+            throw new ValidationError('Chave Pix existente encontrada para esta conta e tipo de chave')
         }
 
         const pixResponse = await this.client.createPixKey(payload)
@@ -268,17 +268,17 @@ export class QiTechService {
 
         const pix = await pixRepository.getByRequestKey(payload.pix_key_request_key)
         if (!pix) {
-            throw new NotFoundError('Pix not found for this key')
+            throw new NotFoundError('Pix não encontrado para esta chave')
         }
 
         const account = await accountRepository.getById(pix.accountId)
         if (!account) {
-            throw new NotFoundError('Account not found for this key')
+            throw new NotFoundError('Conta não encontrada para esta chave')
         }
 
         const apiUser = await apiUserRepository.getById(account.apiUserId)
         if (!apiUser) {
-            throw new NotFoundError('User not found for this account')
+            throw new NotFoundError('Usuário não encontrado para esta conta')
         }
 
         if (payload.pix_key_request_status !== QiTechTypes.Pix.IPixKeyStatus.SUCCESS) {
@@ -353,7 +353,7 @@ export class QiTechService {
     public async uploadFile(document: string, type: string, fileName: string, file: Buffer) {
         const existingFile = await this.fileRepository.findOne(document, type)
         if (existingFile) {
-            throw new ValidationError('Found existing file with same document and type')
+            throw new ValidationError('Arquivo existente encontrado com o mesmo documento e tipo')
         }
 
         const upload = await this.client.uploadFile(fileName, file)
@@ -402,13 +402,13 @@ export class QiTechService {
     private async handleAccountWebhook(decodedBody: QiTechTypes.Account.IAccountWebhook) {
         let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
         if (!account) {
-            throw new NotFoundError('Account not found for this key')
+            throw new NotFoundError('Conta não encontrada para esta chave')
         } else if (account.status === AccountStatus.SUCCESS) {
             return account
         }
         const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
         if (!apiUser) {
-            throw new Error('User not found for Account')
+            throw new Error('Usuário não encontrado para esta conta')
         }
         const updatedStatus = this.mapStatus(decodedBody.status)
         account.status = updatedStatus
@@ -521,7 +521,7 @@ export class QiTechService {
         // account.status = AccountStatus.CLOSED
         // await account.save()
         return {
-            message: 'Account successfully canceled',
+            message: 'Conta cancelada com sucesso',
             data: result,
         }
     }
@@ -538,7 +538,7 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
         if (!account) {
-            throw new ValidationError('No account found for this document')
+            throw new ValidationError('Conta não encontrada para este documento')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -551,7 +551,7 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
         if (!account) {
-            throw new ValidationError('No account found for this document')
+            throw new ValidationError('Conta não encontrada para este documento')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -574,11 +574,63 @@ export class QiTechService {
         const account = await accountRepository.getByDocument(document)
 
         if (!account) {
-            throw new Error('No account found for this document.')
+            throw new Error('Conta não encontrada para este documento.')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
 
         return await this.client.getPixLimitsRequest(accountKey, requestStatus, page, pageSize)
     }
+
+    // public async updateContact(document: string, phoneNumber: QiTechTypes.Person.PhoneNumberType, email: string): Promise<any> {
+    //     const onboardingRepository = OnboardingRepository.getInstance()
+    //     const onboardingService = OnboardingService.getInstance()
+    //     // const accountRepository = AccountRepository.getInstance()
+
+    //     const onboarding = await onboardingRepository.getByDocument(document)
+    //     if (!onboarding || !onboarding.response) {
+    //         throw new Error('Onboarding não encontrado ou resposta não definida')
+    //     }
+
+    //     let analysis = await onboardingService.getAnalysis(onboarding)
+    //     console.log('analysis_natural_legal_person', analysis)
+
+    //     let person_key: { professional_data_key?: string; natural_person?: string } = {}
+
+    //     if ('legal_person_key' in onboarding.response) {
+    //         person_key.professional_data_key = onboarding.response.legal_person_key
+    //         person_key.natural_person = ''
+    //     } else if ('natural_person_key' in onboarding.response) {
+    //         person_key.natural_person = onboarding.response.natural_person_key
+    //         person_key.professional_data_key = onboarding.data?.company_key
+    //     }
+    //     const requestBody: QiTechTypes.Person.IUpdate = {
+    //         contact_type: 'sms',
+    //         professional_data_contact_update: {
+    //             phone_number: phoneNumber,
+    //             email: email,
+    //             ...person_key,
+    //         },
+    //         agent_document_number: document,
+    //     }
+
+    //     console.log('requestBody', requestBody)
+
+    //     const response = await this.client.updatePerson(requestBody)
+
+    //     // //atualiza conta com o telefone
+    //     // const account = await accountRepository.getByDocument(document)
+    //     // if (!account) {
+    //     //     throw new Error('Account não encontrado')
+    //     // }
+    //     // const accountRequest = account.request as AccountRequest
+    //     // if (!accountRequest || !accountRequest.account_owner) {
+    //     //     throw new Error('Account não encontrado ou estrutura de dados incompleta')
+    //     // }
+
+    //     // accountRequest.account_owner.phone = phoneNumber
+    //     // await account.save()
+
+    //     return response
+    // }
 }

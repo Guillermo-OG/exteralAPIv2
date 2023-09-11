@@ -43,7 +43,7 @@ export class NotificationService {
         try {
             const user = await ApiUserRepository.getInstance().getById(notification.apiUserId)
             if (!user) {
-                throw new Error('User for notification not found')
+                throw new Error('Usuario à ser notificado não encontrado')
             }
 
             notification.lastAttemp = new Date()
