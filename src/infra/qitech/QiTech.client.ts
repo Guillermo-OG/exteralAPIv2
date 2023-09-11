@@ -3,6 +3,7 @@ import { createHash, createPrivateKey } from 'crypto'
 import FormData from 'form-data'
 import { JWTPayload, SignJWT, decodeJwt } from 'jose'
 import { QiTechTypes } from './'
+// import { IUpdate } from './types/Person.types'
 
 interface IQiTechConfig {
     apiKey: string
@@ -54,6 +55,15 @@ export class QiTechClient {
         const res = await this.api.post(endpoint, config.body, { headers: config.headers })
         return await this.decodeMessage<QiTechTypes.Account.ICreateResponse>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
+
+    // public async updateAccount(data: Partial<QiTechTypes.Account.IUpdate>) {
+    //     const endpoint = '/account'
+    //     const body = data
+    //     const contentType = 'application/json'
+    //     const config = await this.signMessage(endpoint, 'PATCH', body, contentType)
+    //     const res = await this.api.patch(endpoint, config.body, { headers: config.headers })
+    //     return await this.decodeMessage<QiTechTypes.Account.IUpdateResponse>(endpoint, 'PATCH', res.headers as IHeaders, res.data)
+    // }
 
     public async listAccounts(
         document: string,
@@ -201,11 +211,11 @@ export class QiTechClient {
         const headerApiKey = responseHeader['api-client-key']
 
         if (headerApiKey !== this.config.apiKey) {
-            throw new Error('The api_key gathered on message header does not match the one provided to the function')
+            throw new Error('A chave de API obtida no header da mensagem não corresponde à fornecida na função')
         }
 
         if (!authorization) {
-            throw new Error('Invalid response authorization')
+            throw new Error('Autorização de resposta inválida')
         }
 
         const splitAuthorization = authorization.split(':')
@@ -213,12 +223,12 @@ export class QiTechClient {
         let authorizationApiKey = splitAuthorization[0].split(' ')[1]
 
         if (authorizationApiKey !== this.config.apiKey) {
-            throw new Error('Wrong format for the Authorization header')
+            throw new Error('Formato incorreto para o Authorization header')
         }
 
         authorizationApiKey = splitAuthorization[0].split(' ')[1]
         if (authorizationApiKey !== this.config.apiKey) {
-            throw new Error('The api_key gathered on message authorization header does not match the one provided to the function')
+            throw new Error('A api_key obtida no cabeçalho de autorização da mensagem não corresponde à fornecida na função')
         }
 
         const headerToken = splitAuthorization[1]
@@ -231,17 +241,17 @@ export class QiTechClient {
         const signatureEndpoint = splitSignature[4]
 
         if (signatureEndpoint !== endpoint) {
-            throw new Error('The api_key gathered on message authorization header does not match the one provided to the function')
+            throw new Error('A api_key obtida no cabeçalho de autorização da mensagem não corresponde à fornecida na função')
         }
 
         if (signatureMethod !== method) {
-            throw new Error('The api_key gathered on message authorization header does not match the one provided to the function')
+            throw new Error('A api_key obtida no cabeçalho de autorização da mensagem não corresponde à fornecida na função')
         }
 
         if (responseBody) {
             const md5Body = createHash('md5').update(responseBody['encoded_body']).digest('hex')
             if (signatureMD5Body !== md5Body) {
-                throw new Error('The md5_body parameter gathered on message signature does not match the body provided to the function')
+                throw new Error('O parâmetro md5_body obtido na assinatura da mensagem não corresponde ao corpo fornecido na função')
             }
         }
 

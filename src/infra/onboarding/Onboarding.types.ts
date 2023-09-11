@@ -33,13 +33,13 @@ export enum DocumentValidationType {
     ZAIG_SDK = 'zaig_sdk',
 }
 
-interface IEmail {
+export interface IEmail {
     email: string
     validation_key: string
     validation_type: EmailValidationType
 }
 
-interface IPhone {
+export interface IPhone {
     international_dial_code: string // only numbers
     area_code: string //only numbers
     number: string //only numbers

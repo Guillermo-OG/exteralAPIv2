@@ -10,7 +10,7 @@ export class AccountController {
         try {
             const document = req.body?.account_owner?.individual_document_number || req.body?.account_owner?.company_document_number
             if (!document) {
-                throw new ValidationError('Missing document')
+                throw new ValidationError('Documento ausente')
             }
 
             const response = await qiTechService.createAccount(document, req.body, req.user)
@@ -25,7 +25,7 @@ export class AccountController {
             const document = unMask(req.params.document)
             const account = await AccountRepository.getInstance().eagerGetByDocument(document)
             if (!account) {
-                throw new NotFoundError('Account not found for this document')
+                throw new NotFoundError('Conta não encontrada para este documento')
             }
 
             res.json(account)
@@ -52,7 +52,7 @@ export class AccountController {
         try {
             const { file, body } = req
             if (!file) {
-                throw new ValidationError('File not found')
+                throw new ValidationError('Arquivo não encontrado')
             }
 
             const fileModel = await qiTechService.uploadFile(unMask(body.document), body.type, file.originalname || 'file.pdf', file.buffer)
@@ -103,7 +103,7 @@ export class AccountController {
         try {
             const accountKey = req.params.accountKey
             if (!accountKey) {
-                throw new ValidationError('Missing accountKey')
+                throw new ValidationError('Chave da conta ausente')
             }
             const response = await qiTechService.cancelAccount(accountKey)
             res.status(200).json(response)
@@ -111,4 +111,19 @@ export class AccountController {
             next(await qiTechService.decodeError(error))
         }
     }
+
+    // public async updateContact(req: Request, res: Response, next: NextFunction): Promise<void> {
+    //     const qiTechService = QiTechService.getInstance()
+    //     try {
+    //         const { document } = req.params
+    //         const { phone_number } = req.body
+    //         const { email } = req.body
+
+    //         const response = await qiTechService.updateContact(document, phone_number, email)
+
+    //         res.json(response)
+    //     } catch (error) {
+    //         next(await qiTechService.decodeError(error))
+    //     }
+    // }
 }
