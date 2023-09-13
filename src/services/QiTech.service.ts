@@ -376,7 +376,7 @@ export class QiTechService {
     public async handleWebhook(req: Request): Promise<void> {
         const { headers, body } = req
         if (!body.encoded_body) {
-            throw new ValidationError('Invalid Body')
+            throw new ValidationError('Corpo da requisição inválido.')
         }
 
         const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
