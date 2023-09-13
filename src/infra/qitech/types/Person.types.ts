@@ -1,8 +1,8 @@
 export interface IUpdate {
     contact_type: string
     professional_data_contact_update: {
-        professional_data_key: string
-        natural_person: string
+        professional_data_key?: string
+        natural_person?: string
         email: string
         phone_number: PhoneNumberType
     }

@@ -8,7 +8,7 @@ export class AuthMiddleware {
             const authHeader = req.headers.authorization
 
             if (!authHeader || !authHeader.startsWith('Basic ')) {
-                throw new UnauthorizedError('Unauthorized')
+                throw new UnauthorizedError('Não autorizado')
             }
 
             const credentials = authHeader.slice('Basic '.length)

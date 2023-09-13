@@ -10,14 +10,14 @@ export class OnboardingController {
         try {
             const document = unMask(req.params.document)
             if (!document) {
-                throw new ValidationError('Document required')
+                throw new ValidationError('Documento obrigatório')
             }
 
             const repository = OnboardingRepository.getInstance()
             const onboarding = await repository.getByDocument(document)
 
             if (!onboarding) {
-                throw new NotFoundError('Onboarding not found for this document')
+                throw new NotFoundError('Onboarding não encontrado para este documento')
             }
 
             const qiTechService = OnboardingService.getInstance()
@@ -28,25 +28,6 @@ export class OnboardingController {
             next(error)
         }
     }
-
-    // public async updatePhoneNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
-    //     try {
-    //         const { document } = req.params
-    //         const { phone_number } = req.body
-
-    //         const repository = OnboardingRepository.getInstance()
-
-    //         // Buscar dados na base do onboarding, se necessário
-    //         // ...
-
-    //         const service = OnboardingService.getInstance()
-    //         const response = await service.updatePhoneNumber(document, phone_number)
-
-    //         res.json(response)
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
 
     public async getByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -60,7 +41,7 @@ export class OnboardingController {
             const onboarding = await repository.getByDocument(document)
 
             if (!onboarding) {
-                throw new NotFoundError('Onboarding not found for this document')
+                throw new NotFoundError('Onboarding não encontrado para este documento')
             }
 
             const analysis = await qiTechService.getAnalysis(onboarding)
@@ -82,4 +63,19 @@ export class OnboardingController {
             next(error)
         }
     }
+
+    // public async updatePerson(req: Request, res: Response, next: NextFunction): Promise<void> {
+    //     const qiTechService = OnboardingService.getInstance()
+    //     try {
+    //         const { document } = req.params
+    //         const { phone_number } = req.body
+    //         const { email } = req.body
+
+    //         const response = await qiTechService.updateContact(document, phone_number, email)
+
+    //         res.json(response)
+    //     } catch (error) {
+    //         next(error)
+    //     }
+    // }
 }
