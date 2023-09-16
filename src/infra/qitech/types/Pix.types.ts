@@ -54,15 +54,15 @@ export enum IPixRequestStatus {
     ALL = 'pending_approval,approved,rejected,executed',
 }
 
+export interface IPixTransferLimitConfig {
+    period: string,
+    account_key: string,
+    amount_limit: number,
+    self_amount_limit: number
+}
+
 export interface IPixLimitRequestWebhook {
     webhook_type: string
     origin_key: string
-    data: {
-        pix_transfer_limit_config: {
-            period: string
-            account_key: string
-            amount_limit: number
-            self_amount_limit: number
-        }[]
-    }
+    data: IPixTransferLimitConfig[]
 }
