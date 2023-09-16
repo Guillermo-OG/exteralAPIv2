@@ -64,7 +64,7 @@ export const PjCreateSchema = new yup.ObjectSchema({
                         .test('Validação de data', 'Data inválida', value => {
                             return isValid(new Date(value))
                         }),
-                    document_identification_number: yup.string().required('Número de identificação do documento é obrigatório'),
+                    // document_identification_number: yup.string().required('Número de identificação do documento é obrigatório'),
                     document_identification: yup.string().required('Identificação do documento é obrigatória'),
                     email: yup.string().required('E-mail é obrigatório'),
                     individual_document_number: yup
