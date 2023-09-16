@@ -59,7 +59,7 @@ export class QiTechService {
 
         let account = await accountRepository.getByDocument(document)
         if (account && account.status !== AccountStatus.FAILED) {
-            throw new ValidationError('Conta existente encontrada para este documento')
+            throw new ValidationError(`Conta com status ${account.status} encontrada para este documento`)
         }
 
         if (account) {
@@ -308,6 +308,8 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const apiUserRepository = ApiUserRepository.getInstance()
 
+        console.log('Pix Limit Webhook Payload:', payload)
+
         const account = await accountRepository.getById(payload.origin_key)
         if (!account) {
             throw new NotFoundError('Account not found for this key')
@@ -318,20 +320,14 @@ export class QiTechService {
             throw new NotFoundError('User not found for this account')
         }
 
-        // Você pode fazer mais lógica aqui, se necessário
         const notificationService = NotificationService.getInstance()
         const notification = await notificationService.create(
-            {
-                ...account.toJSON(),
-                pixLimits: payload.data.pix_transfer_limit_config,
-            },
+            payload.data,
             account.callbackURL,
             apiUser
         )
 
         notificationService.notify(notification)
-
-        console.log('Pix Limit Webhook Payload:', payload.data.pix_transfer_limit_config)
     }
 
     public async updateAccountWithQi(account: HydratedDocument<IAccount>): Promise<HydratedDocument<IAccount>> {
