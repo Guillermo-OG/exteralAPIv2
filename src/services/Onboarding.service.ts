@@ -321,22 +321,4 @@ export class OnboardingService {
         }
         return response
     }
-
-    // public async updatePhoneNumber(document: string, phoneNumber: QiTechTypes.Person.): Promise<any> {
-    //     const client = new OnboardingClient(env.ONBOARDING_BASE_URL, env.ONBOARDING_API_SECRET);
-
-    //     const requestBody: QiTechTypes.Person.IUpdate = {
-    //         contact_type: "sms",
-    //         professional_data_contact_update: {
-    //             professional_data_key: "4ba8ff34-e07b-4ea8-ae59-8c23994f546b",
-    //             natural_person: "3ea7f034-f06b-4e28-ae19-7c23694f546b",
-    //             email: "sample@gmail.com",
-    //             phone_number: phoneNumber
-    //         },
-    //         agent_document_number: document
-    //     };
-
-    //     const response = await client.updatePhoneNumber(requestBody);
-    //     return response;
-    // }
 }

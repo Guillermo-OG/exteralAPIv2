@@ -29,25 +29,6 @@ export class OnboardingController {
         }
     }
 
-    // public async updatePhoneNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
-    //     try {
-    //         const { document } = req.params
-    //         const { phone_number } = req.body
-
-    //         const repository = OnboardingRepository.getInstance()
-
-    //         // Buscar dados na base do onboarding, se necessário
-    //         // ...
-
-    //         const service = OnboardingService.getInstance()
-    //         const response = await service.updatePhoneNumber(document, phone_number)
-
-    //         res.json(response)
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
-
     public async getByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const document = unMask(req.params.document)

@@ -8,8 +8,6 @@ import {
     INaturalPersonGetResponse,
 } from './Onboarding.types'
 
-import { IUpdate } from '../qitech/types/Person.types'
-
 export class OnboardingClient {
     private readonly secret: string
     private readonly api: AxiosInstance
@@ -38,9 +36,5 @@ export class OnboardingClient {
 
     public async getLegalPerson(id: string): Promise<ILegalPersonGetResponse> {
         return (await this.api.get<ILegalPersonGetResponse>(`/onboarding/legal_person/${id}`)).data
-    }
-
-    public async updatePerson(body: IUpdate) {
-        return (await this.api.post('/baas/token_request', body)).data
     }
 }

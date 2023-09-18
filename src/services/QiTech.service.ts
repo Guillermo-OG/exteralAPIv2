@@ -15,11 +15,19 @@ import {
     PixStatus,
     ValidationError,
 } from '../models'
-import { AccountRepository, ApiUserRepository, FileRepository, OnboardingRepository, PixKeyRepository } from '../repository'
+import {
+    AccountRepository,
+    ApiUserRepository,
+    BillingConfigurationRepository,
+    FileRepository,
+    OnboardingRepository,
+    PixKeyRepository,
+} from '../repository'
 import { maskCNAE, unMask } from '../utils/masks'
 import { IPaginatedSearch } from '../utils/pagination'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
+import { IBillingConfiguration } from '../models/BillingConfiguration.model'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -581,4 +589,73 @@ export class QiTechService {
 
         return await this.client.getPixLimitsRequest(accountKey, requestStatus, page, pageSize)
     }
+
+    public async updatePhoneNumber(document: string, phoneNumber: QiTechTypes.Account.IPhone, email: string) {
+        const requestBody: QiTechTypes.Person.IUpdate = {
+            contact_type: 'sms',
+            professional_data_contact_update: {
+                professional_data_key: '2881681f-7064-468a-a494-8d33d5b94e38',
+                natural_person: '2881681f-7064-468a-a494-8d33d5b94e38',
+                email: email,
+                phone_number: phoneNumber,
+            },
+            agent_document_number: document,
+        }
+
+        const response = await this.client.requestToken(requestBody)
+        return response
+    }
+
+    public async getBillingConfigurationByDocument(document: string) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('Não foi encontrada conta para esse documento')
+        }
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+
+        return await this.client.getBillingConfigurationByAccountKey(accountKey)
+    }
+
+    public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('Não foi encontrada conta para esse documento')
+        }
+
+        const template = await BillingConfigurationRepository.getInstance().get()
+        if (!template) {
+            throw new Error('Template not found')
+        }
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+
+        const { billing_configuration_data: templateData } = template
+
+        // Merge the template and the billingConfiguration
+        const mergedBillingConfigurationData = {
+            ...templateData,
+            ...billingConfiguration.billing_configuration_data,
+        }
+
+        // Replace billing_account_key in all relevant sections
+        const sections: Array<keyof typeof mergedBillingConfigurationData> = ['bankslip', 'ted', 'pix', 'account_maintenance']
+        for (const section of sections) {
+            if (mergedBillingConfigurationData[section]) {
+                (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = accountKey
+            }
+        }
+
+        // Create the final merged data
+        const mergedData = {
+            billing_configuration_data: mergedBillingConfigurationData,
+        }
+
+        return await this.client.updateBillingConfigurationByAccountKey(accountKey, mergedData)
+    }
+}
+
+interface ISectionData {
+    billing_account_key: string
+    // Add other fields as necessary
 }
