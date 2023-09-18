@@ -37,12 +37,4 @@ export class OnboardingClient {
     public async getLegalPerson(id: string): Promise<ILegalPersonGetResponse> {
         return (await this.api.get<ILegalPersonGetResponse>(`/onboarding/legal_person/${id}`)).data
     }
-
-    // public async updateNaturalPerson(id: string, body: Partial<INaturalPersonCreate>): Promise<INaturalPersonGetResponse> {
-    //     return (await this.api.patch<INaturalPersonGetResponse>(`/onboarding/natural_person/${id}`, body)).data
-    // }
-
-    // public async updateLegalPerson(id: string, body: Partial<ILegalPersonCreate>): Promise<ILegalPersonGetResponse> {
-    //     return (await this.api.patch<ILegalPersonGetResponse>(`/onboarding/legal_person/${id}`, body)).data
-    // }
 }

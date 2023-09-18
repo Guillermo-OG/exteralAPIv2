@@ -15,11 +15,19 @@ import {
     PixStatus,
     ValidationError,
 } from '../models'
-import { AccountRepository, ApiUserRepository, FileRepository, OnboardingRepository, PixKeyRepository } from '../repository'
+import {
+    AccountRepository,
+    ApiUserRepository,
+    BillingConfigurationRepository,
+    FileRepository,
+    OnboardingRepository,
+    PixKeyRepository,
+} from '../repository'
 import { maskCNAE, unMask } from '../utils/masks'
 import { IPaginatedSearch } from '../utils/pagination'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
+import { IBillingConfiguration } from '../models/BillingConfiguration.model'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -578,55 +586,72 @@ export class QiTechService {
         return await this.client.getPixLimitsRequest(accountKey, requestStatus, page, pageSize)
     }
 
-    // public async updateContact(document: string, phoneNumber: QiTechTypes.Person.PhoneNumberType, email: string): Promise<any> {
-    //     const onboardingRepository = OnboardingRepository.getInstance()
-    //     const onboardingService = OnboardingService.getInstance()
-    //     // const accountRepository = AccountRepository.getInstance()
+    public async updatePhoneNumber(document: string, phoneNumber: QiTechTypes.Account.IPhone, email: string) {
+        const requestBody: QiTechTypes.Person.IUpdate = {
+            contact_type: 'sms',
+            professional_data_contact_update: {
+                professional_data_key: '2881681f-7064-468a-a494-8d33d5b94e38',
+                natural_person: '2881681f-7064-468a-a494-8d33d5b94e38',
+                email: email,
+                phone_number: phoneNumber,
+            },
+            agent_document_number: document,
+        }
 
-    //     const onboarding = await onboardingRepository.getByDocument(document)
-    //     if (!onboarding || !onboarding.response) {
-    //         throw new Error('Onboarding não encontrado ou resposta não definida')
-    //     }
+        const response = await this.client.requestToken(requestBody)
+        return response
+    }
 
-    //     let analysis = await onboardingService.getAnalysis(onboarding)
-    //     console.log('analysis_natural_legal_person', analysis)
+    public async getBillingConfigurationByDocument(document: string) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('Não foi encontrada conta para esse documento')
+        }
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
 
-    //     let person_key: { professional_data_key?: string; natural_person?: string } = {}
+        return await this.client.getBillingConfigurationByAccountKey(accountKey)
+    }
 
-    //     if ('legal_person_key' in onboarding.response) {
-    //         person_key.professional_data_key = onboarding.response.legal_person_key
-    //         person_key.natural_person = ''
-    //     } else if ('natural_person_key' in onboarding.response) {
-    //         person_key.natural_person = onboarding.response.natural_person_key
-    //         person_key.professional_data_key = onboarding.data?.company_key
-    //     }
-    //     const requestBody: QiTechTypes.Person.IUpdate = {
-    //         contact_type: 'sms',
-    //         professional_data_contact_update: {
-    //             phone_number: phoneNumber,
-    //             email: email,
-    //             ...person_key,
-    //         },
-    //         agent_document_number: document,
-    //     }
+    public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('Não foi encontrada conta para esse documento')
+        }
 
-    //     console.log('requestBody', requestBody)
+        const template = await BillingConfigurationRepository.getInstance().get()
+        if (!template) {
+            throw new Error('Template not found')
+        }
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
 
-    //     const response = await this.client.updatePerson(requestBody)
+        const { billing_configuration_data: templateData } = template
 
-    //     // //atualiza conta com o telefone
-    //     // const account = await accountRepository.getByDocument(document)
-    //     // if (!account) {
-    //     //     throw new Error('Account não encontrado')
-    //     // }
-    //     // const accountRequest = account.request as AccountRequest
-    //     // if (!accountRequest || !accountRequest.account_owner) {
-    //     //     throw new Error('Account não encontrado ou estrutura de dados incompleta')
-    //     // }
+        // Merge the template and the billingConfiguration
+        const mergedBillingConfigurationData = {
+            ...templateData,
+            ...billingConfiguration.billing_configuration_data,
+        }
 
-    //     // accountRequest.account_owner.phone = phoneNumber
-    //     // await account.save()
+        // Replace billing_account_key in all relevant sections
+        const sections: Array<keyof typeof mergedBillingConfigurationData> = ['bankslip', 'ted', 'pix', 'account_maintenance']
+        for (const section of sections) {
+            if (mergedBillingConfigurationData[section]) {
+                (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = accountKey
+            }
+        }
 
-    //     return response
-    // }
+        // Create the final merged data
+        const mergedData = {
+            billing_configuration_data: mergedBillingConfigurationData,
+        }
+
+        return await this.client.updateBillingConfigurationByAccountKey(accountKey, mergedData)
+    }
+}
+
+interface ISectionData {
+    billing_account_key: string
+    // Add other fields as necessary
 }
