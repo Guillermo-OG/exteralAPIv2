@@ -310,4 +310,41 @@ export class QiTechClient {
             res.data
         )
     }
+
+    public async requestToken(updateObject: QiTechTypes.Person.IUpdate) {
+        const endpoint = '/baas/token_request'
+        const body = updateObject
+        const contentType = 'application/json'
+
+        const config = await this.signMessage(endpoint, 'POST', body, contentType)
+        const res = await this.api.post(endpoint, config.body, { headers: config.headers })
+
+        return await this.decodeMessage<object>(endpoint, 'POST', res.headers as IHeaders, res.data)
+    }
+
+    public async getBillingConfigurationByAccountKey(accountKey: string) {
+        const endpoint = `/billing/${accountKey}/billing_configuration`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
+
+        const res = await this.api.get(endpoint, { headers: config.headers })
+        return await this.decodeMessage<object>(endpoint, 'GET', res.headers as IHeaders, res.data)
+    }
+
+    public async updateBillingConfigurationByAccountKey(
+        accountKey: string,
+        data: QiTechTypes.BillingConfiguration.IBillingConfigurationResponse
+    ) {
+        const endpoint = `/baas/billing/${accountKey}/billing_configuration`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'PUT', data, contentType)
+
+        const res = await this.api.put(endpoint, config.body, { headers: config.headers })
+        return await this.decodeMessage<QiTechTypes.BillingConfiguration.IBillingConfigurationResponse>(
+            endpoint,
+            'PUT',
+            res.headers as IHeaders,
+            res.data
+        )
+    }
 }

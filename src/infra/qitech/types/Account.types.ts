@@ -8,7 +8,7 @@ interface IAddress {
     complement: string
 }
 
-interface IPhone {
+export interface IPhone {
     country_code: string
     number: string
     area_code: string

@@ -88,4 +88,41 @@ export class PixKeyController {
             next(error)
         }
     }
+
+    public async getBillingConfiguration(req: Request, res: Response, next: NextFunction) {
+        try {
+            const document = unMask(req.params.document)
+            if (!document) {
+                throw new ValidationError('No document specified')
+            }
+
+            const qiTechService = QiTechService.getInstance()
+            const billingConfiguration = await qiTechService.getBillingConfigurationByDocument(document as string)
+
+            res.json(billingConfiguration)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    public async updateBillingConfiguration(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const document = unMask(req.params.document)
+            if (!document) {
+                throw new ValidationError('No document specified')
+            }
+
+            const billingConfiguration = req.body // Assumindo que o body é enviado com o mesmo formato
+
+            const updatedBillingConfiguration = await qiTechService.updateBillingConfigurationByDocument(
+                document as string,
+                billingConfiguration
+            )
+
+            res.json(updatedBillingConfiguration)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
 }

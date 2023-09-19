@@ -41,6 +41,7 @@ export class AccountRouter {
             this.controller.uploadFile
         )
         this.router.patch('/cancel/:accountKey', this.controller.cancelAccount)
-        // this.router.patch('/update-contact/:document', this.controller.updateContact)
+
+        this.router.patch('/update-contact/:document', this.controller.updatePhoneNumber)
     }
 }

@@ -25,7 +25,7 @@ export class AccountController {
             const document = unMask(req.params.document)
             const account = await AccountRepository.getInstance().eagerGetByDocument(document)
             if (!account) {
-                throw new NotFoundError('Conta n√£o encontrada para este documento')
+                throw new NotFoundError('Conta n„o encontrada para este documento')
             }
 
             res.json(account)
@@ -112,18 +112,18 @@ export class AccountController {
         }
     }
 
-    // public async updateContact(req: Request, res: Response, next: NextFunction): Promise<void> {
-    //     const qiTechService = QiTechService.getInstance()
-    //     try {
-    //         const { document } = req.params
-    //         const { phone_number } = req.body
-    //         const { email } = req.body
+    public async updatePhoneNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const { document } = req.params
+            const { phone_number } = req.body
+            const { email } = req.body
 
-    //         const response = await qiTechService.updateContact(document, phone_number, email)
+            const response = await qiTechService.updatePhoneNumber(document, phone_number, email)
 
-    //         res.json(response)
-    //     } catch (error) {
-    //         next(await qiTechService.decodeError(error))
-    //     }
-    // }
+            res.json(response)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
 }

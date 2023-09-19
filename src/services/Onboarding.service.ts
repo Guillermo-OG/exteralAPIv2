@@ -13,12 +13,6 @@ import { maskCEP, maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
 import { QiTechService } from './QiTech.service'
 
-// interface AccountRequest {
-//     account_owner: {
-//         phone: QiTechTypes.Person.PhoneNumberType
-//     }
-// }
-
 export class OnboardingService {
     private static instance: OnboardingService
     private readonly api: OnboardingClient
@@ -26,7 +20,7 @@ export class OnboardingService {
 
     private constructor() {
         if (!env.ONBOARDING_API_SECRET || !env.ONBOARDING_BASE_URL || !env.ONBOARDING_WEBHOOK_SECRET) {
-            throw new Error('Faltam variáveis de ambiente qitech')
+            throw new Error('Faltam vari�veis de ambiente qitech')
         }
         this.webhookSecret = env.ONBOARDING_WEBHOOK_SECRET
         this.api = new OnboardingClient(env.ONBOARDING_BASE_URL, env.ONBOARDING_API_SECRET)
@@ -107,7 +101,7 @@ export class OnboardingService {
 
             return analysis
         } catch (error) {
-            throw new Error('Erro ao obter análise')
+            throw new Error('Erro ao obter an�lise')
         }
     }
 
@@ -171,14 +165,14 @@ export class OnboardingService {
             if (onboarding.status === OnboardingTypes.RequestStatus.APPROVED) {
                 createdAccount = await this.createAccountIfNecessary(onboarding)
 
-                if (!createdAccount) throw new Error('Conta não criada')
+                if (!createdAccount) throw new Error('Conta n�o criada')
 
                 url = createdAccount.callbackURL
             }
         }
 
         if (!payload || !url) {
-            throw new NotFoundError('Onboarding não encontrado')
+            throw new NotFoundError('Onboarding n�o encontrado')
         }
 
         return {
@@ -205,7 +199,7 @@ export class OnboardingService {
         const apiUser = await apiUserRepository.getById(account.apiUserId)
 
         if (!apiUser) {
-            throw new Error('uário da API não encontrado para o apiUserId fornecido')
+            throw new Error('usu�rio da API n�o encontrado para o apiUserId fornecido')
         }
 
         const qiTechService = QiTechService.getInstance()
@@ -328,59 +322,4 @@ export class OnboardingService {
         return response
     }
 
-    // public async updateContact(document: string, phoneNumber: QiTechTypes.Person.PhoneNumberType, email: string): Promise<OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate> {
-    //     const onboardingRepository = OnboardingRepository.getInstance();
-    //     const onboarding = await onboardingRepository.getByDocument(document);
-    //     if (!onboarding || !onboarding.response) {
-    //         throw new Error('Onboarding não encontrado ou resposta não definida');
-    //     }
-
-    //     const phone: Partial<OnboardingTypes.IPhone> = {
-    //         area_code: phoneNumber.area_code,
-    //         number: phoneNumber.number,
-    //         international_dial_code: phoneNumber.country_code,
-    //     };
-
-    //     const emailOnboarding: Partial<OnboardingTypes.IEmail> = {
-    //         email: email
-    //     }
-
-    //     if ('legal_name' in onboarding.request) {  // Legal Person
-    //         let updateData: Partial<OnboardingTypes.ILegalPersonCreate> = onboarding.request;
-
-    //         if (updateData.document_number === document) {
-    //             // Atualizar os telefones e emails principais
-    //             updateData.phones = [phone];
-    //             updateData.emails = [emailOnboarding];
-    //         } else {
-    //             updateData.legal_representatives?.forEach(rep => {
-    //                 if (rep.document_number === document) {
-    //                     rep.phones = [phone];
-    //                     rep.emails = [email];
-    //                 }
-    //             });
-    //             updateData.partners?.forEach(partner => {
-    //                 if (partner.document_number === document) {
-    //                     partner.phones = [phone];
-    //                     partner.emails = [email];
-    //                 }
-    //             });
-    //         }
-
-    //         // Pass through formatter
-    //         updateData = this.formatLegalPersonData(updateData as OnboardingTypes.ILegalPersonCreate);
-    //         const updatedPerson = await this.api.updateLegalPerson(onboarding.response.legal_person_key, updateData);
-    //         return updatedPerson;
-
-    //     } else {  // Natural Person
-    //         let updateData: Partial<OnboardingTypes.INaturalPersonCreate> = onboarding.request;
-
-    //         // ... (Omitindo código semelhante ao de cima para Natural Person)
-
-    //         // Pass through formatter
-    //         updateData = this.formatNaturalPersonData(updateData as OnboardingTypes.INaturalPersonCreate);
-    //         const updatedPerson = await this.api.updateNaturalPerson(onboarding.response.natural_person_key, updateData);
-    //         return updatedPerson;
-    //     }
-    // }
 }

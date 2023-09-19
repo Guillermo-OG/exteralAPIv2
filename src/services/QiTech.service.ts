@@ -15,11 +15,19 @@ import {
     PixStatus,
     ValidationError,
 } from '../models'
-import { AccountRepository, ApiUserRepository, FileRepository, OnboardingRepository, PixKeyRepository } from '../repository'
+import {
+    AccountRepository,
+    ApiUserRepository,
+    BillingConfigurationRepository,
+    FileRepository,
+    OnboardingRepository,
+    PixKeyRepository,
+} from '../repository'
 import { maskCNAE, unMask } from '../utils/masks'
 import { IPaginatedSearch } from '../utils/pagination'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
+import { IBillingConfiguration } from '../models/BillingConfiguration.model'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -85,7 +93,7 @@ export class QiTechService {
         if (onboarding.status !== OnboardingTypes.RequestStatus.APPROVED) {
             account.status = AccountStatus.PENDING
             await account.save()
-            throw new ValidationError('Onboarding falhou ou est√° pendente')
+            throw new ValidationError('Onboarding falhou ou est· pendente')
         }
 
         try {
@@ -116,7 +124,7 @@ export class QiTechService {
 
                 account = await this.updateAccountWithQi(account)
 
-                if (!account?.data) throw new Error('Dados da Conta n√£o encontrados')
+                if (!account?.data) throw new Error('Dados da Conta n„o encontrados')
 
                 await this.createPixKey({
                     account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
@@ -124,7 +132,7 @@ export class QiTechService {
                 })
 
                 const apiUser = await userRepository.getById(account.apiUserId)
-                if (!apiUser) throw new NotFoundError('Nenhum usu√°rio encontrado para esta conta')
+                if (!apiUser) throw new NotFoundError('Nenhum usu·rio encontrado para esta conta')
 
                 const notificationService = NotificationService.getInstance()
                 const notification = await notificationService.create(
@@ -177,7 +185,7 @@ export class QiTechService {
     public async createAccountOnboardingOk(document: string, payload: QiTechTypes.Account.ICreate, apiUserId: Schema.Types.ObjectId) {
         const userRepository = ApiUserRepository.getInstance()
         const apiUser = await userRepository.getById(apiUserId)
-        if (!apiUser) throw new NotFoundError('Nenhum usu√°rio encontrado para esta conta')
+        if (!apiUser) throw new NotFoundError('Nenhum usu·rio encontrado para esta conta')
 
         const accountRepository = AccountRepository.getInstance()
 
@@ -220,7 +228,7 @@ export class QiTechService {
 
         const apiUser = await apiUserRepository.getById(account?.apiUserId)
         if (!apiUser) {
-            throw new ValidationError('Nenhum usu√°rio encontrado para esta conta')
+            throw new ValidationError('Nenhum usu·rio encontrado para esta conta')
         }
         let pix = await pixRepository.getByDocumentAndKeyType(account.document, payload.pix_key_type)
 
@@ -268,17 +276,17 @@ export class QiTechService {
 
         const pix = await pixRepository.getByRequestKey(payload.pix_key_request_key)
         if (!pix) {
-            throw new NotFoundError('Pix n√£o encontrado para esta chave')
+            throw new NotFoundError('Pix n„o encontrado para esta chave')
         }
 
         const account = await accountRepository.getById(pix.accountId)
         if (!account) {
-            throw new NotFoundError('Conta n√£o encontrada para esta chave')
+            throw new NotFoundError('Conta n„o encontrada para esta chave')
         }
 
         const apiUser = await apiUserRepository.getById(account.apiUserId)
         if (!apiUser) {
-            throw new NotFoundError('Usu√°rio n√£o encontrado para esta conta')
+            throw new NotFoundError('Usu·rio n„o encontrado para esta conta')
         }
 
         if (payload.pix_key_request_status !== QiTechTypes.Pix.IPixKeyStatus.SUCCESS) {
@@ -312,12 +320,12 @@ export class QiTechService {
 
         const account = await accountRepository.getById(payload.origin_key)
         if (!account) {
-            throw new NotFoundError('Account not found for this key')
+            throw new NotFoundError('Conta n„o encontrada para esta chave')
         }
 
         const apiUser = await apiUserRepository.getById(account.apiUserId)
         if (!apiUser) {
-            throw new NotFoundError('User not found for this account')
+            throw new NotFoundError('Usu·rio n„o encontrado para esta conta')
         }
 
         const notificationService = NotificationService.getInstance()
@@ -372,7 +380,7 @@ export class QiTechService {
     public async handleWebhook(req: Request): Promise<void> {
         const { headers, body } = req
         if (!body.encoded_body) {
-            throw new ValidationError('Corpo da requisi√ß√£o inv√°lido.')
+            throw new ValidationError('Corpo da requisiÁ„o inv·lido.')
         }
 
         const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
@@ -398,13 +406,13 @@ export class QiTechService {
     private async handleAccountWebhook(decodedBody: QiTechTypes.Account.IAccountWebhook) {
         let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
         if (!account) {
-            throw new NotFoundError('Conta n√£o encontrada para esta chave')
+            throw new NotFoundError('Conta n„o encontrada para esta chave')
         } else if (account.status === AccountStatus.SUCCESS) {
             return account
         }
         const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
         if (!apiUser) {
-            throw new Error('Usu√°rio n√£o encontrado para esta conta')
+            throw new Error('Usu·rio n„o encontrado para esta conta')
         }
         const updatedStatus = this.mapStatus(decodedBody.status)
         account.status = updatedStatus
@@ -534,7 +542,7 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
         if (!account) {
-            throw new ValidationError('Conta n√£o encontrada para este documento')
+            throw new ValidationError('Conta n„o encontrada para este documento')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -547,7 +555,7 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
         if (!account) {
-            throw new ValidationError('Conta n√£o encontrada para este documento')
+            throw new ValidationError('Conta n„o encontrada para este documento')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -570,7 +578,7 @@ export class QiTechService {
         const account = await accountRepository.getByDocument(document)
 
         if (!account) {
-            throw new Error('Conta n√£o encontrada para este documento.')
+            throw new Error('Conta n„o encontrada para este documento.')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -578,55 +586,72 @@ export class QiTechService {
         return await this.client.getPixLimitsRequest(accountKey, requestStatus, page, pageSize)
     }
 
-    // public async updateContact(document: string, phoneNumber: QiTechTypes.Person.PhoneNumberType, email: string): Promise<any> {
-    //     const onboardingRepository = OnboardingRepository.getInstance()
-    //     const onboardingService = OnboardingService.getInstance()
-    //     // const accountRepository = AccountRepository.getInstance()
+    public async updatePhoneNumber(document: string, phoneNumber: QiTechTypes.Account.IPhone, email: string) {
+        const requestBody: QiTechTypes.Person.IUpdate = {
+            contact_type: 'sms',
+            professional_data_contact_update: {
+                professional_data_key: '2881681f-7064-468a-a494-8d33d5b94e38',
+                natural_person: '2881681f-7064-468a-a494-8d33d5b94e38',
+                email: email,
+                phone_number: phoneNumber,
+            },
+            agent_document_number: document,
+        }
 
-    //     const onboarding = await onboardingRepository.getByDocument(document)
-    //     if (!onboarding || !onboarding.response) {
-    //         throw new Error('Onboarding n√£o encontrado ou resposta n√£o definida')
-    //     }
+        const response = await this.client.requestToken(requestBody)
+        return response
+    }
 
-    //     let analysis = await onboardingService.getAnalysis(onboarding)
-    //     console.log('analysis_natural_legal_person', analysis)
+    public async getBillingConfigurationByDocument(document: string) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('N„o foi encontrada conta para esse documento')
+        }
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
 
-    //     let person_key: { professional_data_key?: string; natural_person?: string } = {}
+        return await this.client.getBillingConfigurationByAccountKey(accountKey)
+    }
 
-    //     if ('legal_person_key' in onboarding.response) {
-    //         person_key.professional_data_key = onboarding.response.legal_person_key
-    //         person_key.natural_person = ''
-    //     } else if ('natural_person_key' in onboarding.response) {
-    //         person_key.natural_person = onboarding.response.natural_person_key
-    //         person_key.professional_data_key = onboarding.data?.company_key
-    //     }
-    //     const requestBody: QiTechTypes.Person.IUpdate = {
-    //         contact_type: 'sms',
-    //         professional_data_contact_update: {
-    //             phone_number: phoneNumber,
-    //             email: email,
-    //             ...person_key,
-    //         },
-    //         agent_document_number: document,
-    //     }
+    public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('N„o foi encontrada conta para esse documento')
+        }
 
-    //     console.log('requestBody', requestBody)
+        const template = await BillingConfigurationRepository.getInstance().get()
+        if (!template) {
+            throw new Error('Erro ao buscar configuraÁ„o de taxas (template)')
+        }
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
 
-    //     const response = await this.client.updatePerson(requestBody)
+        const { billing_configuration_data: templateData } = template
 
-    //     // //atualiza conta com o telefone
-    //     // const account = await accountRepository.getByDocument(document)
-    //     // if (!account) {
-    //     //     throw new Error('Account n√£o encontrado')
-    //     // }
-    //     // const accountRequest = account.request as AccountRequest
-    //     // if (!accountRequest || !accountRequest.account_owner) {
-    //     //     throw new Error('Account n√£o encontrado ou estrutura de dados incompleta')
-    //     // }
+        // Merge the template and the billingConfiguration
+        const mergedBillingConfigurationData = {
+            ...templateData,
+            ...billingConfiguration.billing_configuration_data,
+        }
 
-    //     // accountRequest.account_owner.phone = phoneNumber
-    //     // await account.save()
+        // Replace billing_account_key in all relevant sections
+        const sections: Array<keyof typeof mergedBillingConfigurationData> = ['bankslip', 'ted', 'pix', 'account_maintenance']
+        for (const section of sections) {
+            if (mergedBillingConfigurationData[section]) {
+                (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = accountKey
+            }
+        }
 
-    //     return response
-    // }
+        // Create the final merged data
+        const mergedData = {
+            billing_configuration_data: mergedBillingConfigurationData,
+        }
+
+        return await this.client.updateBillingConfigurationByAccountKey(accountKey, mergedData)
+    }
+}
+
+interface ISectionData {
+    billing_account_key: string
+    // Add other fields as necessary
 }
