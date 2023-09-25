@@ -11,6 +11,7 @@ interface IQiTechConfig {
     passphrase?: string
     baseUrl: string
     qiPublicKey: string
+    billingAccountKey: string
 }
 
 interface IHeaders {

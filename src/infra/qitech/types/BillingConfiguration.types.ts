@@ -37,23 +37,31 @@ interface IPixFees {
     outgoing_pix_dynamic_qr_code: IFee
 }
 
+interface IBankslip {
+    bankslip_fees: IBankslipFees
+    billing_account_key: string
+}
+
+interface ITed {
+    ted_fees: ITedFees
+    billing_account_key: string
+}
+
+interface IPix {
+    pix_fees: IPixFees
+    billing_account_key: string
+}
+
+interface IAccountMaintenance {
+    amount: number
+    billing_account_key: string
+}
+
 export interface IBillingConfigurationResponse {
     billing_configuration_data: {
-        ted: {
-            ted_fees: ITedFees
-            billing_account_key: string
-        }
-        bankslip: {
-            bankslip_fees: IBankslipFees
-            billing_account_key: string
-        }
-        pix: {
-            pix_fees: IPixFees
-            billing_account_key: string
-        }
-        account_maintenance: {
-            amount: number
-            billing_account_key: string
-        }
+        bankslip: IBankslip
+        ted: ITed
+        pix: IPix
+        account_maintenance: IAccountMaintenance
     }
 }

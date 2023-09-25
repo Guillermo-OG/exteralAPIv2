@@ -15,7 +15,6 @@ import {
     PixStatus,
     ValidationError,
 } from '../models'
-import { IBillingConfiguration } from '../models/BillingConfiguration.model'
 import {
     AccountRepository,
     ApiUserRepository,
@@ -28,6 +27,7 @@ import { maskCNAE, unMask } from '../utils/masks'
 import { IPaginatedSearch } from '../utils/pagination'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
+import { IBillingConfiguration } from '../models/BillingConfiguration.model'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -45,6 +45,7 @@ export class QiTechService {
             privateKey: env.QITECH_PRIVATE_KEY,
             passphrase: env.QITECH_PRIVATE_KEY_PASSPHRASE,
             qiPublicKey: env.QITECH_PUBLIC_KEY,
+            billingAccountKey: env.BILLING_ACCOUNT_KEY,
         })
         this.fileRepository = FileRepository.getInstance()
     }
@@ -171,17 +172,13 @@ export class QiTechService {
                 if (!account) {
                     throw new NotFoundError('Nenhuma conta encontrada para este documento')
                 }
-                
-                try {
-                    await this.createAccountOnboardingOk(
-                        onboarding.document,
-                        account?.request as QiTechTypes.Account.ICreate,
-                        account.apiUserId
-                    )
-                    await onboardingService.updateOnboarding(onboarding)
-                } catch (error) {
-                    console.log(account, error)
-                }
+
+                await this.createAccountOnboardingOk(
+                    onboarding.document,
+                    account?.request as QiTechTypes.Account.ICreate,
+                    account.apiUserId
+                )
+                await onboardingService.updateOnboarding(onboarding)
             }
         }
     }
@@ -333,11 +330,7 @@ export class QiTechService {
         }
 
         const notificationService = NotificationService.getInstance()
-        const notification = await notificationService.create(
-            payload.data,
-            account.callbackURL,
-            apiUser
-        )
+        const notification = await notificationService.create(payload.data, account.callbackURL, apiUser)
 
         notificationService.notify(notification)
     }
@@ -594,8 +587,8 @@ export class QiTechService {
         const requestBody: QiTechTypes.Person.IUpdate = {
             contact_type: 'sms',
             professional_data_contact_update: {
-                professional_data_key: '2881681f-7064-468a-a494-8d33d5b94e38',
-                natural_person: '2881681f-7064-468a-a494-8d33d5b94e38',
+                professional_data_key: '',
+                natural_person: '',
                 email: email,
                 phone_number: phoneNumber,
             },
@@ -619,39 +612,93 @@ export class QiTechService {
 
     public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) {
         const accountRepository = AccountRepository.getInstance()
+        const billingRepo = BillingConfigurationRepository.getInstance()
+
         const account = await accountRepository.getByDocument(document)
         if (!account) {
-            throw new ValidationError('N�o foi encontrada conta para esse documento')
-        }
-
-        const template = await BillingConfigurationRepository.getInstance().get()
-        if (!template) {
-            throw new Error('Erro ao buscar configura��o de taxas (template)')
+            throw new ValidationError('Não foi encontrada conta para esse documento')
         }
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+        const existingBillingConfiguration = await billingRepo.get(document)
 
-        const { billing_configuration_data: templateData } = template
+        if (!existingBillingConfiguration) {
+            return this.setDefaultBillingConfiguration(document)
+        } else {
+            const { billing_configuration_data: billing_configuration_data } = existingBillingConfiguration
 
-        // Merge the template and the billingConfiguration
-        const mergedBillingConfigurationData = {
-            ...templateData,
-            ...billingConfiguration.billing_configuration_data,
-        }
-
-        // Replace billing_account_key in all relevant sections
-        const sections: Array<keyof typeof mergedBillingConfigurationData> = ['bankslip', 'ted', 'pix', 'account_maintenance']
-        for (const section of sections) {
-            if (mergedBillingConfigurationData[section]) {
-                (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = accountKey
+            // Merge the template and the billingConfiguration
+            const mergedBillingConfigurationData = {
+                ...billing_configuration_data,
+                ...billingConfiguration.billing_configuration_data,
             }
+
+            // Determine which billing_account_key to use
+            const billingAccountKeyToUse = env.BILLING_ACCOUNT_KEY === 'user' ? accountKey : env.BILLING_ACCOUNT_KEY
+
+            // Replace billing_account_key in all relevant sections
+            const sections: Array<keyof typeof mergedBillingConfigurationData> = ['bankslip', 'ted', 'pix', 'account_maintenance']
+
+            for (const section of sections) {
+                if (mergedBillingConfigurationData[section]) {
+                    (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
+                }
+            }
+
+            // Create the final merged data
+            const mergedData = {
+                billing_configuration_data: mergedBillingConfigurationData,
+            }
+            const responseQiTech = await this.client.updateBillingConfigurationByAccountKey(accountKey, mergedData)
+
+            const finalBillingConfiguration: IBillingConfiguration = {
+                document: document,
+                billing_configuration_data: responseQiTech.billing_configuration_data,
+            }
+
+            if (!existingBillingConfiguration) {
+                await billingRepo.insert(finalBillingConfiguration)
+            } else {
+                await billingRepo.updateByDocument(document, finalBillingConfiguration)
+            }
+
+            return responseQiTech
+        }
+    }
+
+    public async setDefaultBillingConfiguration(document: string) {
+        const accountRepository = AccountRepository.getInstance()
+        const billingRepo = BillingConfigurationRepository.getInstance()
+
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('Não foi encontrada conta para esse documento')
         }
 
-        // Create the final merged data
-        const mergedData = {
-            billing_configuration_data: mergedBillingConfigurationData,
+        const billingTemplate = await billingRepo.get('template')
+
+        if (!billingTemplate) {
+            throw new Error('Billing template não encontrado')
         }
 
-        return await this.client.updateBillingConfigurationByAccountKey(accountKey, mergedData)
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+        const billingAccountKeyToUse = env.BILLING_ACCOUNT_KEY === 'user' ? accountKey : env.BILLING_ACCOUNT_KEY
+
+        //// função incompleta
+        billingTemplate.billing_configuration_data.bankslip.billing_account_key = billingAccountKeyToUse
+        billingTemplate.billing_configuration_data.ted.billing_account_key = billingAccountKeyToUse
+        billingTemplate.billing_configuration_data.pix.billing_account_key = billingAccountKeyToUse
+        billingTemplate.billing_configuration_data.account_maintenance.billing_account_key = billingAccountKeyToUse
+
+        const responseQiTech = await this.client.updateBillingConfigurationByAccountKey(accountKey, billingTemplate)
+
+        const finalBillingConfiguration: IBillingConfiguration = {
+            document: document,
+            billing_configuration_data: responseQiTech.billing_configuration_data,
+        }
+
+        await billingRepo.insert(finalBillingConfiguration)
+
+        return responseQiTech
     }
 }
 
