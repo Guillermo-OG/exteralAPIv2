@@ -77,4 +77,10 @@ export class PixKeyRepository {
 
         return PixKey.find(filter).sort({ _id: -1 }).exec()
     }
+
+    public async listUniqueDocuments(): Promise<string[]> {
+        // Usar o método 'distinct' para obter documentos únicos
+        const uniqueDocuments: string[] = await PixKey.distinct('document')
+        return uniqueDocuments
+    }
 }

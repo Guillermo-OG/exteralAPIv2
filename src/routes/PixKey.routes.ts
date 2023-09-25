@@ -23,5 +23,7 @@ export class PixKeyRouter {
         this.router.get('/limits_request/:document', this.controller.getPixLimitsRequest)
         this.router.get('/billing_configuration/:document', this.controller.getBillingConfiguration)
         this.router.put('/billing_configuration/:document', this.controller.updateBillingConfiguration)
+        this.router.put('/default_billing_configuration/:document', this.controller.setDefaultBillingConfiguration)
+        this.router.put('/all_billing_configuration/', this.controller.updateALLBillingConfiguration)
     }
 }

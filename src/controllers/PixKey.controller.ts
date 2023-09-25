@@ -110,15 +110,56 @@ export class PixKeyController {
         try {
             const document = unMask(req.params.document)
             if (!document) {
-                throw new ValidationError('No document specified')
+                throw new ValidationError('Documento não especificado')
             }
 
-            const billingConfiguration = req.body // Assumindo que o body é enviado com o mesmo formato
+            const billingConfiguration = req.body
 
             const updatedBillingConfiguration = await qiTechService.updateBillingConfigurationByDocument(
                 document as string,
                 billingConfiguration
             )
+
+            res.json(updatedBillingConfiguration)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
+
+    public async updateALLBillingConfiguration(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const billingConfiguration = req.body
+            const pixRepository = PixKeyRepository.getInstance()
+
+            const uniqueDocuments = await pixRepository.listUniqueDocuments()
+
+            let updateCount = 0
+
+            for (const document of uniqueDocuments) {
+                try {
+                    await qiTechService.updateBillingConfigurationByDocument(document, billingConfiguration)
+                    updateCount++
+                } catch (innerError) {
+                    console.log('documento com erro:', document)
+                }
+            }
+
+            res.json({ message: 'success', totalUpdated: updateCount })
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
+
+    public async setDefaultBillingConfiguration(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const document = unMask(req.params.document)
+            if (!document) {
+                throw new ValidationError('Documento não especificado')
+            }
+
+            const updatedBillingConfiguration = await qiTechService.setDefaultBillingConfiguration(document as string)
 
             res.json(updatedBillingConfiguration)
         } catch (error) {

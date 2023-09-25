@@ -11,11 +11,20 @@ export class BillingConfigurationRepository {
         return BillingConfigurationRepository.instance
     }
 
-    public async get(): Promise<HydratedDocument<IBillingConfiguration> | null> {
-        return await BillingConfiguration.findOne()
+    public async get(document: string): Promise<HydratedDocument<IBillingConfiguration> | null> {
+        return await BillingConfiguration.findOne({ document })
     }
 
     public async update(data: Partial<IBillingConfiguration>): Promise<void> {
         await BillingConfiguration.updateOne({}, data, { upsert: true })
+    }
+
+    public async insert(data: IBillingConfiguration): Promise<void> {
+        const newBillingConfiguration = new BillingConfiguration(data)
+        await newBillingConfiguration.save()
+    }
+
+    public async updateByDocument(document: string, data: Partial<IBillingConfiguration>): Promise<void> {
+        await BillingConfiguration.updateOne({ document }, data, { upsert: true })
     }
 }
