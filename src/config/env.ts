@@ -15,6 +15,7 @@ const env = {
     QITECH_PRIVATE_KEY: process.env.QITECH_PRIVATE_KEY!,
     QITECH_PRIVATE_KEY_PASSPHRASE: process.env.QITECH_PRIVATE_KEY_PASSPHRASE!,
     QITECH_PUBLIC_KEY: process.env.QITECH_PUBLIC_KEY!,
+    BILLING_ACCOUNT_KEY: process.env.BILLING_ACCOUNT_KEY || 'user',
 }
 
 export default env

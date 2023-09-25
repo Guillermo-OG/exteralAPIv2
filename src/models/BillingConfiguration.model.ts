@@ -84,6 +84,10 @@ const AccountMaintenanceSchema = new Schema(
 )
 
 const BillingConfigurationSchema = new Schema({
+    document: {
+        type: String,
+        required: true 
+    },
     billing_configuration_data: {
         bankslip: BankslipSchema,
         ted: TedSchema,
@@ -159,6 +163,7 @@ export interface IBillingConfigurationData {
 }
 
 export interface IBillingConfiguration {
+    document: string,
     billing_configuration_data: IBillingConfigurationData
 }
 
