@@ -660,7 +660,7 @@ export class QiTechService {
 
             const finalBillingConfiguration: IBillingConfiguration = {
                 document: document,
-                billing_configuration_data: responseQiTech.billing_configuration_data,
+                billing_configuration_data: mergedBillingConfigurationData,
             }
 
             if (!existingBillingConfiguration) {
@@ -697,15 +697,18 @@ export class QiTechService {
         billingTemplate.billing_configuration_data.pix.billing_account_key = billingAccountKeyToUse
         billingTemplate.billing_configuration_data.account_maintenance.billing_account_key = billingAccountKeyToUse
 
-        const responseQiTech = await this.client.updateBillingConfigurationByAccountKey(accountKey, billingTemplate)
+        const configDataToSend = {
+            billing_configuration_data: billingTemplate.billing_configuration_data,
+        }
+
+        const responseQiTech = await this.client.updateBillingConfigurationByAccountKey(accountKey, configDataToSend)
 
         const finalBillingConfiguration: IBillingConfiguration = {
             document: document,
-            billing_configuration_data: responseQiTech.billing_configuration_data,
+            billing_configuration_data: billingTemplate.billing_configuration_data,
         }
 
-        await billingRepo.insert(finalBillingConfiguration)
-
+        await billingRepo.upsertByDocument(document, finalBillingConfiguration)
         return responseQiTech
     }
 }
