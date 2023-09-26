@@ -139,7 +139,6 @@ export class QiTechService {
                 const notification = await notificationService.create(
                     {
                         ...account.toJSON(),
-                        pixKeys: [],
                     },
                     account.callbackURL,
                     apiUser
@@ -160,29 +159,35 @@ export class QiTechService {
 
         if (onboardings.count == 0) return
 
-        for (let index = 0; index < onboardings.count; index++) {
+        for (let index = 0; index <= onboardings.count; index++) {
             const onboarding = onboardings.data[index]
 
-            const updatedAnalysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse =
+            try {
+                if (onboarding == null) return
+
+                const updatedAnalysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse =
                 await onboardingService.getAnalysis(onboarding)
 
-            if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
-                const account = await accountRepository.getByDocument(onboarding.document)
+                if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
+                    const account = await accountRepository.getByDocument(onboarding.document)
 
-                if (!account) {
-                    throw new NotFoundError('Nenhuma conta encontrada para este documento')
+                    if (!account) {
+                        throw new NotFoundError('Nenhuma conta encontrada para este documento')
+                    }
+                    
+                    try {
+                        await this.createAccountOnboardingOk(
+                            onboarding.document,
+                            account?.request as QiTechTypes.Account.ICreate,
+                            account.apiUserId
+                        )
+                        await onboardingService.updateOnboarding(onboarding)
+                    } catch (error) {
+                        console.log({documento: account.document, erro: error})
+                    }
                 }
-                
-                try {
-                    await this.createAccountOnboardingOk(
-                        onboarding.document,
-                        account?.request as QiTechTypes.Account.ICreate,
-                        account.apiUserId
-                    )
-                    await onboardingService.updateOnboarding(onboarding)
-                } catch (error) {
-                    console.log(account, error)
-                }
+            } catch (error) {
+                console.log(onboarding, error)
             }
         }
     }
@@ -433,8 +438,7 @@ export class QiTechService {
         const notificationService = NotificationService.getInstance()
         const notification = await notificationService.create(
             {
-                ...account.toJSON(),
-                pixKeys: [],
+                ...account.toJSON()
             },
             account.callbackURL,
             apiUser
