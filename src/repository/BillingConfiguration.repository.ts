@@ -29,6 +29,6 @@ export class BillingConfigurationRepository {
     }
 
     public async upsertByDocument(document: string, data: IBillingConfiguration): Promise<void> {
-        await BillingConfiguration.updateOne({ document }, data, { upsert: true });
-      }
+        await BillingConfiguration.updateOne({ document }, data, { upsert: true })
+    }
 }

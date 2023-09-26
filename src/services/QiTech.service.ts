@@ -708,7 +708,7 @@ export class QiTechService {
             billing_configuration_data: billingTemplate.billing_configuration_data,
         }
 
-        await billingRepo.upsertByDocument(document, finalBillingConfiguration);
+        await billingRepo.upsertByDocument(document, finalBillingConfiguration)
         return responseQiTech
     }
 }
