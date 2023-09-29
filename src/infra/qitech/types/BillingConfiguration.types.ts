@@ -35,6 +35,10 @@ interface IPixFees {
     outgoing_pix_static_qr_code: IFee
     incoming_pix_dynamic_qr_code: IFee
     outgoing_pix_dynamic_qr_code: IFee
+    incoming_pix_chargeback: IFee
+    outgoing_pix_chargeback: IFee
+    incoming_pix_external_service: IFee
+    outgoing_pix_external_service: IFee
 }
 
 interface IBankslip {

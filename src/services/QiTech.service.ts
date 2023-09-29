@@ -166,7 +166,7 @@ export class QiTechService {
                 if (onboarding == null) return
 
                 const updatedAnalysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse =
-                await onboardingService.getAnalysis(onboarding)
+                    await onboardingService.getAnalysis(onboarding)
 
                 if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
                     const account = await accountRepository.getByDocument(onboarding.document)
@@ -174,7 +174,7 @@ export class QiTechService {
                     if (!account) {
                         throw new NotFoundError('Nenhuma conta encontrada para este documento')
                     }
-                    
+
                     try {
                         await this.createAccountOnboardingOk(
                             onboarding.document,
@@ -183,7 +183,7 @@ export class QiTechService {
                         )
                         await onboardingService.updateOnboarding(onboarding)
                     } catch (error) {
-                        console.log({documento: account.document, erro: error})
+                        console.log({ documento: account.document, erro: error })
                     }
                 }
             } catch (error) {
@@ -438,7 +438,7 @@ export class QiTechService {
         const notificationService = NotificationService.getInstance()
         const notification = await notificationService.create(
             {
-                ...account.toJSON()
+                ...account.toJSON(),
             },
             account.callbackURL,
             apiUser
@@ -660,7 +660,7 @@ export class QiTechService {
 
             const finalBillingConfiguration: IBillingConfiguration = {
                 document: document,
-                billing_configuration_data: mergedBillingConfigurationData,
+                billing_configuration_data: responseQiTech.billing_configuration_data,
             }
 
             if (!existingBillingConfiguration) {
