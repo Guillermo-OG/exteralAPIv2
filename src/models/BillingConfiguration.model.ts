@@ -47,6 +47,10 @@ const PixFeesSchema = new Schema(
         outgoing_pix_static_qr_code: FeeSchema,
         incoming_pix_dynamic_qr_code: FeeSchema,
         outgoing_pix_dynamic_qr_code: FeeSchema,
+        incoming_pix_chargeback: FeeSchema,
+        outgoing_pix_chargeback: FeeSchema,
+        incoming_pix_external_service: FeeSchema,
+        outgoing_pix_external_service: FeeSchema,
     },
     { _id: false }
 )
@@ -86,7 +90,7 @@ const AccountMaintenanceSchema = new Schema(
 const BillingConfigurationSchema = new Schema({
     document: {
         type: String,
-        required: true 
+        required: true,
     },
     billing_configuration_data: {
         bankslip: BankslipSchema,
@@ -133,6 +137,10 @@ interface IPixFees {
     outgoing_pix_static_qr_code: IFee
     incoming_pix_dynamic_qr_code: IFee
     outgoing_pix_dynamic_qr_code: IFee
+    incoming_pix_chargeback: IFee
+    outgoing_pix_chargeback: IFee
+    incoming_pix_external_service: IFee
+    outgoing_pix_external_service: IFee
 }
 
 interface IBankslip {
@@ -163,7 +171,7 @@ export interface IBillingConfigurationData {
 }
 
 export interface IBillingConfiguration {
-    document: string,
+    document: string
     billing_configuration_data: IBillingConfigurationData
 }
 
