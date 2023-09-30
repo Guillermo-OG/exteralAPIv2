@@ -15,6 +15,7 @@ import {
     PixStatus,
     ValidationError,
 } from '../models'
+import { IBillingConfiguration } from '../models/BillingConfiguration.model'
 import {
     AccountRepository,
     ApiUserRepository,
@@ -27,7 +28,6 @@ import { maskCNAE, unMask } from '../utils/masks'
 import { IPaginatedSearch } from '../utils/pagination'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
-import { IBillingConfiguration } from '../models/BillingConfiguration.model'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -608,14 +608,24 @@ export class QiTechService {
     }
 
     public async getBillingConfigurationByDocument(document: string) {
+        const billingRepo = BillingConfigurationRepository.getInstance()
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
-        if (!account) {
-            throw new ValidationError('N�o foi encontrada conta para esse documento')
-        }
-        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
 
-        return await this.client.getBillingConfigurationByAccountKey(accountKey)
+        if (!account) {
+            throw new ValidationError('Não foi encontrada conta para esse documento.')
+        }
+
+        const billingConfiguration = await billingRepo.get(document)
+
+        if (!billingConfiguration) {
+            throw new ValidationError('Não foi encontrada taxas customizadas para esse documento.')
+        }
+
+        return billingConfiguration.billing_configuration_data
+
+        // const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+        // return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
 
     public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) {
