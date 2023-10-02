@@ -339,7 +339,7 @@ export class QiTechService {
         }
 
         const notificationService = NotificationService.getInstance()
-        const notification = await notificationService.create(payload.data, account.callbackURL, apiUser)
+        const notification = await notificationService.create(payload.data.pix_transfer_limit_config, account.callbackURL, apiUser)
 
         notificationService.notify(notification)
     }

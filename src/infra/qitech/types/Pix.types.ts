@@ -64,5 +64,9 @@ export interface IPixTransferLimitConfig {
 export interface IPixLimitRequestWebhook {
     webhook_type: string
     origin_key: string
-    data: IPixTransferLimitConfig[]
+    data: IDataPixLimit
+}
+
+export interface IDataPixLimit {
+    pix_transfer_limit_config: IPixTransferLimitConfig[];
 }
