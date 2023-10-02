@@ -52,7 +52,7 @@ export class PixKeyController {
         }
     }
 
-    public async getLocalLimitsByDocument(req: Request, res: Response, next: NextFunction) {
+    public async getLocalTaxesByDocument(req: Request, res: Response, next: NextFunction) {
         try {
             const document = unMask(req.params.document)
             if (!document) {

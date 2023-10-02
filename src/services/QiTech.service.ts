@@ -608,24 +608,15 @@ export class QiTechService {
     }
 
     public async getBillingConfigurationByDocument(document: string) {
-        const billingRepo = BillingConfigurationRepository.getInstance()
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
 
         if (!account) {
             throw new ValidationError('Não foi encontrada conta para esse documento.')
         }
-
-        const billingConfiguration = await billingRepo.get(document)
-
-        if (!billingConfiguration) {
-            throw new ValidationError('Não foi encontrada taxas customizadas para esse documento.')
-        }
-
-        return billingConfiguration.billing_configuration_data
-
-        // const accountKey = (account.data as QiTechTypes.Account.IList).account_key
-        // return await this.client.getBillingConfigurationByAccountKey(accountKey)
+     
+        const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+        return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
 
     public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) {
