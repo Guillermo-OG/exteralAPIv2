@@ -19,7 +19,7 @@ export class PixKeyRouter {
         this.router.get('/', this.controller.listByDocument)
         this.router.post('/create', this.controller.createPixKey)
         this.router.get('/limits/:document', this.controller.getLimitsByDocument)
-        this.router.get('/local_limits/:document', this.controller.getLocalLimitsByDocument)
+        this.router.get('/local_taxes/:document', this.controller.getLocalTaxesByDocument)
         this.router.patch('/limits/:document', this.controller.updatePixLimits)
         this.router.get('/limits_request/:document', this.controller.getPixLimitsRequest)
         this.router.get('/billing_configuration/:document', this.controller.getBillingConfiguration)
