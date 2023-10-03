@@ -323,21 +323,39 @@ export class QiTechService {
     }
 
     public async handlePixLimitWebhook(payload: QiTechTypes.Pix.IPixLimitRequestWebhook) {
+        // Repositories
         const accountRepository = AccountRepository.getInstance()
         const apiUserRepository = ApiUserRepository.getInstance()
 
+        // Initial Diagnostic Logging
         console.log('Pix Limit Webhook Payload:', payload)
 
-        const account = await accountRepository.getById(payload.origin_key)
-        if (!account) {
-            throw new NotFoundError('Conta n�o encontrada para esta chave')
+        if (!payload || !payload.data || !payload.data.pix_transfer_limit_config) {
+            throw new NotFoundError('Payload incompleto ou estrutura inesperada')
         }
 
+        console.log('Pix Limit Webhook Payload:', payload.data.pix_transfer_limit_config[0])
+
+        const accountKey = payload.data.pix_transfer_limit_config[0].account_key
+
+        // Check Account Key
+        if (!accountKey) {
+            throw new NotFoundError('O payload não tem nenhum objeto "account_key"')
+        }
+
+        // Check Account
+        const account = await accountRepository.getById(accountKey)
+        if (!account) {
+            throw new NotFoundError(`Conta não encontrada para a chave ${accountKey}`)
+        }
+
+        // Check API User
         const apiUser = await apiUserRepository.getById(account.apiUserId)
         if (!apiUser) {
-            throw new NotFoundError('Usu�rio n�o encontrado para esta conta')
+            throw new NotFoundError(`Usuário não encontrado para a conta com a chave ${accountKey}`)
         }
 
+        // Notification Handling
         const notificationService = NotificationService.getInstance()
         const notification = await notificationService.create(payload.data.pix_transfer_limit_config, account.callbackURL, apiUser)
 
@@ -614,7 +632,7 @@ export class QiTechService {
         if (!account) {
             throw new ValidationError('Não foi encontrada conta para esse documento.')
         }
-     
+
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
         return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
