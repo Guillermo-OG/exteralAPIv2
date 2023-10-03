@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
 import { ValidationError } from 'yup'
-import { BillingConfigurationRepository, PixKeyRepository } from '../repository'
+import { BillingConfigurationRepository, PixKeyRepository, PixLimitsRequestRepository } from '../repository'
 import { QiTechTypes } from '../infra'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
+import { IPixLimitsRequest } from '../models'
 
 export class PixKeyController {
     public async listByDocument(req: Request, res: Response, next: NextFunction) {
@@ -72,11 +73,19 @@ export class PixKeyController {
     public async updatePixLimits(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { document } = req.params
-            const pixLimits = req.body as Partial<QiTechTypes.Pix.IPixLimits> // Utilizando a interface IPixLimits parcialmente
-
+            const pixLimits = req.body as Partial<QiTechTypes.Pix.IPixLimits>
             const service = QiTechService.getInstance()
-            await service.updatePixLimits(document, pixLimits)
 
+            const response = await service.updatePixLimits(document, pixLimits)
+
+            // Salvar no novo modelo
+            const pixLimitsRequestData: IPixLimitsRequest = {
+                document,
+                request: pixLimits,
+                response,
+            }
+            const pixLimitsRepo = PixLimitsRequestRepository.getInstance()
+            await pixLimitsRepo.create(pixLimitsRequestData)
             res.json({ message: 'success' })
         } catch (error) {
             next(error)
