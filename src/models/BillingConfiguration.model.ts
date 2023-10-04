@@ -164,7 +164,8 @@ interface IAccountMaintenance {
 }
 
 export interface IBillingConfigurationData {
-    bankslip: IBankslip
+    [key: string]: any // This makes the interface less type-safe
+    bankslip: IBankslip    
     ted: ITed
     pix: IPix
     account_maintenance: IAccountMaintenance
