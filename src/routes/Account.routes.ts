@@ -31,6 +31,7 @@ export class AccountRouter {
         this.router.get('/status/:document', this.statusController.getStatusByDocument)
         this.router.get('/', this.controller.handleListAllAccounts)
         this.router.get('/qitech/:accountKey', this.controller.getByAccountKeyFromQITech)
+        // this.router.get('/allPixLimits', this.controller.handleListAllAccountsWithPixLimits)
         this.router.post('/', this.validationMiddleware.validate({ body: CreateAccountSchema }), this.controller.createAccount)
 
         this.router.get('/file', this.controller.listFiles)

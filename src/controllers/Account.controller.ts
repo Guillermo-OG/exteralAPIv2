@@ -25,7 +25,7 @@ export class AccountController {
             const document = unMask(req.params.document)
             const account = await AccountRepository.getInstance().eagerGetByDocument(document)
             if (!account) {
-                throw new NotFoundError('Conta não encontrada para este documento')
+                throw new NotFoundError('Conta n�o encontrada para este documento')
             }
 
             res.json(account)
@@ -85,6 +85,19 @@ export class AccountController {
             next(error)
         }
     }
+
+    // public async handleListAllAccountsWithPixLimits(req: Request, res: Response, next: NextFunction): Promise<void> {
+    //     try {
+    //         const page = Number(req.query.page) || 1
+    //         const pageSize = Number(req.query.pageSize) || 100
+
+    //         const accounts = await QiTechService.getInstance().listAllAccountsWithPixLimits(page, pageSize)
+
+    //         res.status(200).json(accounts)
+    //     } catch (error) {
+    //         next(error)
+    //     }
+    // }
 
     public async getByAccountKeyFromQITech(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
