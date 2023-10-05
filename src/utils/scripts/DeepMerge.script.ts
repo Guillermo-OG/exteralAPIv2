@@ -1,22 +1,17 @@
-﻿import { IBillingConfigurationData } from '../../models/BillingConfiguration.model'
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export function deepMerge(obj1: IBillingConfigurationData, obj2: IBillingConfigurationData): IBillingConfigurationData {
-  const output: IBillingConfigurationData = { ...obj1 };
+export function deepMerge<T>(obj1: T, obj2: Partial<T>): T {
+    const output: T = { ...obj1 }
 
-  for (const [key, value] of Object.entries(obj2)) {
-    // Here we assure TypeScript that the keys are definitely in IBillingConfigurationData
-    if (obj1.hasOwnProperty(key) && typeof value === "object" && !Array.isArray(value) && value !== null) {
-      output[key as keyof IBillingConfigurationData] = deepMerge(obj1[key as keyof IBillingConfigurationData], value);
-    } else {
-      output[key as keyof IBillingConfigurationData] = value;
+    for (const [key, value] of Object.entries(obj2)) {
+        if (Object.prototype.hasOwnProperty.call(obj1, key)) {
+            if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+                // A asserção de tipo é necessária aqui para apaziguar o TypeScript
+                output[key as keyof T] = deepMerge(obj1[key as keyof T] as any, value)
+            } else {
+                output[key as keyof T] = value as any
+            }
+        }
     }
-  }
-  
-  // Remove specific properties with type assertion
-  if (output.pix?.pix_fees) {
-    delete (output.pix.pix_fees as any).outgoing_pix_external_service;
-    delete (output.pix.pix_fees as any).outgoing_pix_chargeback;
-  }
-  
-  return output;
+    return output
 }

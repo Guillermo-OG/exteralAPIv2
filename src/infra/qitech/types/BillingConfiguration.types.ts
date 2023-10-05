@@ -27,18 +27,18 @@ interface IBankslipFees {
 }
 
 interface IPixFees {
-    incoming_pix_manual: IFee
-    outgoing_pix_manual: IFee
-    incoming_pix_key: IFee
-    outgoing_pix_key: IFee
-    incoming_pix_static_qr_code: IFee
-    outgoing_pix_static_qr_code: IFee
-    incoming_pix_dynamic_qr_code: IFee
-    outgoing_pix_dynamic_qr_code: IFee
-    incoming_pix_chargeback: IFee
-    outgoing_pix_chargeback: IFee
-    incoming_pix_external_service: IFee
-    outgoing_pix_external_service: IFee
+    incoming_pix_manual?: IFee
+    outgoing_pix_manual?: IFee
+    incoming_pix_key?: IFee
+    outgoing_pix_key?: IFee
+    incoming_pix_static_qr_code?: IFee
+    outgoing_pix_static_qr_code?: IFee
+    incoming_pix_dynamic_qr_code?: IFee
+    outgoing_pix_dynamic_qr_code?: IFee
+    incoming_pix_chargeback?: IFee
+    outgoing_pix_chargeback?: IFee
+    incoming_pix_external_service?: IFee
+    outgoing_pix_external_service?: IFee
 }
 
 interface IBankslip {
