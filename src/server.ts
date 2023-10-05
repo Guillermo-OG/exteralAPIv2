@@ -25,6 +25,16 @@ class Server {
     }
 
     private async config(): Promise<void> {
+        appInsights
+            .setup(env.INSIGHTS_CONNECTION_STRING)
+            .setAutoDependencyCorrelation(true)
+            .setAutoCollectRequests(true)
+            .setAutoCollectPerformance(true)
+            .setAutoCollectExceptions(true)
+            .setAutoCollectDependencies(true)
+            .setAutoCollectConsole(true, true)
+            .start()
+
         await Database.getInstance().start()
         new CronService().setup()
 
@@ -32,7 +42,6 @@ class Server {
         this.app.use(express.json())
         this.routes()
         console.log(env)
-        appInsights.setup(env.INSIGHTS_CONNECTION_STRING).setAutoCollectConsole(true, true).start()
     }
 
     private routes(): void {
