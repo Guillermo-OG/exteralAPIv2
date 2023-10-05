@@ -28,6 +28,7 @@ import { maskCNAE, unMask } from '../utils/masks'
 import { IPaginatedSearch } from '../utils/pagination'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
+import { deepMerge } from '../utils/scripts/DeepMerge.script'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -641,23 +642,23 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const billingRepo = BillingConfigurationRepository.getInstance()
 
+        if (!billingConfiguration.billing_configuration_data){
+            throw new ValidationError('Favor informar a informação das taxas a serem mudadas')
+        }
+
         const account = await accountRepository.getByDocument(document)
         if (!account) {
             throw new ValidationError('Não foi encontrada conta para esse documento')
         }
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
-        const existingBillingConfiguration = await billingRepo.get(document)
+        const existingBillingConfiguration = (await billingRepo.get(document))?.toObject()
 
         if (!existingBillingConfiguration) {
             return this.setDefaultBillingConfiguration(document)
         } else {
             const { billing_configuration_data: billing_configuration_data } = existingBillingConfiguration
 
-            // Merge the template and the billingConfiguration
-            const mergedBillingConfigurationData = {
-                ...billing_configuration_data,
-                ...billingConfiguration.billing_configuration_data,
-            }
+            const mergedBillingConfigurationData = deepMerge(billing_configuration_data, billingConfiguration.billing_configuration_data);
 
             // Determine which billing_account_key to use
             const billingAccountKeyToUse = env.BILLING_ACCOUNT_KEY === 'user' ? accountKey : env.BILLING_ACCOUNT_KEY
