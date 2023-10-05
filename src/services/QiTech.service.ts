@@ -29,11 +29,13 @@ import { IPaginatedSearch } from '../utils/pagination'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
 import { deepMerge } from '../utils/scripts/DeepMerge.script'
+import { TelemetryClient } from 'applicationinsights'
 
 export class QiTechService {
     private static instance: QiTechService
     private readonly client: QiTechClient
     private readonly fileRepository: FileRepository
+    private readonly telemetryClient: TelemetryClient
     private readonly analysisToAproveOnboarding: AnalysisStatus[] = [
         AnalysisStatus.AUTOMATICALLY_APPROVED,
         AnalysisStatus.MANUALLY_APPROVED,
@@ -49,6 +51,7 @@ export class QiTechService {
             billingAccountKey: env.BILLING_ACCOUNT_KEY,
         })
         this.fileRepository = FileRepository.getInstance()
+        this.telemetryClient = new TelemetryClient()
     }
 
     public static getInstance(): QiTechService {
@@ -404,67 +407,87 @@ export class QiTechService {
 
     public async handleWebhook(req: Request): Promise<void> {
         const { headers, body } = req
-        if (!body.encoded_body) {
-            throw new ValidationError('Corpo da requisi��o inv�lido.')
-        }
+        try {
+            if (!body.encoded_body) {
+                throw new ValidationError('Corpo da requisãoo inv�lido.')
+            }
 
-        const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
+            const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
 
-        switch (decodedBody.webhook_type) {
-            case 'account':
-                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
-                break
-            case 'key_inclusion':
-                await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
-                break
-            case 'account_transaction':
-                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
-                break
-            case 'baas.pix.limits.account_limit_config.updated':
-                await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
-                break
-            default:
-                break
+            switch (decodedBody.webhook_type) {
+                case 'account':
+                    await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                    break
+                case 'key_inclusion':
+                    await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
+                    break
+                case 'account_transaction':
+                    await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                    break
+                case 'baas.pix.limits.account_limit_config.updated':
+                    await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
+                    break
+                default:
+                    break
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                this.telemetryClient.trackException({ exception: error })
+            } else {
+                this.telemetryClient.trackTrace({ message: 'Um erro desconhecido ocorreu', severity: 3 })
+            }
+            throw error
         }
     }
 
     private async handleAccountWebhook(decodedBody: QiTechTypes.Account.IAccountWebhook) {
-        let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
-        if (!account) {
-            throw new NotFoundError('Conta n�o encontrada para esta chave')
-        } else if (account.status === AccountStatus.SUCCESS) {
+        try {
+            let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
+            if (!account) {
+                throw new NotFoundError('Conta não encontrada para esta chave')
+            } else if (account.status === AccountStatus.SUCCESS) {
+                return account
+            }
+            const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
+            if (!apiUser) {
+                throw new Error('Usuário não encontrado para esta conta')
+            }
+            const updatedStatus = this.mapStatus(decodedBody.status)
+            account.status = updatedStatus
+
+            if (updatedStatus === AccountStatus.SUCCESS) {
+                account = await this.updateAccountWithQi(account)
+            } else {
+                console.log('Account status diferente de SUCCESS', decodedBody)
+            }
+            await account.save()
+
+            if (updatedStatus === AccountStatus.SUCCESS && account.data) {
+                await this.createPixKey({
+                    account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
+                    pix_key_type: PixKeyType.RANDOM_KEY,
+                })
+            }
+
+            const notificationService = NotificationService.getInstance()
+            const notification = await notificationService.create(
+                {
+                    ...account.toJSON(),
+                },
+                account.callbackURL,
+                apiUser
+            )
+            notificationService.notify(notification)
+
             return account
+        } catch (error) {
+            if (error instanceof Error) {
+                this.telemetryClient.trackException({ exception: error })
+            } else {
+                this.telemetryClient.trackTrace({ message: 'Um erro desconhecido ocorreu', severity: 3 })
+            }
+            throw error
         }
-        const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
-        if (!apiUser) {
-            throw new Error('Usu�rio n�o encontrado para esta conta')
-        }
-        const updatedStatus = this.mapStatus(decodedBody.status)
-        account.status = updatedStatus
-
-        if (updatedStatus === AccountStatus.SUCCESS) {
-            account = await this.updateAccountWithQi(account)
-        }
-        await account.save()
-
-        if (updatedStatus === AccountStatus.SUCCESS && account.data) {
-            await this.createPixKey({
-                account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
-                pix_key_type: PixKeyType.RANDOM_KEY,
-            })
-        }
-
-        const notificationService = NotificationService.getInstance()
-        const notification = await notificationService.create(
-            {
-                ...account.toJSON(),
-            },
-            account.callbackURL,
-            apiUser
-        )
-        notificationService.notify(notification)
-
-        return account
     }
 
     public async decodeError(error: unknown) {
@@ -674,7 +697,9 @@ export class QiTechService {
 
             for (const section of sections) {
                 if (mergedBillingConfigurationData[section]) {
-                    (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
+                    // por algum motivo a linha abaixo não deveria ter semi-colon, mas como não consegui configurar adicionei uma exceção
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ;(mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
                 }
             }
 
