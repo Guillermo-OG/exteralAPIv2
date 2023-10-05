@@ -3,9 +3,12 @@ import { NextFunction, Request, Response } from 'express'
 import { ValidationError } from 'yup'
 import { ServerError } from '../models/errors'
 import { parseError } from '../utils/schemas'
+import { TelemetryClient } from 'applicationinsights'
 
 export class ErrorMiddleware {
-    public handler(err: unknown, _req: Request, res: Response, next: NextFunction): void {
+    public handler(err: unknown, req: Request, res: Response, next: NextFunction): void {
+        const appInsightsClient: TelemetryClient = req.app.locals.appInsightsClient
+
         if (res.headersSent) {
             return next(err)
         }
@@ -13,7 +16,7 @@ export class ErrorMiddleware {
         let status = 500
         let response: unknown = { message: 'Server Error' }
 
-        //* Abstract handler for errors
+        // Abstract handler for errors
         if (err instanceof ServerError) {
             status = err.status || status
             response = { error: err.name, message: err.message }
@@ -33,6 +36,21 @@ export class ErrorMiddleware {
         } else {
             console.log(err)
         }
+
+        // Log the exception in Application Insights
+        appInsightsClient.trackException({ exception: new Error(err as string) })
+
+        // Log request and response details
+        appInsightsClient.trackTrace({
+            message: 'Request and Response Details',
+            properties: {
+                requestBody: JSON.stringify(req.body),
+                requestHeaders: JSON.stringify(req.headers),
+                responseBody: JSON.stringify(res.locals.body || {}),
+                responseHeaders: JSON.stringify(res.getHeaders()),
+            },
+        })
+
         res.status(status).json(response)
     }
 }
