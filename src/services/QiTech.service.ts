@@ -403,68 +403,78 @@ export class QiTechService {
     }
 
     public async handleWebhook(req: Request): Promise<void> {
-        const { headers, body } = req
-        if (!body.encoded_body) {
-            throw new ValidationError('Corpo da requisi��o inv�lido.')
-        }
+        try {
+            const { headers, body } = req
+            if (!body.encoded_body) {
+                throw new ValidationError('Corpo da requisição inválido.')
+            }
 
-        const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
+            const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
 
-        switch (decodedBody.webhook_type) {
-            case 'account':
-                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
-                break
-            case 'key_inclusion':
-                await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
-                break
-            case 'account_transaction':
-                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
-                break
-            case 'baas.pix.limits.account_limit_config.updated':
-                await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
-                break
-            default:
-                break
+            switch (decodedBody.webhook_type) {
+                case 'account':
+                    await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                    break
+                case 'key_inclusion':
+                    await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
+                    break
+                case 'account_transaction':
+                    await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                    break
+                case 'baas.pix.limits.account_limit_config.updated':
+                    await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
+                    break
+                default:
+                    break
+            }
+        } catch (err) {
+            console.error(err)
+            throw err
         }
     }
 
     private async handleAccountWebhook(decodedBody: QiTechTypes.Account.IAccountWebhook) {
-        let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
-        if (!account) {
-            throw new NotFoundError('Conta n�o encontrada para esta chave')
-        } else if (account.status === AccountStatus.SUCCESS) {
+        try {
+            let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
+            if (!account) {
+                throw new NotFoundError('Conta n�o encontrada para esta chave')
+            } else if (account.status === AccountStatus.SUCCESS) {
+                return account
+            }
+            const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
+            if (!apiUser) {
+                throw new Error('Usu�rio n�o encontrado para esta conta')
+            }
+            const updatedStatus = this.mapStatus(decodedBody.status)
+            account.status = updatedStatus
+
+            if (updatedStatus === AccountStatus.SUCCESS) {
+                account = await this.updateAccountWithQi(account)
+            }
+            await account.save()
+
+            if (updatedStatus === AccountStatus.SUCCESS && account.data) {
+                await this.createPixKey({
+                    account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
+                    pix_key_type: PixKeyType.RANDOM_KEY,
+                })
+            }
+
+            const notificationService = NotificationService.getInstance()
+            const notification = await notificationService.create(
+                {
+                    ...account.toJSON(),
+                },
+                account.callbackURL,
+                apiUser
+            )
+            notificationService.notify(notification)
+
             return account
+        } catch (err) {
+            console.error(err)
+            throw err
         }
-        const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
-        if (!apiUser) {
-            throw new Error('Usu�rio n�o encontrado para esta conta')
-        }
-        const updatedStatus = this.mapStatus(decodedBody.status)
-        account.status = updatedStatus
-
-        if (updatedStatus === AccountStatus.SUCCESS) {
-            account = await this.updateAccountWithQi(account)
-        }
-        await account.save()
-
-        if (updatedStatus === AccountStatus.SUCCESS && account.data) {
-            await this.createPixKey({
-                account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
-                pix_key_type: PixKeyType.RANDOM_KEY,
-            })
-        }
-
-        const notificationService = NotificationService.getInstance()
-        const notification = await notificationService.create(
-            {
-                ...account.toJSON(),
-            },
-            account.callbackURL,
-            apiUser
-        )
-        notificationService.notify(notification)
-
-        return account
     }
 
     public async decodeError(error: unknown) {
