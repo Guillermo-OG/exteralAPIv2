@@ -642,7 +642,7 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const billingRepo = BillingConfigurationRepository.getInstance()
 
-        if (!billingConfiguration.billing_configuration_data){
+        if (!billingConfiguration.billing_configuration_data) {
             throw new ValidationError('Favor informar a informação das taxas a serem mudadas')
         }
 
@@ -658,7 +658,13 @@ export class QiTechService {
         } else {
             const { billing_configuration_data: billing_configuration_data } = existingBillingConfiguration
 
-            const mergedBillingConfigurationData = deepMerge(billing_configuration_data, billingConfiguration.billing_configuration_data);
+            const mergedBillingConfigurationData = deepMerge(billing_configuration_data, billingConfiguration.billing_configuration_data)
+
+            //apaga campos não admitidos (regra QITECH)
+            if (mergedBillingConfigurationData.pix?.pix_fees) {
+                delete mergedBillingConfigurationData.pix.pix_fees.outgoing_pix_external_service
+                delete mergedBillingConfigurationData.pix.pix_fees.outgoing_pix_chargeback
+            }
 
             // Determine which billing_account_key to use
             const billingAccountKeyToUse = env.BILLING_ACCOUNT_KEY === 'user' ? accountKey : env.BILLING_ACCOUNT_KEY
