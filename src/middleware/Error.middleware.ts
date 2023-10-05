@@ -38,7 +38,26 @@ export class ErrorMiddleware {
         }
 
         // Log the exception in Application Insights
-        appInsightsClient.trackException({ exception: new Error(err as string) })
+        appInsightsClient.trackException({
+            exception: new Error(err as string),
+            properties: {
+                requestBody: JSON.stringify(req.body), // Capture the request body here
+                responseBody: JSON.stringify(res.locals.body || {}), // Capture the response body here
+            },
+        })
+
+        appInsightsClient.trackRequest({
+            name: req.path,
+            resultCode: res.statusCode,
+            success: res.statusCode <= 400,
+            url: req.url,
+            duration: 300, // você pode medir a duração correta
+            properties: {
+                requestBody: JSON.stringify(req.body),
+                responseBody: JSON.stringify(res.locals.body || {}),
+                // outras propriedades que você gostaria de registrar
+            },
+        })
 
         // Log request and response details
         appInsightsClient.trackTrace({
