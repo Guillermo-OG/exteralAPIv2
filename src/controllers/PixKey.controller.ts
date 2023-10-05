@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
-import { ValidationError } from 'yup'
 import { BillingConfigurationRepository, PixKeyRepository, PixLimitsRequestRepository } from '../repository'
 import { QiTechTypes } from '../infra'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
 import { IPixLimitsRequest } from '../models'
+import { ValidationError } from '../models'
 
 export class PixKeyController {
     public async listByDocument(req: Request, res: Response, next: NextFunction) {
