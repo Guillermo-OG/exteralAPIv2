@@ -184,11 +184,13 @@ export class QiTechService {
                         )
                         await onboardingService.updateOnboarding(onboarding)
                     } catch (error) {
-                        console.log({ documento: account.document, erro: error })
+                        console.log('erro na criacao de conta (onboardingAprovado)', { documento: account.document, erro: error })
+                        throw error
                     }
                 }
             } catch (error) {
-                console.log(onboarding, error)
+                console.log('onboarding com erro:', {onboarding, error})
+                throw error
             }
         }
     }
@@ -428,7 +430,7 @@ export class QiTechService {
                     break
             }
         } catch (err) {
-            console.error(err)
+            console.error('Erro webhooks', err)
             throw err
         }
     }
@@ -472,7 +474,7 @@ export class QiTechService {
 
             return account
         } catch (err) {
-            console.error(err)
+            console.error('Erro webhook account',err)
             throw err
         }
     }
