@@ -34,15 +34,17 @@ export class ErrorMiddleware {
                 details: err.response?.data,
             }
         } else {
-            console.log(err)
+            console.log("Erro desconhecido:", err)
         }
 
         // Log the exception in Application Insights
         appInsightsClient.trackException({
             exception: new Error(err as string),
             properties: {
-                requestBody: JSON.stringify(req.body), // Capture the request body here
-                responseBody: JSON.stringify(response || {}), // Capture the response body here
+                name: JSON.stringify(req.path), 
+                requestBody: JSON.stringify(req.body),
+                responseBody: JSON.stringify(response || {}),
+                statusCode: res.statusCode.toString()
             },
         })
 
@@ -51,15 +53,13 @@ export class ErrorMiddleware {
             resultCode: status,
             success: status <= 400,
             url: req.url,
-            duration: 300, // você pode medir a duração correta
+            duration: 300, 
             properties: {
                 requestBody: JSON.stringify(req.body),
                 responseBody: JSON.stringify(response || {}),
-                // outras propriedades que você gostaria de registrar
             },
         })
 
-        // Log request and response details
         appInsightsClient.trackTrace({
             message: 'Request and Response Details',
             properties: {
