@@ -42,7 +42,7 @@ export class ErrorMiddleware {
             exception: new Error(err as string),
             properties: {
                 requestBody: JSON.stringify(req.body), // Capture the request body here
-                responseBody: JSON.stringify(res.locals.body || {}), // Capture the response body here
+                responseBody: JSON.stringify(response || {}), // Capture the response body here
             },
         })
 
@@ -54,7 +54,7 @@ export class ErrorMiddleware {
             duration: 300, // você pode medir a duração correta
             properties: {
                 requestBody: JSON.stringify(req.body),
-                responseBody: JSON.stringify(res.locals.body || {}),
+                responseBody: JSON.stringify(response || {}),
                 // outras propriedades que você gostaria de registrar
             },
         })
@@ -65,7 +65,7 @@ export class ErrorMiddleware {
             properties: {
                 requestBody: JSON.stringify(req.body),
                 requestHeaders: JSON.stringify(req.headers),
-                responseBody: JSON.stringify(res.locals.body || {}),
+                responseBody: JSON.stringify(response || {}),
                 responseHeaders: JSON.stringify(res.getHeaders()),
             },
         })
