@@ -26,9 +26,9 @@ import {
 } from '../repository'
 import { maskCNAE, unMask } from '../utils/masks'
 import { IPaginatedSearch } from '../utils/pagination'
+import { deepMerge } from '../utils/scripts/DeepMerge.script'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
-import { deepMerge } from '../utils/scripts/DeepMerge.script'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -69,7 +69,7 @@ export class QiTechService {
 
         let account = await accountRepository.getByDocument(document)
         if (account && account.status !== AccountStatus.FAILED) {
-            throw new ValidationError(`Conta com status ${account.status} encontrada para este documento`)
+            throw new ValidationError('Conta com status pendente. Verificar portal Zaig pois ela pode estar pendente de aprovação.')
         }
 
         if (account) {
@@ -126,7 +126,7 @@ export class QiTechService {
 
                 account = await this.updateAccountWithQi(account)
 
-                if (!account?.data) throw new Error('Dados da Conta n�o encontrados')
+                if (!account?.data) throw new Error('Dados da Conta não encontrados')
 
                 await this.createPixKey({
                     account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
@@ -134,7 +134,7 @@ export class QiTechService {
                 })
 
                 const apiUser = await userRepository.getById(account.apiUserId)
-                if (!apiUser) throw new NotFoundError('Nenhum usu�rio encontrado para esta conta')
+                if (!apiUser) throw new NotFoundError('Nenhum usuário encontrado para esta conta')
 
                 const notificationService = NotificationService.getInstance()
                 const notification = await notificationService.create(
@@ -289,17 +289,17 @@ export class QiTechService {
 
         const pix = await pixRepository.getByRequestKey(payload.pix_key_request_key)
         if (!pix) {
-            throw new NotFoundError('Pix n�o encontrado para esta chave')
+            throw new NotFoundError('Pix não encontrado para esta chave')
         }
 
         const account = await accountRepository.getById(pix.accountId)
         if (!account) {
-            throw new NotFoundError('Conta n�o encontrada para esta chave')
+            throw new NotFoundError('Conta não encontrada para esta chave')
         }
 
         const apiUser = await apiUserRepository.getById(account.apiUserId)
         if (!apiUser) {
-            throw new NotFoundError('Usu�rio n�o encontrado para esta conta')
+            throw new NotFoundError('Usuário não encontrado para esta conta')
         }
 
         if (payload.pix_key_request_status !== QiTechTypes.Pix.IPixKeyStatus.SUCCESS) {
@@ -439,13 +439,13 @@ export class QiTechService {
         try {
             let account = await AccountRepository.getInstance().getByRequestKey(decodedBody.key)
             if (!account) {
-                throw new NotFoundError('Conta n�o encontrada para esta chave')
+                throw new NotFoundError('Conta não encontrada para esta chave')
             } else if (account.status === AccountStatus.SUCCESS) {
                 return account
             }
             const apiUser = await ApiUserRepository.getInstance().getById(account.apiUserId)
             if (!apiUser) {
-                throw new Error('Usu�rio n�o encontrado para esta conta')
+                throw new Error('Usuário não encontrado para esta conta')
             }
             const updatedStatus = this.mapStatus(decodedBody.status)
             account.status = updatedStatus
@@ -578,7 +578,7 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
         if (!account) {
-            throw new ValidationError('Conta n�o encontrada para este documento')
+            throw new ValidationError('Conta não encontrada para este documento')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -591,7 +591,7 @@ export class QiTechService {
         const accountRepository = AccountRepository.getInstance()
         const account = await accountRepository.getByDocument(document)
         if (!account) {
-            throw new ValidationError('Conta n�o encontrada para este documento')
+            throw new ValidationError('Conta não encontrada para este documento')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -614,7 +614,7 @@ export class QiTechService {
         const account = await accountRepository.getByDocument(document)
 
         if (!account) {
-            throw new Error('Conta n�o encontrada para este documento.')
+            throw new Error('Conta não encontrada para este documento.')
         }
 
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
@@ -655,7 +655,7 @@ export class QiTechService {
         const billingRepo = BillingConfigurationRepository.getInstance()
 
         if (!billingConfiguration.billing_configuration_data) {
-            throw new ValidationError('Favor informar a informação das taxas a serem mudadas')
+            throw new ValidationError('Favor informar o campo que deseja alterar')
         }
 
         const account = await accountRepository.getByDocument(document)
