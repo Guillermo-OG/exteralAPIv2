@@ -48,8 +48,8 @@ export class ErrorMiddleware {
 
         appInsightsClient.trackRequest({
             name: req.path,
-            resultCode: res.statusCode,
-            success: res.statusCode <= 400,
+            resultCode: status,
+            success: status <= 400,
             url: req.url,
             duration: 300, // você pode medir a duração correta
             properties: {
@@ -63,6 +63,8 @@ export class ErrorMiddleware {
         appInsightsClient.trackTrace({
             message: 'Request and Response Details',
             properties: {
+                requestPath: req.path,
+                requestStatus: status,
                 requestBody: JSON.stringify(req.body),
                 requestHeaders: JSON.stringify(req.headers),
                 responseBody: JSON.stringify(response || {}),
