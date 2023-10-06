@@ -147,7 +147,7 @@ export class QiTechService {
                 notificationService.notify(notification)
             } catch (error) {
                 console.log(error)
-                throw(error)
+                throw error
             }
         }
     }
@@ -190,7 +190,7 @@ export class QiTechService {
                     }
                 }
             } catch (error) {
-                console.log('onboarding com erro:', {onboarding, error})
+                console.log('onboarding com erro:', { onboarding, error })
                 throw error
             }
         }
@@ -348,7 +348,7 @@ export class QiTechService {
         }
 
         // Check Account
-        const account = await accountRepository.getById(accountKey)
+        const account = await accountRepository.getByAccountKey(accountKey)
         if (!account) {
             throw new NotFoundError(`Conta não encontrada para a chave ${accountKey}`)
         }
@@ -475,7 +475,7 @@ export class QiTechService {
 
             return account
         } catch (err) {
-            console.error('Erro webhook account',err)
+            console.error('Erro webhook account', err)
             throw err
         }
     }
@@ -689,7 +689,7 @@ export class QiTechService {
                 if (mergedBillingConfigurationData[section]) {
                     // por algum motivo a linha abaixo não deveria ter semi-colon, mas como não consegui configurar adicionei uma exceção
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
+                    ;(mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
                 }
             }
 
