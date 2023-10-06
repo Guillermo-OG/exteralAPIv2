@@ -34,43 +34,34 @@ export class ErrorMiddleware {
                 details: err.response?.data,
             }
         } else {
-            console.log("Erro desconhecido:", err)
+            console.log('Erro desconhecido:', err)
         }
 
         // Log the exception in Application Insights
-        appInsightsClient.trackException({
-            exception: new Error(err as string),
-            properties: {
-                name: JSON.stringify(req.path), 
-                requestBody: JSON.stringify(req.body),
-                responseBody: JSON.stringify(response || {}),
-                statusCode: res.statusCode.toString()
-            },
-        })
+        if (err instanceof ServerError || err instanceof AxiosError) {
+            const errorString = err instanceof ServerError ? err.message : err.message || 'Axios Error'
+            appInsightsClient.trackException({
+                exception: new Error(errorString),
+                properties: {
+                    name: JSON.stringify(req.path),
+                    requestBody: JSON.stringify(req.body),
+                    responseBody: JSON.stringify(response || {}),
+                    statusCode: res.statusCode.toString(),
+                },
+            })
 
-        appInsightsClient.trackRequest({
-            name: req.path,
-            resultCode: status,
-            success: status <= 400,
-            url: req.url,
-            duration: 300, 
-            properties: {
-                requestBody: JSON.stringify(req.body),
-                responseBody: JSON.stringify(response || {}),
-            },
-        })
-
-        appInsightsClient.trackTrace({
-            message: 'Request and Response Details',
-            properties: {
-                requestPath: req.path,
-                requestStatus: status,
-                requestBody: JSON.stringify(req.body),
-                requestHeaders: JSON.stringify(req.headers),
-                responseBody: JSON.stringify(response || {}),
-                responseHeaders: JSON.stringify(res.getHeaders()),
-            },
-        })
+            appInsightsClient.trackTrace({
+                message: 'Error Request and Response Details',
+                properties: {
+                    requestPath: req.path,
+                    requestStatus: status,
+                    requestBody: JSON.stringify(req.body),
+                    requestHeaders: JSON.stringify(req.headers),
+                    responseBody: JSON.stringify(response || {}),
+                    responseHeaders: JSON.stringify(res.getHeaders()),
+                },
+            })
+        }
 
         res.status(status).json(response)
     }
