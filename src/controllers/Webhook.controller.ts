@@ -4,6 +4,7 @@ import { NotificationService, OnboardingService, QiTechService } from '../servic
 
 export class WebhookController {
     public async handleOnboardingWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
         try {
             const body = req.body as OnboardingTypes.IWebhookBody
             const service = OnboardingService.getInstance()
@@ -19,35 +20,38 @@ export class WebhookController {
             await notificationService.notify(notification)
             res.send('ok')
         } catch (error) {
-            next(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
     public async handlePendingAnalysis(_req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
         try {
             await QiTechService.getInstance().handlePendingAnalysis()
             res.status(200).send('ok')
         } catch (error) {
             console.error(error)
-            next(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
     public async handleAccountCreation(_req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
         try {
             await QiTechService.getInstance().handleAccountCreation()
             res.status(200).send('ok')
         } catch (error) {
-            next(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
     public async handleQITechBaaSWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
         try {
             await QiTechService.getInstance().handleWebhook(req)
             res.status(200).send('ok')
         } catch (error) {
-            next(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 }
