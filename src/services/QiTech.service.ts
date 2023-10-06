@@ -147,6 +147,7 @@ export class QiTechService {
                 notificationService.notify(notification)
             } catch (error) {
                 console.log(error)
+                throw(error)
             }
         }
     }
