@@ -20,7 +20,7 @@ export class WebhookController {
             await notificationService.notify(notification)
             res.send('ok')
         } catch (error) {
-            await qiTechService.decodeError(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
@@ -31,7 +31,7 @@ export class WebhookController {
             res.status(200).send('ok')
         } catch (error) {
             console.error(error)
-            await qiTechService.decodeError(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
@@ -41,7 +41,7 @@ export class WebhookController {
             await QiTechService.getInstance().handleAccountCreation()
             res.status(200).send('ok')
         } catch (error) {
-            await qiTechService.decodeError(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
@@ -51,7 +51,7 @@ export class WebhookController {
             await QiTechService.getInstance().handleWebhook(req)
             res.status(200).send('ok')
         } catch (error) {
-            await qiTechService.decodeError(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 }
