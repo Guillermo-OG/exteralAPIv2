@@ -19,7 +19,7 @@ export class ErrorMiddleware {
         // Abstract handler for errors
         if (err instanceof ServerError) {
             status = err.status || status
-            response = { error: err.name, message: err.message }
+            response = { error: err.name, message: err.message, details: err.details }
         } else if (err instanceof ValidationError) {
             const parsedErrors = parseError(err)
             status = 400
