@@ -35,6 +35,17 @@ export class ErrorMiddleware {
             }
         } else {
             console.log('Erro desconhecido:', err)
+            appInsightsClient.trackTrace({
+                message: 'Error desconhecido',
+                properties: {
+                    requestPath: req.path,
+                    requestStatus: status,
+                    requestBody: JSON.stringify(req.body),
+                    requestHeaders: JSON.stringify(req.headers),
+                    responseBody: JSON.stringify(response || {}),
+                    responseHeaders: JSON.stringify(res.getHeaders()),
+                },
+            })
         }
 
         // Log the exception in Application Insights
