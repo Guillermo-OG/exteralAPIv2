@@ -26,7 +26,7 @@ export class OnboardingService {
 
     private constructor() {
         if (!env.ONBOARDING_API_SECRET || !env.ONBOARDING_BASE_URL || !env.ONBOARDING_WEBHOOK_SECRET) {
-            throw new Error('Faltam variáveis de ambiente qitech')
+            throw new Error('Faltam vari�veis de ambiente qitech')
         }
         this.webhookSecret = env.ONBOARDING_WEBHOOK_SECRET
         this.api = new OnboardingClient(env.ONBOARDING_BASE_URL, env.ONBOARDING_API_SECRET)
@@ -107,7 +107,7 @@ export class OnboardingService {
 
             return analysis
         } catch (error) {
-            throw new Error('Erro ao obter análise')
+            throw new Error('Erro ao obter an�lise')
         }
     }
 
@@ -171,14 +171,14 @@ export class OnboardingService {
             if (onboarding.status === OnboardingTypes.RequestStatus.APPROVED) {
                 createdAccount = await this.createAccountIfNecessary(onboarding)
 
-                if (!createdAccount) throw new Error('Conta não criada')
+                if (!createdAccount) throw new Error('Conta n�o criada')
 
                 url = createdAccount.callbackURL
             }
         }
 
         if (!payload || !url) {
-            throw new NotFoundError('Onboarding não encontrado')
+            throw new NotFoundError('Onboarding não encontrado', {requestBody: data})
         }
 
         return {
@@ -205,7 +205,7 @@ export class OnboardingService {
         const apiUser = await apiUserRepository.getById(account.apiUserId)
 
         if (!apiUser) {
-            throw new Error('uário da API não encontrado para o apiUserId fornecido')
+            throw new Error('usu�rio da API n�o encontrado para o apiUserId fornecido')
         }
 
         const qiTechService = QiTechService.getInstance()
