@@ -34,37 +34,18 @@ export class ErrorMiddleware {
                 details: err.response?.data,
             }
         } else {
-            console.log('Erro desconhecido:', err)
-            appInsightsClient.trackTrace({
-                message: 'Error desconhecido',
-                properties: {
-                    requestPath: req.path,
-                    requestStatus: status,
-                    requestBody: JSON.stringify(req.body),
-                    requestHeaders: JSON.stringify(req.headers),
-                    responseBody: JSON.stringify(response || {}),
-                    responseHeaders: JSON.stringify(res.getHeaders()),
-                },
-            })
+            console.log('Erro desconhecido:', err)     
         }
 
         // Log the exception in Application Insights
         if (err instanceof ServerError || err instanceof AxiosError) {
-            const errorString = err instanceof ServerError ? err.message : err.message || 'Axios Error'
-            appInsightsClient.trackException({
-                exception: new Error(errorString),
-                properties: {
-                    name: JSON.stringify(req.path),
-                    requestBody: JSON.stringify(req.body),
-                    responseBody: JSON.stringify(response || {}),
-                    statusCode: res.statusCode.toString(),
-                },
-            })
+            const errorString = err instanceof ServerError ? err.message : err.message || 'Axios Error'          
 
             appInsightsClient.trackTrace({
-                message: 'Error Request and Response Details',
+                message: errorString,
                 properties: {
                     requestPath: req.path,
+                    requestMethod: req.method,
                     requestStatus: status,
                     requestBody: JSON.stringify(req.body),
                     requestHeaders: JSON.stringify(req.headers),
