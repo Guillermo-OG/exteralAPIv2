@@ -26,34 +26,34 @@ export class PixKeyController {
     }
 
     public async createPixKey(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
         try {
-            const qiTechService = QiTechService.getInstance()
-
             const payload: QiTechTypes.Pix.ICreatePix = req.body // A partir do corpo da solicitação
 
             const pixKey = await qiTechService.createPixKey(payload)
 
             res.json(pixKey)
         } catch (error) {
-            next(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
     public async getLimitsByDocument(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
         try {
             const document = unMask(req.params.document)
             if (!document) {
                 throw new ValidationError('Não foi encontrado o documento')
             }
-            const qiTechService = QiTechService.getInstance()
             const limits = await qiTechService.getPixLimitsByDocument(document as string)
             res.json(limits)
         } catch (error) {
-            next(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
     public async getLocalTaxesByDocument(req: Request, res: Response, next: NextFunction) {
+        const service = QiTechService.getInstance()
         try {
             const document = unMask(req.params.document)
             if (!document) {
@@ -66,15 +66,15 @@ export class PixKeyController {
             }
             res.json(limits)
         } catch (error) {
-            next(error)
+            next(await service.decodeError(error))
         }
     }
 
     public async updatePixLimits(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const service = QiTechService.getInstance()
         try {
             const { document } = req.params
             const pixLimits = req.body as Partial<QiTechTypes.Pix.IPixLimits>
-            const service = QiTechService.getInstance()
 
             const response = await service.updatePixLimits(document, pixLimits)
 
@@ -88,11 +88,12 @@ export class PixKeyController {
             await pixLimitsRepo.create(pixLimitsRequestData)
             res.json({ message: 'success' })
         } catch (error) {
-            next(error)
+            next(await service.decodeError(error))
         }
     }
 
     public async getPixLimitsRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const service = QiTechService.getInstance()
         try {
             const document = unMask(req.params.document)
 
@@ -101,7 +102,6 @@ export class PixKeyController {
             const page = Number(req.query.page ?? '1')
             const pageSize = Number(req.query.pageSize ?? '100')
 
-            const service = QiTechService.getInstance()
             const result = await service.getPixLimitsRequestByDocument(
                 document as string,
                 requestStatus as QiTechTypes.Pix.IPixRequestStatus,
@@ -111,23 +111,23 @@ export class PixKeyController {
 
             res.json(result)
         } catch (error) {
-            next(error)
+            next(await service.decodeError(error))
         }
     }
 
     public async getBillingConfiguration(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
         try {
             const document = unMask(req.params.document)
             if (!document) {
                 throw new ValidationError('No document specified')
             }
 
-            const qiTechService = QiTechService.getInstance()
             const billingConfiguration = await qiTechService.getBillingConfigurationByDocument(document as string)
 
             res.json(billingConfiguration)
         } catch (error) {
-            next(error)
+            next(await qiTechService.decodeError(error))
         }
     }
 
