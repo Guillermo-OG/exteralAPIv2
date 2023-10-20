@@ -8,7 +8,7 @@ export class WebhookController {
         try {
             const body = req.body as OnboardingTypes.IWebhookBody
             if (!body) {
-                console.log(req.body)
+                console.log('body empty', req.body)
             }
             const service = OnboardingService.getInstance()
             const notificationService = NotificationService.getInstance()
