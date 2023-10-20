@@ -7,6 +7,9 @@ export class WebhookController {
         const qiTechService = QiTechService.getInstance()
         try {
             const body = req.body as OnboardingTypes.IWebhookBody
+            if (!body) {
+                console.log(req.body)
+            }
             const service = OnboardingService.getInstance()
             const notificationService = NotificationService.getInstance()
 
