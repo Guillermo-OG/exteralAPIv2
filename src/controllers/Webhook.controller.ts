@@ -7,7 +7,7 @@ export class WebhookController {
         const qiTechService = QiTechService.getInstance()
         try {
             const body = req.body as OnboardingTypes.IWebhookBody
-            if (!body) {
+            if (!(body.legal_person_id && body.natural_person_id)) {
                 console.log('body empty', req.body)
             }
             const service = OnboardingService.getInstance()
