@@ -3,7 +3,7 @@ import * as appInsights from 'applicationinsights'
 import express, { Express } from 'express'
 import Database from './config/database'
 import env from './config/env'
-import { ErrorMiddleware } from './middleware'
+import { ErrorMiddleware, AppInsightsMiddleware } from './middleware'
 import { AccountRouter, HealthRouter, OnboardingRouter, PixKeyRouter, WebhookRouter } from './routes'
 import { CronService } from './services'
 import { TelemetryClient } from 'applicationinsights'
@@ -29,7 +29,7 @@ class Server {
         appInsights
             .setup(env.INSIGHTS_CONNECTION_STRING)
             .setAutoDependencyCorrelation(true)
-            .setAutoCollectRequests(true)
+            .setAutoCollectRequests(false)
             .setAutoCollectPerformance(true)
             .setAutoCollectExceptions(true)
             .setAutoCollectDependencies(true)
@@ -38,6 +38,9 @@ class Server {
 
         // Initialize Application Insights Client
         this.app.locals.appInsightsClient = new TelemetryClient(env.INSIGHTS_CONNECTION_STRING)
+
+        //loga todas as request no app insights
+        this.app.use(new AppInsightsMiddleware().handler)
 
         await Database.getInstance().start()
         new CronService().setup()

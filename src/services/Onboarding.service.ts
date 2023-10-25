@@ -10,6 +10,7 @@ import { OnboardingClient, OnboardingTypes, QiTechTypes } from '../infra'
 import { IAccount, IOnboarding, NotFoundError, OnboardingModel, ServerError } from '../models'
 import { AccountRepository, ApiUserRepository, OnboardingRepository } from '../repository'
 import { maskCEP, maskCNPJ, maskCPF, unMask } from '../utils/masks'
+import { formatJson } from '../utils/scripts/formatStringJson.script'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
 import { QiTechService } from './QiTech.service'
 
@@ -135,8 +136,8 @@ export class OnboardingService {
     }
 
     public authenticateWebhook(req: Request): void {
-        const signature = req.headers.signature
-        const payload = req.body
+        const signature = req.headers.signature as string // Assuming header exists and is a string
+        const payload = formatJson(req.body) // Convert object to JSON string
         const method = req.method
         const endpoint = req.protocol + '://' + req.get('host') + req.originalUrl
 
@@ -145,7 +146,8 @@ export class OnboardingService {
             .digest('hex')
 
         if (hash !== signature) {
-            // throw new UnauthorizedError()
+            console.log('onboarding não autorizado')
+            // throw new UnauthorizedError('Onboarding não autorizado')
         }
     }
 
