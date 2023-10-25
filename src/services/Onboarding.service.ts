@@ -173,10 +173,6 @@ export class OnboardingService {
             }
         }
 
-        console.log('Fetched onboarding:', onboarding)
-        console.log('Generated payload:', payload)
-        console.log('Generated url:', url)
-
         if (!payload || !url) {
             throw new NotFoundError('Onboarding não encontrado', { requestBody: data })
         }
