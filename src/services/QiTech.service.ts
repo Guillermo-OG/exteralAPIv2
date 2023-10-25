@@ -29,6 +29,7 @@ import { IPaginatedSearch } from '../utils/pagination'
 import { deepMerge } from '../utils/scripts/DeepMerge.script'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
+import { IBillingConfigurationResponse } from '../infra/qitech/types/BillingConfiguration.types'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -651,7 +652,7 @@ export class QiTechService {
         return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
 
-    public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) {
+    public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) : Promise<IBillingConfigurationResponse> {
         const accountRepository = AccountRepository.getInstance()
         const billingRepo = BillingConfigurationRepository.getInstance()
 
@@ -667,7 +668,8 @@ export class QiTechService {
         const existingBillingConfiguration = (await billingRepo.get(document))?.toObject()
 
         if (!existingBillingConfiguration) {
-            return this.setDefaultBillingConfiguration(document)
+            await this.setDefaultBillingConfiguration(document)
+            return this.updateBillingConfigurationByDocument(document, billingConfiguration)
         } else {
             const { billing_configuration_data: billing_configuration_data } = existingBillingConfiguration
 
