@@ -55,9 +55,9 @@ export enum IPixRequestStatus {
 }
 
 export interface IPixTransferLimitConfig {
-    period: string,
-    account_key: string,
-    amount_limit: number,
+    period: string
+    account_key: string
+    amount_limit: number
     self_amount_limit: number
 }
 
@@ -68,5 +68,5 @@ export interface IPixLimitRequestWebhook {
 }
 
 export interface IDataPixLimit {
-    pix_transfer_limit_config: IPixTransferLimitConfig[];
+    pix_transfer_limit_config: IPixTransferLimitConfig[]
 }
