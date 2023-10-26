@@ -13,6 +13,7 @@ import { maskCEP, maskCNPJ, maskCPF, unMask } from '../utils/masks'
 import { formatJson } from '../utils/scripts/formatStringJson.script'
 import { legalPersonSchema, naturalPersonSchema, parseError } from '../utils/schemas'
 import { QiTechService } from './QiTech.service'
+import { TelemetryClient } from 'applicationinsights'
 
 // interface AccountRequest {
 //     account_owner: {
@@ -136,7 +137,9 @@ export class OnboardingService {
     }
 
     public authenticateWebhook(req: Request): void {
+        const appInsightsClient: TelemetryClient = req.app.locals.appInsightsClient
         const signature = req.headers.signature as string // Assuming header exists and is a string
+        const payloadBeforeFormat = req.body
         const payload = formatJson(req.body) // Convert object to JSON string
         const method = req.method
         const endpoint = req.protocol + '://' + req.get('host') + req.originalUrl
@@ -146,7 +149,18 @@ export class OnboardingService {
             .digest('hex')
 
         if (hash !== signature) {
-            console.log('onboarding não autorizado')
+            appInsightsClient.trackTrace({
+                message: 'Track do Onboarding não autorizado',
+                severity: 3, // Error severity level
+                properties: {
+                    Signature: signature,
+                    'Payload Before Format': JSON.stringify(payloadBeforeFormat),
+                    Payload: payload,
+                    Method: method,
+                    Endpoint: endpoint,
+                    Hash: hash,
+                },
+            })
             // throw new UnauthorizedError('Onboarding não autorizado')
         }
     }
