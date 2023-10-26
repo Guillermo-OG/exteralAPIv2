@@ -136,8 +136,9 @@ export class OnboardingService {
         const payloadBeforeFormat = req.body
         const payload = formatJson(req.body) // Convert object to JSON string
         const method = req.method
-        const endpoint = req.protocol + '://' + req.get('host') + req.originalUrl
+        const endpoint = req.protocol + 's://' + req.get('host') + req.originalUrl
 
+        // const tempEndpoint = 'https://prd-ap1-q1-t3ch.azurewebsites.net/webhook/onboarding'
         const hash = createHmac('sha1', this.webhookSecret)
             .update(endpoint + method + payload)
             .digest('hex')
@@ -147,12 +148,13 @@ export class OnboardingService {
                 message: 'Track do Onboarding não autorizado',
                 severity: 3, // Error severity level
                 properties: {
-                    Signature: signature,
+                    SignatureKey: this.webhookSecret,
                     'Payload Before Format': JSON.stringify(payloadBeforeFormat),
                     Payload: payload,
                     Method: method,
                     Endpoint: endpoint,
-                    Hash: hash,
+                    HashCriado: hash,
+                    HashEsperadoHeader: signature,
                 },
             })
             // throw new UnauthorizedError('Onboarding não autorizado')
