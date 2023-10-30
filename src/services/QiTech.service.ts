@@ -30,6 +30,7 @@ import { deepMerge } from '../utils/scripts/DeepMerge.script'
 import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
 import { IBillingConfigurationResponse } from '../infra/qitech/types/BillingConfiguration.types'
+import { IDeletePix } from '../infra/qitech/types/Pix.types'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -282,6 +283,15 @@ export class QiTechService {
         notificationService.notify(notification)
 
         return pix
+    }
+
+    public async deletePixKey(payload: IDeletePix) {
+        const result = await this.client.deletePixKey(payload)
+
+        return {
+            message: 'Pix Key excluido!',
+            data: result,
+        }
     }
 
     public async handlePixWebhook(payload: QiTechTypes.Pix.IPixKeyWebhook) {
@@ -652,7 +662,10 @@ export class QiTechService {
         return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
 
-    public async updateBillingConfigurationByDocument(document: string, billingConfiguration: Partial<IBillingConfiguration>) : Promise<IBillingConfigurationResponse> {
+    public async updateBillingConfigurationByDocument(
+        document: string,
+        billingConfiguration: Partial<IBillingConfiguration>
+    ): Promise<IBillingConfigurationResponse> {
         const accountRepository = AccountRepository.getInstance()
         const billingRepo = BillingConfigurationRepository.getInstance()
 

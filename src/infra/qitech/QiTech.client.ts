@@ -267,6 +267,14 @@ export class QiTechClient {
         return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
+    public async deletePixKey(data: QiTechTypes.Pix.IDeletePix) {
+        const endpoint = `/baas/pix/keys/${data.pix_key}`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'DELETE', data, contentType)
+        const res = await this.api.delete(endpoint, { headers: config.headers, data: config.body })
+        return await this.decodeMessage(endpoint, 'DELETE', res.headers as IHeaders, res.data)
+    }
+
     public async cancelAccount(accountKey: string): Promise<string> {
         const endpoint = `/account/${accountKey}/cancel`
         const contentType = 'application/json'
