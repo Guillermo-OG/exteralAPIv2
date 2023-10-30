@@ -38,6 +38,22 @@ export class PixKeyController {
         }
     }
 
+    public async deletePixKey(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const pixKey = req.params.pix_key // A partir dos parâmetros da URL
+
+            const payload: QiTechTypes.Pix.IDeletePix = req.body
+            payload.pix_key = pixKey
+
+            await qiTechService.deletePixKey(payload)
+
+            res.json({ message: 'PixKey excluída com sucesso.' })
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
+
     public async getLimitsByDocument(req: Request, res: Response, next: NextFunction) {
         const qiTechService = QiTechService.getInstance()
         try {
