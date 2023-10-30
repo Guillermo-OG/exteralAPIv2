@@ -34,12 +34,12 @@ export class ErrorMiddleware {
                 details: err.response?.data,
             }
         } else {
-            console.log('Erro desconhecido:', err)     
+            console.log('Erro desconhecido:', err)
         }
 
         // Log the exception in Application Insights
         if (err instanceof ServerError || err instanceof AxiosError) {
-            const errorString = err instanceof ServerError ? err.message : err.message || 'Axios Error'          
+            const errorString = err instanceof ServerError ? err.message : err.message || 'Axios Error'
 
             appInsightsClient.trackTrace({
                 message: errorString,

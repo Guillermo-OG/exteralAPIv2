@@ -18,6 +18,7 @@ export class PixKeyRouter {
         this.router.use(this.authMiddleware.authenticate)
         this.router.get('/', this.controller.listByDocument)
         this.router.post('/create', this.controller.createPixKey)
+        this.router.delete('/delete/:pix_key', this.controller.deletePixKey)
         this.router.get('/limits/:document', this.controller.getLimitsByDocument)
         this.router.get('/local_taxes/:document', this.controller.getLocalTaxesByDocument)
         this.router.patch('/limits/:document', this.controller.updatePixLimits)

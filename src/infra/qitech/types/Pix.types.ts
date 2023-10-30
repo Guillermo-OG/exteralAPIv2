@@ -21,6 +21,12 @@ export interface ICreatePix {
     pix_key?: string
 }
 
+export interface IDeletePix {
+    account_key: string
+    pix_key_type: PixKeyType
+    pix_key?: string
+}
+
 export interface IPixLimits {
     daily_amount_limit: string
     daily_amount_percentage: string | null
