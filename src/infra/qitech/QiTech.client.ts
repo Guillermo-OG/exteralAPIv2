@@ -332,7 +332,7 @@ export class QiTechClient {
     }
 
     public async getBillingConfigurationByAccountKey(accountKey: string) {
-        const endpoint = `/billing/${accountKey}/billing_configuration`
+        const endpoint = `/baas/billing/${accountKey}/billing_configuration`
         const contentType = 'application/json'
         const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
 
