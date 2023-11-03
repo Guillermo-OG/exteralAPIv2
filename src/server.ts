@@ -3,7 +3,7 @@ import * as appInsights from 'applicationinsights'
 import express, { Express } from 'express'
 import Database from './config/database'
 import env from './config/env'
-import { ErrorMiddleware, AppInsightsMiddleware } from './middleware'
+import { ErrorMiddleware, AppInsightsMiddleware, ProtectHeaderMiddleware } from './middleware'
 import { AccountRouter, HealthRouter, OnboardingRouter, PixKeyRouter, WebhookRouter } from './routes'
 import { CronService } from './services'
 import { TelemetryClient } from 'applicationinsights'
@@ -44,6 +44,7 @@ class Server {
 
         await Database.getInstance().start()
         new CronService().setup()
+        this.app.use(new ProtectHeaderMiddleware().handler)
         this.app.use(express.text())
         this.app.use(express.json())
         this.routes()
