@@ -79,7 +79,10 @@ export class AccountController {
         try {
             const page = Number(req.query.page) || 1
             const pageSize = Number(req.query.pageSize) || 100
-            const accounts = await QiTechService.getInstance().listAllAccounts(page, pageSize)
+            const document = req.query.document as string | undefined // novo parâmetro
+            const accountNumber = req.query.account_number as string | undefined // novo parâmetro
+
+            const accounts = await QiTechService.getInstance().listAllAccounts(page, pageSize, document, accountNumber) // passar novos argumentos
             res.status(200).json(accounts)
         } catch (error) {
             next(error)
