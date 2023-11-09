@@ -1,6 +1,7 @@
 export * from './Account.repository'
 export * from './ApiUser.repository'
 export * from './BillingConfiguration.repository'
+export * from './BillingConfigurationRequest.repository'
 export * from './File.repository'
 export * from './Notification.repository'
 export * from './Onboarding.repository'

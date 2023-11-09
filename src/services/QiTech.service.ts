@@ -9,17 +9,19 @@ import {
     AccountType,
     IAccount,
     IApiUser,
+    IBillingConfigurationRequest,
     IOnboarding,
     NotFoundError,
     PixKeyType,
     PixStatus,
     ValidationError,
 } from '../models'
-import { IBillingConfiguration } from '../models/BillingConfiguration.model'
+import { IBillingConfiguration, IBillingConfigurationData } from '../models/BillingConfiguration.model'
 import {
     AccountRepository,
     ApiUserRepository,
     BillingConfigurationRepository,
+    BillingConfigurationRequestRepository,
     FileRepository,
     OnboardingRepository,
     PixKeyRepository,
@@ -564,6 +566,42 @@ export class QiTechService {
         }
     }
 
+    public async listAllAccountsByStatusSuccess(page: number) {
+        // Obtém uma instância do repositório de contas
+        const accountRepository = AccountRepository.getInstance()
+
+        // Lista todas as contas com status SUCCESS
+        const result: IPaginatedSearch<IAccount> = await accountRepository.list(page, '', AccountStatus.SUCCESS)
+
+        // Mapeia os dados para o formato desejado
+        const mappedData = result.data.map(account => ({
+            account_key: (account.data as QiTechTypes.Account.IList).account_key, // Presumo que esses campos existem no seu IAccount
+            account_number: (account.data as QiTechTypes.Account.IList).account_number,
+            account_digit: (account.data as QiTechTypes.Account.IList).account_digit,
+            owner_name: (account.data as QiTechTypes.Account.IList).owner_name,
+            owner_document_number: account.document,
+            created_at: (account.data as QiTechTypes.Account.IList).created_at,
+        }))
+
+        // Ordena os dados mapeados
+        const sortedData = mappedData.sort((a, b) => {
+            if (a.created_at < b.created_at) return -1
+            if (a.created_at > b.created_at) return 1
+            return a.owner_name.localeCompare(b.owner_name)
+        })
+
+        // Retorna os dados no formato especificado
+        return {
+            total: result.count, // Usando o total de contas da consulta paginada
+            data: sortedData,
+            pagination: {
+                page: result.page,
+                limitPerPage: result.limitPerPage,
+                totalPages: result.totalPages,
+            },
+        }
+    }
+
     public async cancelAccount(accountKey: string) {
         const result = await this.client.cancelAccount(accountKey)
         // const account = await AccountRepository.getInstance().getByAccountKey(accountKey)
@@ -670,7 +708,7 @@ export class QiTechService {
         const billingRepo = BillingConfigurationRepository.getInstance()
 
         if (!billingConfiguration.billing_configuration_data) {
-            throw new ValidationError('Favor informar o campo que deseja alterar')
+            throw new ValidationError('O payload não contem "billing_configuration_data"')
         }
 
         const account = await accountRepository.getByDocument(document)
@@ -727,6 +765,63 @@ export class QiTechService {
 
             return responseQiTech
         }
+    }
+
+    public async compareAllBillingConfigurations() {
+        const discrepancies = []
+        let totalCount = 0
+        let page = 1
+
+        // Chamar listAllAccounts do client e continuar enquanto houver páginas
+        let accountsResult
+        do {
+            accountsResult = await this.listAllAccountsByStatusSuccess(page)
+            for (const account of accountsResult.data) {
+                const qitechConfig = (await this.client.getBillingConfigurationByAccountKey(account.account_key)) as IBillingConfiguration
+
+                if (qitechConfig.billing_configuration_data.pix.billing_account_key !== account.account_key) {
+                    discrepancies.push({
+                        account_key: account.account_key,
+                        owner_document_number: account.owner_document_number,
+                        qitech_billing_account_key: qitechConfig.billing_configuration_data.pix.billing_account_key,
+                    })
+                    totalCount++
+                }
+            }
+
+            page++ // Ir para a próxima página
+        } while (page <= accountsResult.pagination.totalPages)
+
+        return {
+            totalDiscrepancies: totalCount,
+            discrepancies: discrepancies,
+        }
+    }
+
+    public async updateBillingConfigurationRequestByDocument(document: string, billingConfigurationData: object) {
+        const accountRepository = AccountRepository.getInstance()
+        const account = await accountRepository.getByDocument(document)
+
+        // Assegure-se de que a conta foi encontrada antes de prosseguir
+        if (!account || !account.data || !(account.data as QiTechTypes.Account.IList).account_number) {
+            throw new Error('Conta não encontrada')
+        }
+
+        const accountNumber = (account.data as QiTechTypes.Account.IList).account_number
+        const ownerPersonType = account.type === 'PF' ? 'natural' : 'legal'
+        const billingRequestRepo = BillingConfigurationRequestRepository.getInstance()
+
+        // Prepare os dados para upsert conforme o esquema necessário
+        const upsertData: IBillingConfigurationRequest = {
+            account_number: accountNumber,
+            owner_person_type: ownerPersonType,
+            document,
+            billing_configuration_data: billingConfigurationData as IBillingConfigurationData,
+        }
+
+        await billingRequestRepo.upsertByAccountNumber(accountNumber, upsertData)
+        // Retorne o que for apropriado aqui, possivelmente os dados inseridos/atualizados
+        return upsertData
     }
 
     public async setDefaultBillingConfiguration(document: string) {
