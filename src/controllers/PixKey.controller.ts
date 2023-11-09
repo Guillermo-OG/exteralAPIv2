@@ -5,6 +5,7 @@ import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
 import { IPixLimitsRequest } from '../models'
 import { ValidationError } from '../models'
+import { runBillingJob } from '../jobs/billingJob'
 
 export class PixKeyController {
     public async listByDocument(req: Request, res: Response, next: NextFunction) {
@@ -20,6 +21,15 @@ export class PixKeyController {
             const pixKeys = await pixRepository.listByDocument(document as string, keyType as string)
 
             res.json(pixKeys)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    public async triggerBillingJob(_req: Request, res: Response, next: NextFunction) {
+        try {
+            await runBillingJob()
+            res.sendStatus(200)
         } catch (error) {
             next(error)
         }
@@ -147,6 +157,16 @@ export class PixKeyController {
         }
     }
 
+    public async billingKeysCompare(_req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const discrepancies = await qiTechService.compareAllBillingConfigurations()
+            res.json(discrepancies)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
+
     public async updateBillingConfiguration(req: Request, res: Response, next: NextFunction) {
         const qiTechService = QiTechService.getInstance()
         try {
@@ -163,6 +183,27 @@ export class PixKeyController {
             )
 
             res.json(updatedBillingConfiguration)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
+
+    public async updateBillingConfigurationRequest(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const document = unMask(req.params.document)
+            if (!document) {
+                throw new ValidationError('Documento não especificado')
+            }
+
+            const billingConfigurationData = req.body.billing_configuration_data
+
+            const updatedBillingConfigurationRequest = await qiTechService.updateBillingConfigurationRequestByDocument(
+                document,
+                billingConfigurationData
+            )
+
+            res.json(updatedBillingConfigurationRequest)
         } catch (error) {
             next(await qiTechService.decodeError(error))
         }

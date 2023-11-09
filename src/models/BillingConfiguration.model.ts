@@ -87,7 +87,7 @@ const AccountMaintenanceSchema = new Schema(
     { _id: false }
 )
 
-const BillingConfigurationSchema = new Schema({
+export const BillingConfigurationSchema = new Schema({
     document: {
         type: String,
         required: true,
