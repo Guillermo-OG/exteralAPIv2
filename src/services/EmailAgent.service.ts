@@ -35,9 +35,11 @@ export class EmailAgentService {
         const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '') // "YYYYMMDD"
         const fileName = `billing-${formattedDate}01.xlsx`
 
+        const recipients = ['guillermo@villelabrasillabs.com']
+
         const mailOptions: SendMailOptions = {
-            from: env.MAIL_AUTH_USER, // Sender address
-            to: 'guillermo@villelabrasillabs.com', // List of recipients
+            from: env.MAIL_SENDER, // Sender address
+            to: recipients, // List of recipients
             subject: fileName, // Subject line
             text: 'Attached is the daily billing report.', // Plain text body
             attachments: [
