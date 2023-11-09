@@ -6,6 +6,13 @@ async function runBillingJob() {
     try {
         const billingService = BillingConfigurationRequestService.getInstance()
         const formattedData = await billingService.getRecentUpdates()
+
+        if (formattedData.length === 0) {
+            const date = new Date().toISOString().split('T')[0]
+            console.log(`No ${date}, não houve configurações de taxas novas`)
+            return // Encerra a função aqui se não houver dados
+        }
+
         const excelBuffer = await createExcelFromData(formattedData)
 
         const emailService = EmailAgentService.getInstance()
