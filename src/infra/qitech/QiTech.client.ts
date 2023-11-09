@@ -88,15 +88,25 @@ export class QiTechClient {
         )
     }
 
-    public async listAllAccounts(page = 1, pageSize = 100): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
+    public async listAllAccounts(
+        page = 1,
+        pageSize = 100,
+        document?: string,
+        accountNumber?: string
+    ): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
         const urlQueryParams = new URLSearchParams({
             page: page.toString(),
             pageSize: pageSize.toString(),
         })
+
+        if (document) urlQueryParams.append('owner_document_number', document)
+        if (accountNumber) urlQueryParams.append('account_number', accountNumber)
+
         const endpoint = `/account?${urlQueryParams}`
         const contentType = 'application/json'
         const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
         const res = await this.api.get(endpoint, { headers: config.headers })
+
         return await this.decodeMessage<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>>(
             endpoint,
             'GET',

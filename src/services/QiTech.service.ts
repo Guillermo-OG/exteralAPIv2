@@ -540,8 +540,8 @@ export class QiTechService {
         }
     }
 
-    public async listAllAccounts(page: number, pageSize: number) {
-        const result = await this.client.listAllAccounts(page, pageSize)
+    public async listAllAccounts(page: number, pageSize: number, document?: string, accountNumber?: string) {
+        const result = await this.client.listAllAccounts(page, pageSize, document, accountNumber)
 
         const mappedData = result.data.map(account => ({
             account_key: account.account_key,
