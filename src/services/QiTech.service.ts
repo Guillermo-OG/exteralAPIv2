@@ -616,9 +616,8 @@ export class QiTechService {
         }
     }
 
-    public async getAccountQITech(accountKey: string, page: number, pageSize: number) {
-        const result = await this.client.getAccountsByKey(accountKey, page, pageSize)
-
+    public async getAccountQITech(accountKey: string) {
+        const result = await this.client.getAccountsByKey(accountKey)
         return {
             data: result,
         }
@@ -741,7 +740,7 @@ export class QiTechService {
                 if (mergedBillingConfigurationData[section]) {
                     // por algum motivo a linha abaixo não deveria ter semi-colon, mas como não consegui configurar adicionei uma exceção
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
+                    ;(mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
                 }
             }
 

@@ -115,17 +115,8 @@ export class QiTechClient {
         )
     }
 
-    public async getAccountsByKey(
-        accountKey: string,
-        page = 1,
-        pageSize = 100
-    ): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
-        const urlQueryParams = new URLSearchParams({
-            account_key: accountKey,
-            page: page.toString(),
-            pageSize: pageSize.toString(),
-        })
-        const endpoint = `/account?${urlQueryParams}`
+    public async getAccountsByKey(accountKey: string): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
+        const endpoint = `/account/${accountKey}`
         const contentType = 'application/json'
         const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
         const res = await this.api.get(endpoint, { headers: config.headers })

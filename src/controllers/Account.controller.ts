@@ -104,10 +104,8 @@ export class AccountController {
 
     public async getByAccountKeyFromQITech(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const page = Number(req.query.page) || 1
-            const pageSize = Number(req.query.pageSize) || 100
-            const account_key = String(req.query.account_key)
-            const accounts = await QiTechService.getInstance().getAccountQITech(account_key, page, pageSize)
+            const account_key = req.params.accountKey
+            const accounts = await QiTechService.getInstance().getAccountQITech(account_key)
             res.status(200).json(accounts)
         } catch (error) {
             next(error)
