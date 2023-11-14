@@ -35,7 +35,6 @@ export class WebhookController {
             await QiTechService.getInstance().handlePendingAnalysis()
             res.status(200).send('ok')
         } catch (error) {
-            console.error(error)
             next(await qiTechService.decodeError(error))
         }
     }

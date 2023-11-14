@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { BillingConfigurationRepository, PixKeyRepository, PixLimitsRequestRepository } from '../repository'
+import { PixKeyRepository, PixLimitsRequestRepository } from '../repository'
 import { QiTechTypes } from '../infra'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
@@ -85,12 +85,9 @@ export class PixKeyController {
             if (!document) {
                 throw new ValidationError('Não foi encontrado o documento')
             }
-            const billingRepo = BillingConfigurationRepository.getInstance()
-            const limits = await billingRepo.get(document)
-            if (!limits) {
-                throw new ValidationError('Limites não encontrados para este documento')
-            }
-            res.json(limits)
+
+            const billingConfiguration = await service.updateAndGetBillingConfiguration(document)
+            res.json(billingConfiguration)
         } catch (error) {
             next(await service.decodeError(error))
         }
