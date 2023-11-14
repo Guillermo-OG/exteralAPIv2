@@ -39,11 +39,20 @@ export class ErrorMiddleware {
 
         // Log the exception in Application Insights
         if (err instanceof ServerError || err instanceof AxiosError) {
-            const errorString = err instanceof ServerError ? err.message : err.message || 'Axios Error'
+            let errorString
+            let errorDetails = ''
+
+            if (err instanceof AxiosError && err.response && err.response.data && err.response.data.error) {
+                errorString = err.response.data.error
+                errorDetails = err.response.data.details.translation
+            } else {
+                errorString = err instanceof ServerError ? err.message : err.message || 'Axios Error'
+            }
 
             appInsightsClient.trackTrace({
                 message: errorString,
                 properties: {
+                    errorDetails: errorDetails,
                     requestPath: req.path,
                     requestMethod: req.method,
                     requestStatus: status,

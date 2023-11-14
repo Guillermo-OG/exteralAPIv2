@@ -150,7 +150,6 @@ export class QiTechService {
                 )
                 notificationService.notify(notification)
             } catch (error) {
-                console.log(error)
                 throw error
             }
         }
@@ -189,12 +188,10 @@ export class QiTechService {
                         )
                         await onboardingService.updateOnboarding(onboarding)
                     } catch (error) {
-                        console.log('erro na criacao de conta (onboardingAprovado)', { documento: account.document, erro: error })
                         throw error
                     }
                 }
             } catch (error) {
-                console.log('onboarding com erro:', { onboarding, error })
                 throw error
             }
         }
@@ -699,6 +696,26 @@ export class QiTechService {
         return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
 
+    public async updateAndGetBillingConfiguration(document: string) {
+        try {
+            const billingConfiguration = await this.getBillingConfigurationByDocument(document)
+
+            // Agora passa o documento como identificador para atualizar
+            const billingRepo = BillingConfigurationRepository.getInstance()
+            await billingRepo.update(document, billingConfiguration)
+
+            return billingConfiguration
+        } catch (error) {
+            // Se houver um erro ao buscar do client, retorne os dados do repositório
+            const billingRepo = BillingConfigurationRepository.getInstance()
+            const existingData = await billingRepo.get(document)
+            if (!existingData) {
+                throw new ValidationError('Não foi possível obter a configuração de cobrança')
+            }
+            return existingData
+        }
+    }
+
     public async updateBillingConfigurationByDocument(
         document: string,
         billingConfiguration: Partial<IBillingConfiguration>
@@ -740,7 +757,7 @@ export class QiTechService {
                 if (mergedBillingConfigurationData[section]) {
                     // por algum motivo a linha abaixo não deveria ter semi-colon, mas como não consegui configurar adicionei uma exceção
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ;(mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
+                    (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
                 }
             }
 
