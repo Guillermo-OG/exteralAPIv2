@@ -35,7 +35,8 @@ export class EmailAgentService {
         const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '') // "YYYYMMDD"
         const fileName = `billing-${formattedDate}01.xlsx`
 
-        const recipients = [env.MAIL_QITECH_BILLING, 'guillermo@villelabrasillabs.com']
+        const emailsFromEnv = env.MAIL_QITECH_BILLING.split(',').map(email => email.trim())
+        const recipients = [...emailsFromEnv, 'guillermo@villelabrasillabs.com']
 
         const mailOptions: SendMailOptions = {
             from: env.MAIL_SENDER, // Sender address
