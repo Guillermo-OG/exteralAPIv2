@@ -15,8 +15,8 @@ export class BillingConfigurationRepository {
         return await BillingConfiguration.findOne({ document })
     }
 
-    public async update(data: Partial<IBillingConfiguration>): Promise<void> {
-        await BillingConfiguration.updateOne({}, data, { upsert: true })
+    public async update(document: string, data: Partial<IBillingConfiguration>): Promise<void> {
+        await BillingConfiguration.updateOne({ document: document }, data, { upsert: true })
     }
 
     public async insert(data: IBillingConfiguration): Promise<void> {
