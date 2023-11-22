@@ -508,6 +508,10 @@ export class QiTechService {
         if ('trading_name' in payload.account_owner) {
             payload.account_owner.cnae_code = maskCNAE(payload.account_owner.cnae_code)
         }
+        //if name is too long, then cut
+        if (payload.account_owner.name.length > 50) {
+            payload.account_owner.name = payload.account_owner.name.substring(0, 50)
+        }
     }
 
     private mapStatus(status: QiTechTypes.Account.AccountStatus): AccountStatus {
