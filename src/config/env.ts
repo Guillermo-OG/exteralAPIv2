@@ -22,6 +22,8 @@ const env = {
     MAIL_AUTH_PASS: process.env.MAIL_AUTH_PASS!,
     MAIL_SENDER: process.env.MAIL_SENDER!,
     MAIL_QITECH_BILLING: process.env.MAIL_QITECH_BILLING!,
+    ONBOARDING_WEBHOOK_URL_CONTA_VBB: process.env.ONBOARDING_WEBHOOK_URL_CONTA_VBB!,
+    VBB_API_USER_ID: process.env.VBB_API_USER_ID!,
 }
 
 export default env

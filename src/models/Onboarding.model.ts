@@ -12,7 +12,8 @@ export interface IOnboarding {
     response?: OnboardingTypes.ILegalPersonCreateResponse | OnboardingTypes.INaturalPersonCreateResponse
     data?: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
     error?: IUnknownError
-    accountId: Schema.Types.ObjectId
+    accountId?: Schema.Types.ObjectId
+    origin?: string
 }
 
 const schema = new Schema<IOnboarding>(
@@ -23,7 +24,8 @@ const schema = new Schema<IOnboarding>(
         response: { type: Schema.Types.Mixed, required: false },
         data: { type: Schema.Types.Mixed, required: false },
         error: { type: Schema.Types.Mixed, required: false },
-        accountId: { type: Schema.Types.ObjectId, ref: 'Account', required: true },
+        accountId: { type: Schema.Types.ObjectId, ref: 'Account', required: false },
+        origin: { type: String, required: false },
     },
     {
         collection: 'onboarding',

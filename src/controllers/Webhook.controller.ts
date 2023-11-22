@@ -1,24 +1,22 @@
 import { NextFunction, Request, Response } from 'express'
 import { OnboardingTypes } from '../infra'
 import { NotificationService, OnboardingService, QiTechService } from '../services'
+import env from '../config/env'
 
 export class WebhookController {
     public async handleOnboardingWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
         const qiTechService = QiTechService.getInstance()
         try {
             const body = req.body as OnboardingTypes.IWebhookBody
-            if (!body.legal_person_id && !body.natural_person_id) {
-                console.log('body empty', req.body)
-            } else {
-                console.log('Received body', body)
-            }
+
             const service = OnboardingService.getInstance()
             const notificationService = NotificationService.getInstance()
 
             const { payload, url, createdAccount } = await service.handleWebhook(body)
 
+            const apiUserId = createdAccount?.apiUserId || env.VBB_API_USER_ID
             if (!req.user) {
-                req.user = { id: createdAccount?.apiUserId }
+                req.user = { id: apiUserId }
             }
 
             const notification = await notificationService.create(payload, url, req.user)
