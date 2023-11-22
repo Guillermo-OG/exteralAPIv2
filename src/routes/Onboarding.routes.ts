@@ -22,6 +22,6 @@ export class OnboardingRouter {
         this.router.get('/', this.validator.validate({ query: onboardingPersonListSchema }), this.controller.listOnboarding)
         this.router.get('/:document', this.controller.getByDocument)
         this.router.get('/analysis/:document', this.controller.getAnalysis)
-        this.router.post('/create', this.validator.validate(CreateAccountSchema), this.controller.createOnboarding)
+        this.router.post('/create', this.validator.validate({ body: CreateAccountSchema }), this.controller.createOnboarding)
     }
 }
