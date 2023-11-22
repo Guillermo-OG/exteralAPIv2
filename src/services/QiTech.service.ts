@@ -124,34 +124,30 @@ export class QiTechService {
         if (accounts.count == 0) return
 
         for (let index = 0; index < accounts.count; index++) {
-            try {
-                let account = accounts.data[index]
-                if (!account) throw new NotFoundError('Conta existente encontrada para este documento')
+            let account = accounts.data[index]
+            if (!account) throw new NotFoundError('Conta existente encontrada para este documento')
 
-                account = await this.updateAccountWithQi(account)
+            account = await this.updateAccountWithQi(account)
 
-                if (!account?.data) throw new Error('Dados da Conta não encontrados')
+            if (!account?.data) throw new Error('Dados da Conta não encontrados')
 
-                await this.createPixKey({
-                    account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
-                    pix_key_type: PixKeyType.RANDOM_KEY,
-                })
+            await this.createPixKey({
+                account_key: (account.data as QiTechTypes.Account.IList).account_key as string,
+                pix_key_type: PixKeyType.RANDOM_KEY,
+            })
 
-                const apiUser = await userRepository.getById(account.apiUserId)
-                if (!apiUser) throw new NotFoundError('Nenhum usuário encontrado para esta conta')
+            const apiUser = await userRepository.getById(account.apiUserId)
+            if (!apiUser) throw new NotFoundError('Nenhum usuário encontrado para esta conta')
 
-                const notificationService = NotificationService.getInstance()
-                const notification = await notificationService.create(
-                    {
-                        ...account.toJSON(),
-                    },
-                    account.callbackURL,
-                    apiUser
-                )
-                notificationService.notify(notification)
-            } catch (error) {
-                throw error
-            }
+            const notificationService = NotificationService.getInstance()
+            const notification = await notificationService.create(
+                {
+                    ...account.toJSON(),
+                },
+                account.callbackURL,
+                apiUser
+            )
+            notificationService.notify(notification)
         }
     }
 
@@ -167,32 +163,24 @@ export class QiTechService {
         for (let index = 0; index <= onboardings.count; index++) {
             const onboarding = onboardings.data[index]
 
-            try {
-                if (onboarding == null) return
+            if (onboarding == null) return
 
-                const updatedAnalysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse =
-                    await onboardingService.getAnalysis(onboarding)
+            const updatedAnalysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse =
+                await onboardingService.getAnalysis(onboarding)
 
-                if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
-                    const account = await accountRepository.getByDocument(onboarding.document)
+            if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
+                const account = await accountRepository.getByDocument(onboarding.document)
 
-                    if (!account) {
-                        throw new NotFoundError('Nenhuma conta encontrada para este documento')
-                    }
-
-                    try {
-                        await this.createAccountOnboardingOk(
-                            onboarding.document,
-                            account?.request as QiTechTypes.Account.ICreate,
-                            account.apiUserId
-                        )
-                        await onboardingService.updateOnboarding(onboarding)
-                    } catch (error) {
-                        throw error
-                    }
+                if (!account) {
+                    throw new NotFoundError('Nenhuma conta encontrada para este documento')
                 }
-            } catch (error) {
-                throw error
+
+                await this.createAccountOnboardingOk(
+                    onboarding.document,
+                    account?.request as QiTechTypes.Account.ICreate,
+                    account.apiUserId
+                )
+                await onboardingService.updateOnboarding(onboarding)
             }
         }
     }

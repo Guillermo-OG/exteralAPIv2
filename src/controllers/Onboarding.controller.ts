@@ -4,6 +4,7 @@ import { NotFoundError, ValidationError } from '../models'
 import { OnboardingRepository } from '../repository'
 import { OnboardingService } from '../services'
 import { unMask } from '../utils/masks'
+import { Schema } from 'mongoose'
 
 export class OnboardingController {
     public async getAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -59,6 +60,21 @@ export class OnboardingController {
 
             const onboardings = await repository.list(page, status)
             res.json(onboardings)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    public async createOnboarding(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const origin = req.body.origin // Ou req.query.origin, dependendo de como você quer receber
+            const data = req.body.data
+            const accountId = req.body.accountId ? (req.body.accountId as Schema.Types.ObjectId) : undefined
+
+            const onboardingService = OnboardingService.getInstance()
+            const onboarding = await onboardingService.createOnboarding(data, accountId, origin)
+
+            res.json(onboarding)
         } catch (error) {
             next(error)
         }

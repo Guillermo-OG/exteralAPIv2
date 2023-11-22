@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { OnboardingController } from '../controllers'
 import { AuthMiddleware, ValidationMiddleware } from '../middleware'
 import { onboardingPersonListSchema } from '../utils/schemas'
+import { CreateAccountSchema } from '../utils/schemas/account/createAccountSchema'
 
 export class OnboardingRouter {
     public readonly router: Router
@@ -21,5 +22,6 @@ export class OnboardingRouter {
         this.router.get('/', this.validator.validate({ query: onboardingPersonListSchema }), this.controller.listOnboarding)
         this.router.get('/:document', this.controller.getByDocument)
         this.router.get('/analysis/:document', this.controller.getAnalysis)
+        this.router.post('/create', this.validator.validate(CreateAccountSchema), this.controller.createOnboarding)
     }
 }

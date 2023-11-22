@@ -2,7 +2,7 @@ import { AxiosError } from 'axios'
 import { createHmac } from 'crypto'
 import { format } from 'date-fns'
 import { Request } from 'express'
-import { ObjectId } from 'mongoose'
+import { Schema } from 'mongoose'
 import { v4 } from 'uuid'
 import { ValidationError as YupValidationError } from 'yup'
 import env from '../config/env'
@@ -19,12 +19,14 @@ export class OnboardingService {
     private static instance: OnboardingService
     private readonly api: OnboardingClient
     private readonly webhookSecret: string
+    private readonly urlContaVBB: string
 
     private constructor() {
         if (!env.ONBOARDING_API_SECRET || !env.ONBOARDING_BASE_URL || !env.ONBOARDING_WEBHOOK_SECRET) {
             throw new Error('Faltam variáveis de ambiente qitech')
         }
         this.webhookSecret = env.ONBOARDING_WEBHOOK_SECRET
+        this.urlContaVBB = env.ONBOARDING_WEBHOOK_URL_CONTA_VBB
         this.api = new OnboardingClient(env.ONBOARDING_BASE_URL, env.ONBOARDING_API_SECRET)
     }
 
@@ -37,7 +39,8 @@ export class OnboardingService {
 
     public async createOnboarding(
         data: OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate,
-        accountId: ObjectId
+        accountId?: Schema.Types.ObjectId,
+        origin?: string
     ): Promise<OnboardingModel> {
         const repository = OnboardingRepository.getInstance()
         const document = unMask(data.document_number)
@@ -49,6 +52,7 @@ export class OnboardingService {
             data: undefined,
             status: OnboardingTypes.RequestStatus.PENDING,
             accountId: accountId,
+            origin,
         }
 
         let onboarding = await repository.getByDocument(document)
@@ -176,16 +180,21 @@ export class OnboardingService {
 
         if (onboarding) {
             payload = await this.updateOnboarding(onboarding)
-            // url = legalPerson.webhookUrl
-            url = 'http://localhost:3000/webhook/mock'
 
-            // Verifique se o onboarding foi aprovado
-            if (onboarding.status === OnboardingTypes.RequestStatus.APPROVED) {
-                createdAccount = await this.createAccountIfNecessary(onboarding)
+            if (onboarding.origin?.toLowerCase() === 'vbb' && onboarding.status === OnboardingTypes.RequestStatus.APPROVED) {
+                url = this.urlContaVBB
+            } else {
+                // url = legalPerson.webhookUrl
+                url = 'http://localhost:3000/webhook/mock'
 
-                if (!createdAccount) throw new Error('Conta não criada')
+                // Verifique se o onboarding foi aprovado
+                if (onboarding.status === OnboardingTypes.RequestStatus.APPROVED) {
+                    createdAccount = await this.createAccountIfNecessary(onboarding)
 
-                url = createdAccount.callbackURL
+                    if (!createdAccount) throw new Error('Conta não criada')
+
+                    url = createdAccount.callbackURL
+                }
             }
         }
 
