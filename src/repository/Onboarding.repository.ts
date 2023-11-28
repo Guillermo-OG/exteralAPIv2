@@ -52,6 +52,10 @@ export class OnboardingRepository {
         )
     }
 
+    public async getByResponseId(id: string): Promise<OnboardingModel | null> {
+        return await Onboarding.findOne({ 'response.id': id }, null, { sort: { _id: -1 } })
+    }
+
     public async list(page: number, status?: OnboardingTypes.RequestStatus): Promise<IPaginatedSearch<IOnboarding>> {
         const filter: FilterQuery<IOnboarding> = {}
         if (status) {
