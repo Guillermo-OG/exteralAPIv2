@@ -504,7 +504,7 @@ export class QiTechService {
         }
     }
 
-    private formatPayload(payload: QiTechTypes.Account.ICreate): void {
+    public formatPayload(payload: QiTechTypes.Account.ICreate): void {
         if ('trading_name' in payload.account_owner) {
             payload.account_owner.cnae_code = maskCNAE(payload.account_owner.cnae_code)
         }
@@ -658,22 +658,6 @@ export class QiTechService {
         const accountKey = (account.data as QiTechTypes.Account.IList).account_key
 
         return await this.client.getPixLimitsRequest(accountKey, requestStatus, page, pageSize)
-    }
-
-    public async updatePhoneNumber(document: string, phoneNumber: QiTechTypes.Account.IPhone, email: string) {
-        const requestBody: QiTechTypes.Person.IUpdate = {
-            contact_type: 'sms',
-            professional_data_contact_update: {
-                professional_data_key: '',
-                natural_person: '',
-                email: email,
-                phone_number: phoneNumber,
-            },
-            agent_document_number: document,
-        }
-
-        const response = await this.client.requestToken(requestBody)
-        return response
     }
 
     public async getBillingConfigurationByDocument(document: string) {
