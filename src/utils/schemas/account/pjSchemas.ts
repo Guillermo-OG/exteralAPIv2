@@ -26,7 +26,7 @@ export const PjCreateSchema = new yup.ObjectSchema({
             .test('Validação de data', 'Data inválida', value => {
                 return isValid(new Date(value))
             }),
-        company_statute: yup.string().required('Estatuto da empresa é obrigatório'),
+        company_statute: yup.string().default(''),
         annual_revenue_amount: yup
             .string()
             .required('Receita anual é obrigatória')
