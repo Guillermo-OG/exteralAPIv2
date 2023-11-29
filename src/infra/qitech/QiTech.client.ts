@@ -25,6 +25,16 @@ interface IBody {
     encoded_body: string
 }
 
+type tokenRequestTypes =
+    | QiTechTypes.Person.IPersonCreateRequest
+    | QiTechTypes.Person.IProfessionalCreateRequest
+    | QiTechTypes.Person.IProfessionalDeleteRequest
+
+type tokenValidateTypes =
+    | QiTechTypes.Person.IPersonCreateValidate
+    | QiTechTypes.Person.IProfessionalCreateValidate
+    | QiTechTypes.Person.IProfessionalDeleteValidate
+
 export class QiTechClient {
     private readonly api: AxiosInstance
     private readonly config: IQiTechConfig
@@ -289,6 +299,18 @@ export class QiTechClient {
 
         const res = await this.api.post(endpoint, config.body, { headers: config.headers })
         return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
+    }
+
+    public async sendTokenRequest(payload: tokenRequestTypes) {
+        const endpoint = '/baas/token_request'
+        const res = await this.api.post(endpoint, payload)
+        return this.decodeMessage(endpoint, 'POST', res.headers, res.data)
+    }
+
+    public async validateMovement(payload: tokenValidateTypes) {
+        const endpoint = '/baas/movement_validation'
+        const res = await this.api.post(endpoint, payload)
+        return this.decodeMessage(endpoint, 'POST', res.headers, res.data)
     }
 
     public async getPixLimitsRequest(accountKey: string, requestStatus: QiTechTypes.Pix.IPixRequestStatus, page = 1, pageSize = 10) {
