@@ -3,7 +3,6 @@ import { createHash, createPrivateKey } from 'crypto'
 import FormData from 'form-data'
 import { JWTPayload, SignJWT, decodeJwt } from 'jose'
 import { QiTechTypes } from './'
-// import { IUpdate } from './types/Person.types'
 
 interface IQiTechConfig {
     apiKey: string
@@ -56,15 +55,6 @@ export class QiTechClient {
         const res = await this.api.post(endpoint, config.body, { headers: config.headers })
         return await this.decodeMessage<QiTechTypes.Account.ICreateResponse>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
-
-    // public async updateAccount(data: Partial<QiTechTypes.Account.IUpdate>) {
-    //     const endpoint = '/account'
-    //     const body = data
-    //     const contentType = 'application/json'
-    //     const config = await this.signMessage(endpoint, 'PATCH', body, contentType)
-    //     const res = await this.api.patch(endpoint, config.body, { headers: config.headers })
-    //     return await this.decodeMessage<QiTechTypes.Account.IUpdateResponse>(endpoint, 'PATCH', res.headers as IHeaders, res.data)
-    // }
 
     public async listAccounts(
         document: string,
@@ -319,17 +309,6 @@ export class QiTechClient {
             res.headers as IHeaders,
             res.data
         )
-    }
-
-    public async requestToken(updateObject: QiTechTypes.Person.IUpdate) {
-        const endpoint = '/baas/token_request'
-        const body = updateObject
-        const contentType = 'application/json'
-
-        const config = await this.signMessage(endpoint, 'POST', body, contentType)
-        const res = await this.api.post(endpoint, config.body, { headers: config.headers })
-
-        return await this.decodeMessage<object>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
     public async getBillingConfigurationByAccountKey(accountKey: string) {

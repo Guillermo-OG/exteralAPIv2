@@ -125,19 +125,4 @@ export class AccountController {
             next(await qiTechService.decodeError(error))
         }
     }
-
-    public async updatePhoneNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const qiTechService = QiTechService.getInstance()
-        try {
-            const { document } = req.params
-            const { phone_number } = req.body
-            const { email } = req.body
-
-            const response = await qiTechService.updatePhoneNumber(document, phone_number, email)
-
-            res.json(response)
-        } catch (error) {
-            next(await qiTechService.decodeError(error))
-        }
-    }
 }

@@ -37,6 +37,15 @@ export class OnboardingService {
         return OnboardingService.instance
     }
 
+    public async createOnboardingVBB(data: QiTechTypes.Account.ICreate, accountId?: Schema.Types.ObjectId): Promise<OnboardingModel> {
+        const qiTechService = QiTechService.getInstance()
+        await qiTechService.formatPayload(data)
+        const onboardingData = await this.mapQiTechPayload(data)
+        const onboarding = await this.createOnboarding(onboardingData, accountId, 'vbb')
+
+        return onboarding
+    }
+
     public async createOnboarding(
         data: OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate,
         accountId?: Schema.Types.ObjectId,
@@ -120,7 +129,7 @@ export class OnboardingService {
                 udaptedData = await this.api.getNaturalPerson(onboarding.response.id)
             }
             const newStatus = this.mapQiTechStatusToVillelaStatus(udaptedData.analysis_status)
-            if (onboarding.status !== newStatus) {
+            if (onboarding.status !== newStatus || !onboarding.data) {
                 onboarding.data = udaptedData
                 onboarding.status = newStatus
                 onboarding.markModified('data')
@@ -173,9 +182,9 @@ export class OnboardingService {
         let createdAccount: IAccount | null = null
 
         if (data.legal_person_id) {
-            onboarding = await repository.getByExternalId(data.legal_person_id)
+            onboarding = await repository.getByResponseId(data.legal_person_id)
         } else if (data.natural_person_id) {
-            onboarding = await repository.getByExternalId(data.natural_person_id)
+            onboarding = await repository.getByResponseId(data.natural_person_id)
         }
 
         if (onboarding) {

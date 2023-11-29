@@ -67,12 +67,11 @@ export class OnboardingController {
 
     public async createOnboarding(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const origin = req.body.origin // Ou req.query.origin, dependendo de como você quer receber
-            const data = req.body.data
+            const data = req.body
             const accountId = req.body.accountId ? (req.body.accountId as Schema.Types.ObjectId) : undefined
 
             const onboardingService = OnboardingService.getInstance()
-            const onboarding = await onboardingService.createOnboarding(data, accountId, origin)
+            const onboarding = await onboardingService.createOnboardingVBB(data, accountId)
 
             res.json(onboarding)
         } catch (error) {
