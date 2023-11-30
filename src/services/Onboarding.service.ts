@@ -196,7 +196,7 @@ export class OnboardingService {
         if (onboarding) {
             payload = await this.updateOnboarding(onboarding)
 
-            if (onboarding.origin?.toLowerCase() === 'vbb' && onboarding.status === OnboardingTypes.RequestStatus.APPROVED) {
+            if (onboarding.origin?.toLowerCase() === 'vbb') {
                 url = this.urlContaVBB
             } else {
                 // url = legalPerson.webhookUrl
