@@ -5,13 +5,13 @@ export const BaseSchema = yup
     .shape({
         contact_type: yup.string().default('sms'),
         agent_document_number: yup.string().when('$isTokenRequired', (isTokenRequired, schema) => {
-            return isTokenRequired ? schema.notRequired() : schema.required()
+            return isTokenRequired ? schema.required() : schema.notRequired()
         }),
     })
     .concat(
         yup.object({
             token: yup.string().when('$isTokenRequired', (isTokenRequired, schema) => {
-                return isTokenRequired ? schema.required() : schema.notRequired()
+                return isTokenRequired ? schema.notRequired() : schema.required()
             }),
         })
     )
