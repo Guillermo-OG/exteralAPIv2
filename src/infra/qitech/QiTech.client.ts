@@ -303,14 +303,20 @@ export class QiTechClient {
 
     public async sendTokenRequest(payload: tokenRequestTypes) {
         const endpoint = '/baas/token_request'
-        const res = await this.api.post(endpoint, payload)
-        return this.decodeMessage(endpoint, 'POST', res.headers, res.data)
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'POST', payload, contentType)
+
+        const res = await this.api.post(endpoint, config.body, { headers: config.headers })
+        return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
     public async validateMovement(payload: tokenValidateTypes) {
         const endpoint = '/baas/movement_validation'
-        const res = await this.api.post(endpoint, payload)
-        return this.decodeMessage(endpoint, 'POST', res.headers, res.data)
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'POST', payload, contentType)
+
+        const res = await this.api.post(endpoint, config.body, { headers: config.headers })
+        return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
     public async getPixLimitsRequest(accountKey: string, requestStatus: QiTechTypes.Pix.IPixRequestStatus, page = 1, pageSize = 10) {

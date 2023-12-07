@@ -50,8 +50,10 @@ export interface IAddress {
 }
 
 export interface IProfessionalDataCreation {
-    natural_person: string
-    legal_person: string
+    natural_person?: string
+    legal_person?: string
+    pfDocument?: string
+    pjDocument?: string
     natural_person_roles: INaturalPersonRole[]
     post_type: string
 }
@@ -73,8 +75,10 @@ export interface IProfessionalCreateValidate {
 }
 
 export interface IProfessionalDataDeletion {
-    natural_person: string
-    legal_person: string
+    natural_person?: string
+    legal_person?: string
+    pfDocument?: string
+    pjDocument?: string
 }
 
 export interface IProfessionalDeleteRequest {

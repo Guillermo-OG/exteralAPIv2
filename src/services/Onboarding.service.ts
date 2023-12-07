@@ -192,6 +192,7 @@ export class OnboardingService {
 
             if (onboarding.origin?.toLowerCase() === 'vbb') {
                 url = this.urlContaVBB
+                console.log('payloadNotificacao', { data, url })
             } else {
                 // url = legalPerson.webhookUrl
                 url = 'http://localhost:3000/webhook/mock'

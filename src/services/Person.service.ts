@@ -1,6 +1,8 @@
 ﻿import { AxiosError } from 'axios'
+
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
+import { OnboardingRepository } from '../repository'
 
 export class PersonService {
     private static instance: PersonService
@@ -33,19 +35,94 @@ export class PersonService {
     }
 
     public async handleCreatePersonLinkTokenRequest(payload: QiTechTypes.Person.IProfessionalCreateRequest) {
-        return this.client.sendTokenRequest(payload)
+        const { pfDocument, pjDocument, ...professionalDataCreationRest } = payload.professional_data_creation
+
+        const naturalPersonId = await this.findIdByDocument(pfDocument)
+        const legalPersonId = await this.findIdByDocument(pjDocument)
+
+        // Cria um payload modificado com os IDs obtidos
+        const modifiedPayload = {
+            ...payload,
+            professional_data_creation: {
+                ...professionalDataCreationRest,
+                natural_person: naturalPersonId,
+                legal_person: legalPersonId,
+            },
+        }
+
+        // Envia o payload modificado para o cliente QiTech
+        return this.client.sendTokenRequest(modifiedPayload)
     }
 
     public async handleValidatePersonLinkToken(payload: QiTechTypes.Person.IProfessionalCreateValidate) {
-        return this.client.validateMovement(payload)
+        const { pfDocument, pjDocument, ...professionalDataCreationRest } = payload.professional_data_creation
+
+        const naturalPersonId = await this.findIdByDocument(pfDocument)
+        const legalPersonId = await this.findIdByDocument(pjDocument)
+
+        const modifiedPayload = {
+            ...payload,
+            professional_data_creation: {
+                ...professionalDataCreationRest,
+                natural_person: naturalPersonId,
+                legal_person: legalPersonId,
+            },
+        }
+
+        return this.client.validateMovement(modifiedPayload)
     }
 
     public async handleDeletePersonLinkTokenRequest(payload: QiTechTypes.Person.IProfessionalDeleteRequest) {
-        return this.client.sendTokenRequest(payload)
+        const { pfDocument, pjDocument, ...professionalDataDeletionRest } = payload.professional_data_deletion
+
+        const naturalPersonId = await this.findIdByDocument(pfDocument)
+        const legalPersonId = await this.findIdByDocument(pjDocument)
+
+        // Prepara o payload modificado
+        const modifiedPayload = {
+            ...payload,
+            professional_data_deletion: {
+                ...professionalDataDeletionRest,
+                natural_person: naturalPersonId,
+                legal_person: legalPersonId,
+            },
+        }
+
+        // Envia o payload modificado para o cliente QiTech
+        return this.client.sendTokenRequest(modifiedPayload)
     }
 
     public async handleValidateDeletePersonLinkToken(payload: QiTechTypes.Person.IProfessionalDeleteValidate) {
-        return this.client.validateMovement(payload)
+        const { pfDocument, pjDocument, ...professionalDataDeletionRest } = payload.professional_data_deletion
+
+        const naturalPersonId = await this.findIdByDocument(pfDocument)
+        const legalPersonId = await this.findIdByDocument(pjDocument)
+
+        const modifiedPayload = {
+            ...payload,
+            professional_data_deletion: {
+                ...professionalDataDeletionRest,
+                natural_person: naturalPersonId,
+                legal_person: legalPersonId,
+            },
+        }
+
+        return this.client.validateMovement(modifiedPayload)
+    }
+
+    private async findIdByDocument(document: string | undefined): Promise<string> {
+        const repository = OnboardingRepository.getInstance()
+
+        if (!document) {
+            throw new Error('Erro no documento.')
+        }
+
+        const onboarding = await repository.getByDocument(document)
+        if (!onboarding || !onboarding.response?.id) {
+            throw new Error('Onboarding do Documento não encontrado.')
+        }
+
+        return onboarding.response.id
     }
 
     public async decodeError(error: unknown) {
