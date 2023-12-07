@@ -121,6 +121,7 @@ export class OnboardingService {
     }
 
     public async updateOnboarding(onboarding: OnboardingModel) {
+        let updatedOB = onboarding
         if (onboarding.status === OnboardingTypes.RequestStatus.PENDING && onboarding.response) {
             let udaptedData: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
             if ('legal_name' in onboarding.request) {
@@ -137,10 +138,10 @@ export class OnboardingService {
         }
 
         if (onboarding.isModified()) {
-            await onboarding.save()
+            updatedOB = await onboarding.save()
         }
 
-        return onboarding
+        return updatedOB
     }
 
     public authenticateWebhook(req: Request): void {
