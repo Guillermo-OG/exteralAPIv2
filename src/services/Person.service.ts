@@ -3,6 +3,7 @@
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
 import { OnboardingRepository } from '../repository'
+import { OnboardingService } from './Onboarding.service'
 
 export class PersonService {
     private static instance: PersonService
@@ -112,17 +113,25 @@ export class PersonService {
 
     private async findIdByDocument(document: string | undefined): Promise<string> {
         const repository = OnboardingRepository.getInstance()
-
+        // const onboardingSrvice = OnboardingService.getInstance()
+        let entityKey = ''
         if (!document) {
             throw new Error('Erro no documento.')
         }
 
         const onboarding = await repository.getByDocument(document)
-        if (!onboarding || !onboarding.response?.id) {
+        if (!onboarding || !onboarding.response) {
             throw new Error('Onboarding do Documento não encontrado.')
         }
 
-        return onboarding.response.id
+        if ('natural_person_key' in onboarding.response) {
+            entityKey = onboarding.response.natural_person_key
+        } else if ('legal_person_key' in onboarding.response) {
+            entityKey = onboarding.response.legal_person_key
+        }
+        // const analisis = await onboardingSrvice.getAnalysis(onboarding)
+        // console.log({ document, analisis })
+        return entityKey
     }
 
     public async decodeError(error: unknown) {

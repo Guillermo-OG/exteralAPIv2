@@ -143,16 +143,16 @@ export interface IPartner {
     name: string
     document_number: string // Masked
     birthdate: string // date
-    gender: Gender
-    nationality: string // ISO 3166-1 alfa-3
+    gender?: Gender
+    nationality?: string // ISO 3166-1 alfa-3
     mother_name: string
-    occupation: string
-    emails: IEmail[]
-    documents: INaturalDocuments
-    address: IAddress
-    phones: IPhone[]
-    source: ISource
-    face: IFace
+    occupation?: string
+    emails?: IEmail[]
+    documents?: INaturalDocuments
+    address?: IAddress
+    phones?: IPhone[]
+    source?: ISource
+    face?: IFace
 }
 
 export enum ClientStatus {
