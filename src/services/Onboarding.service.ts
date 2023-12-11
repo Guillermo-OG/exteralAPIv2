@@ -193,7 +193,6 @@ export class OnboardingService {
 
             if (onboarding.origin?.toLowerCase() === 'vbb') {
                 url = this.urlContaVBB
-                console.log('payloadNotificacao', { data, url })
             } else {
                 // url = legalPerson.webhookUrl
                 url = 'http://localhost:3000/webhook/mock'
@@ -247,6 +246,16 @@ export class OnboardingService {
     public mapQiTechPayload(data: QiTechTypes.Account.ICreate): OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate {
         if ('allowed_user' in data && data.allowed_user) {
             const owner = data.account_owner as QiTechTypes.Account.IOwnerPJ
+
+            // Este map gostaria que seguisse a seguinte interfaace (deixando string vazia os que não tem)
+            const partners = owner.company_representatives?.map(rep => ({
+                name: rep.name,
+                birthdate: rep.birth_date,
+                nationality: rep.nationality.substring(0, 3),
+                document_number: maskCPF(rep.individual_document_number),
+                mother_name: rep.mother_name,
+            }))
+
             return {
                 foundation_date: owner.foundation_date,
                 id: v4(),
@@ -266,6 +275,7 @@ export class OnboardingService {
                 },
                 legal_name: owner.name,
                 trading_name: owner.trading_name,
+                partners,
             }
         } else {
             const owner = data.account_owner as QiTechTypes.Account.IOwnerPF

@@ -37,6 +37,8 @@ export const legalPersonSchema = new yup.ObjectSchema({
         country: yup.string().length(3).required(),
         validation_type: yup.string().oneOf(['visit']).required(),
     }),
+    mother_name: yup.string().min(2), // Opcional
+    birthdate: yup.string().matches(/^\d{4}-\d{2}-\d{2}$/), // Opcional
 })
 
 export const onboardingPersonListSchema = new yup.ObjectSchema({

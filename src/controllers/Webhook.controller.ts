@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { OnboardingTypes } from '../infra'
 import { NotificationService, OnboardingService, QiTechService } from '../services'
 import env from '../config/env'
+import { IOnboarding } from '../models'
 
 export class WebhookController {
     public async handleOnboardingWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -19,9 +20,14 @@ export class WebhookController {
                 req.user = { id: apiUserId }
             }
 
+            const onboarding: IOnboarding = payload as IOnboarding
+
             const notification = await notificationService.create(payload, url, req.user)
             await notificationService.notify(notification)
-            res.send('ok')
+
+            console.log('webhook response', { url, payload, createdAccount })
+
+            res.send({ notificated: 'ok', onboarding })
         } catch (error) {
             next(await qiTechService.decodeError(error))
         }
