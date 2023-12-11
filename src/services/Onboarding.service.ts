@@ -123,6 +123,7 @@ export class OnboardingService {
     public async updateOnboarding(onboarding: OnboardingModel) {
         let updatedOB = onboarding
         if (onboarding.status === OnboardingTypes.RequestStatus.PENDING && onboarding.response) {
+            await new Promise(resolve => setTimeout(resolve, 5000))
             let udaptedData: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
             if ('legal_name' in onboarding.request) {
                 udaptedData = await this.api.getLegalPerson(onboarding.response.id)
