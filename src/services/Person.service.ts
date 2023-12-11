@@ -3,7 +3,6 @@
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
 import { OnboardingRepository } from '../repository'
-import { OnboardingService } from './Onboarding.service'
 
 export class PersonService {
     private static instance: PersonService
