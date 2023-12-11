@@ -122,8 +122,9 @@ export class OnboardingService {
 
     public async updateOnboarding(onboarding: OnboardingModel) {
         let updatedOB = onboarding
+        console.log({ oldStatus: onboarding.status })
         if (onboarding.status === OnboardingTypes.RequestStatus.PENDING && onboarding.response) {
-            await new Promise(resolve => setTimeout(resolve, 5000))
+            await new Promise(resolve => setTimeout(resolve, 10000))
             let udaptedData: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse
             if ('legal_name' in onboarding.request) {
                 udaptedData = await this.api.getLegalPerson(onboarding.response.id)
@@ -131,6 +132,7 @@ export class OnboardingService {
                 udaptedData = await this.api.getNaturalPerson(onboarding.response.id)
             }
             const newStatus = this.mapQiTechStatusToVillelaStatus(udaptedData.analysis_status)
+            console.log({ statusQiTech: udaptedData.analysis_status })
             if (onboarding.status !== newStatus || !onboarding.data) {
                 onboarding.data = udaptedData
                 onboarding.status = newStatus
@@ -191,7 +193,7 @@ export class OnboardingService {
 
         if (onboarding) {
             payload = await this.updateOnboarding(onboarding)
-
+            console.log({ afterupdate: payload })
             if (onboarding.origin?.toLowerCase() === 'vbb') {
                 url = this.urlContaVBB
             } else {
