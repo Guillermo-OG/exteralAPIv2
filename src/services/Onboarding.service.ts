@@ -260,7 +260,7 @@ export class OnboardingService {
             const partners = owner.company_representatives?.map(rep => ({
                 name: rep.name,
                 birthdate: rep.birth_date,
-                nationality: rep.nationality.substring(0, 3),
+                nationality: rep.nationality.substring(0, 3).toUpperCase(),
                 document_number: maskCPF(rep.individual_document_number),
                 mother_name: rep.mother_name,
             }))

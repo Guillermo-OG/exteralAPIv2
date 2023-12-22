@@ -3,6 +3,7 @@ import { AccountStatus, NotFoundError, ValidationError } from '../models'
 import { AccountRepository, FileRepository } from '../repository'
 import { QiTechService } from '../services'
 import { unMask } from '../utils/masks'
+import { decodeJwt } from 'jose'
 
 export class AccountController {
     public async createAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -109,6 +110,17 @@ export class AccountController {
             res.status(200).json(accounts)
         } catch (error) {
             next(error)
+        }
+    }
+
+    public async decodeBody(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const encodedBody = req.body // assumindo que o corpo está codificado
+            const decodedBody = await decodeJwt(encodedBody['encoded_body'])
+            res.status(200).json({ decodedBody })
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
         }
     }
 
