@@ -195,7 +195,7 @@ export class QiTechService {
         this.formatPayload(payload)
 
         const account = await accountRepository.getByDocument(document)
-        if (account == null) throw new ValidationError('Conta existente encontrada para este documento')
+        if (!account) throw new ValidationError('Conta não encontrada para este documento')
 
         try {
             const response = await this.client.createAccount(payload)
@@ -686,7 +686,7 @@ export class QiTechService {
             const billingRepo = BillingConfigurationRepository.getInstance()
             const existingData = await billingRepo.get(document)
             if (!existingData) {
-                throw new ValidationError('Não foi possível obter a configuração de cobrança')
+                throw new ValidationError('Não foi possível obter a configuração de taxas')
             }
             return existingData
         }
