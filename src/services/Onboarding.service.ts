@@ -238,9 +238,6 @@ export class OnboardingService {
 
         const payload = account.request as QiTechTypes.Account.ICreate
 
-        payload.callbackURL = account.callbackURL
-        // payload.data = account.data
-
         const apiUserRepository = ApiUserRepository.getInstance()
         const apiUser = await apiUserRepository.getById(account.apiUserId)
 
