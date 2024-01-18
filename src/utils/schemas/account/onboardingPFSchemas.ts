@@ -4,6 +4,7 @@ import { isValid } from 'date-fns'
 import addressSchema from './addressSchema'
 
 export const OnboardingPFSchema = new yup.ObjectSchema({
+    external_id: yup.string().notRequired(),
     callbackURL: yup.string().required('URL de retorno é obrigatório'),
     account_owner: yup.object().shape({
         address: addressSchema,
@@ -46,5 +47,13 @@ export const OnboardingPFSchema = new yup.ObjectSchema({
             .test('Validação de data', 'Data inválida', value => {
                 return isValid(new Date(value))
             }),
+        face: yup.lazy(value =>
+            value == null
+                ? yup.object().nullable().notRequired()
+                : yup.object().shape({
+                    type: yup.string().required('Tipo é obrigatório'),
+                    registration_key: yup.string().required('Chave de registro é obrigatória')
+                  })
+        ),
     }),
 })

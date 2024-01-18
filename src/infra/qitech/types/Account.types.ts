@@ -8,6 +8,11 @@ interface IAddress {
     complement: string
 }
 
+interface IFace {
+    type: string
+    registration_key: string
+}
+
 export interface IPhone {
     country_code: string
     number: string
@@ -62,6 +67,7 @@ export interface IOwnerPF {
     individual_document_number: string
     document_identification?: string
     document_identification_type?: 'cnh' | 'rg'
+    face?: IFace
 }
 
 export interface IOwnerPJ {
@@ -92,6 +98,7 @@ export interface IAllowedUser {
 
 export interface ICreate {
     callbackURL?: string
+    external_id?: string
     account_owner: IOwnerPF | IOwnerPJ
     allowed_user?: IAllowedUser
 }
