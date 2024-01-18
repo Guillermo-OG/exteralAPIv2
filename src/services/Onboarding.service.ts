@@ -45,9 +45,10 @@ export class OnboardingService {
 
     public async createOnboardingVBB(data: QiTechTypes.Account.ICreate, accountId?: Schema.Types.ObjectId): Promise<OnboardingModel> {
         const qiTechService = QiTechService.getInstance()
+        const external_id = data.external_id
         await qiTechService.formatPayload(data)
         const onboardingData = await this.mapQiTechPayload(data)
-        const onboarding = await this.createOnboarding(onboardingData, accountId, 'vbb')
+        const onboarding = await this.createOnboarding(onboardingData, accountId, 'vbb', external_id)
 
         return onboarding
     }
@@ -55,7 +56,8 @@ export class OnboardingService {
     public async createOnboarding(
         data: OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate,
         accountId?: Schema.Types.ObjectId,
-        origin?: string
+        origin?: string,
+        externalId?: string,
     ): Promise<OnboardingModel> {
         const repository = OnboardingRepository.getInstance()
         const document = unMask(data.document_number)
@@ -68,6 +70,10 @@ export class OnboardingService {
             status: OnboardingTypes.RequestStatus.PENDING,
             accountId: accountId,
             origin,
+        }
+
+        if (origin === 'vbb' && externalId) {
+            onboardingModelData.externalId = externalId;
         }
 
         let onboarding = await repository.getByDocument(document)
@@ -285,6 +291,12 @@ export class OnboardingService {
             }
         } else {
             const owner = data.account_owner as QiTechTypes.Account.IOwnerPF
+            const faceObject = owner.face ? {
+                face: {
+                    type: owner.face.type as OnboardingTypes.DocumentValidationType,
+                    registration_key: owner.face.registration_key!
+                }
+            } : {}
             return {
                 birthdate: owner.birth_date,
                 document_number: maskCPF(owner.individual_document_number),
@@ -293,6 +305,7 @@ export class OnboardingService {
                 registration_id: v4(),
                 mother_name: owner.mother_name,
                 name: owner.name,
+                ...faceObject,
             }
         }
     }

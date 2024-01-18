@@ -5,6 +5,7 @@ import { isEmailValid, validateCNPJ, validateCPF } from '../../validations'
 import addressSchema from './addressSchema'
 
 export const OnboardingPJSchema = new yup.ObjectSchema({
+    external_id: yup.string().notRequired(),
     account_owner: yup.object().shape({
         address: addressSchema,
         name: yup.string().required('Nome é obrigatório'),
