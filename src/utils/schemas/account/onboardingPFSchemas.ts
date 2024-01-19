@@ -52,8 +52,8 @@ export const OnboardingPFSchema = new yup.ObjectSchema({
                 ? yup.object().nullable().notRequired()
                 : yup.object().shape({
                     type: yup.string().required('Tipo é obrigatório'),
-                    registration_key: yup.string().required('Chave de registro é obrigatória')
-                  })
+                    registration_key: yup.string().required('Chave de registro é obrigatória'),
+                })
         ),
     }),
 })
