@@ -14,6 +14,7 @@ export interface IOnboarding {
     error?: IUnknownError
     accountId?: Schema.Types.ObjectId
     origin?: string
+    externalId?: string
 }
 
 const schema = new Schema<IOnboarding>(
@@ -26,6 +27,7 @@ const schema = new Schema<IOnboarding>(
         error: { type: Schema.Types.Mixed, required: false },
         accountId: { type: Schema.Types.ObjectId, ref: 'Account', required: false },
         origin: { type: String, required: false },
+        externalId: { type: String, required: false },
     },
     {
         collection: 'onboarding',

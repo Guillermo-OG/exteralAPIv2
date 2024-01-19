@@ -104,9 +104,9 @@ interface ILegalDocuments {
 }
 
 interface IFace {
-    validation_type: DocumentValidationType
+    type: DocumentValidationType
     registration_key: string // GUID
-    validation_key: string // GUID
+    validation_key?: string // GUID
 }
 
 export interface INaturalPersonCreate {
@@ -319,3 +319,7 @@ export interface IWebhookBody {
     analysis_status: AnalysisStatus
     event_date: string
 }
+
+export type IPersonCreateWithExternalId = {
+    external_id?: string;
+} & (INaturalPersonCreate | ILegalPersonCreate);
