@@ -51,7 +51,7 @@ export class OnboardingService {
         data: OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate,
         accountId?: Schema.Types.ObjectId,
         origin?: string,
-        externalId?: string,
+        externalId?: string
     ): Promise<OnboardingModel> {
         const repository = OnboardingRepository.getInstance()
         const document = unMask(data.document_number)
@@ -67,7 +67,7 @@ export class OnboardingService {
         }
 
         if (origin === 'vbb' && externalId) {
-            onboardingModelData.externalId = externalId;
+            onboardingModelData.externalId = externalId
         }
 
         let onboarding = await repository.getByDocument(document)
@@ -285,12 +285,14 @@ export class OnboardingService {
             }
         } else {
             const owner = data.account_owner as QiTechTypes.Account.IOwnerPF
-            const faceObject = owner.face ? {
-                face: {
-                    type: owner.face.type as OnboardingTypes.DocumentValidationType,
-                    registration_key: owner.face.registration_key!
+            const faceObject = owner.face
+                ? {
+                    face: {
+                        type: owner.face.type as OnboardingTypes.DocumentValidationType,
+                        registration_key: owner.face.registration_key,
+                    },
                 }
-            } : {}
+                : {}
             return {
                 birthdate: owner.birth_date,
                 document_number: maskCPF(owner.individual_document_number),
