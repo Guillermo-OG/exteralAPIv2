@@ -33,15 +33,15 @@ export class WebhookController {
         }
     }
 
-    public async handlePendingAnalysis(_req: Request, res: Response, next: NextFunction): Promise<void> {
-        const qiTechService = QiTechService.getInstance()
-        try {
-            await QiTechService.getInstance().handlePendingAnalysis()
-            res.status(200).send('ok')
-        } catch (error) {
-            next(await qiTechService.decodeError(error))
-        }
-    }
+    // public async handlePendingAnalysis(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    //     const qiTechService = QiTechService.getInstance()
+    //     try {
+    //         await QiTechService.getInstance().handlePendingAnalysis()
+    //         res.status(200).send('ok')
+    //     } catch (error) {
+    //         next(await qiTechService.decodeError(error))
+    //     }
+    // }
 
     public async handleAccountCreation(_req: Request, res: Response, next: NextFunction): Promise<void> {
         const qiTechService = QiTechService.getInstance()

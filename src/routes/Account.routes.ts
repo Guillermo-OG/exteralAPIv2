@@ -28,6 +28,7 @@ export class AccountRouter {
         this.router.use(this.authMiddleware.authenticate)
 
         this.router.get('/list/:document', this.controller.getByDocument)
+        this.router.get('/listQiTechAccounts/:document', this.controller.listQiTechByDocument)
         this.router.get('/status/:document', this.statusController.getStatusByDocument)
         this.router.post('/decode', this.controller.decodeBody)
         this.router.get('/', this.controller.handleListAllAccounts)
