@@ -3,14 +3,13 @@ import { Request } from 'express'
 import { HydratedDocument, Schema } from 'mongoose'
 import env from '../config/env'
 import { OnboardingTypes, QiTechClient, QiTechTypes } from '../infra'
-import { AnalysisStatus } from '../infra/onboarding/Onboarding.types'
+// import { AnalysisStatus } from '../infra/onboarding/Onboarding.types'
 import {
     AccountStatus,
     AccountType,
     IAccount,
     IApiUser,
     IBillingConfigurationRequest,
-    IOnboarding,
     NotFoundError,
     PixKeyType,
     PixStatus,
@@ -23,7 +22,6 @@ import {
     BillingConfigurationRepository,
     BillingConfigurationRequestRepository,
     FileRepository,
-    OnboardingRepository,
     PixKeyRepository,
 } from '../repository'
 import { maskCNAE, unMask } from '../utils/masks'
@@ -38,10 +36,10 @@ export class QiTechService {
     private static instance: QiTechService
     private readonly client: QiTechClient
     private readonly fileRepository: FileRepository
-    private readonly analysisToAproveOnboarding: AnalysisStatus[] = [
-        AnalysisStatus.AUTOMATICALLY_APPROVED,
-        AnalysisStatus.MANUALLY_APPROVED,
-    ]
+    // private readonly analysisToAproveOnboarding: AnalysisStatus[] = [
+    //     AnalysisStatus.AUTOMATICALLY_APPROVED,
+    //     AnalysisStatus.MANUALLY_APPROVED,
+    // ]
 
     constructor() {
         this.client = new QiTechClient({
@@ -151,39 +149,39 @@ export class QiTechService {
         }
     }
 
-    public async handlePendingAnalysis() {
-        const onboardingRepository = OnboardingRepository.getInstance()
-        const accountRepository = AccountRepository.getInstance()
-        const onboardingService = OnboardingService.getInstance()
+    // public async handlePendingAnalysis() {
+    //     const onboardingRepository = OnboardingRepository.getInstance()
+    //     const accountRepository = AccountRepository.getInstance()
+    //     const onboardingService = OnboardingService.getInstance()
 
-        const onboardings: IPaginatedSearch<IOnboarding> = await onboardingRepository.list(1, OnboardingTypes.RequestStatus.PENDING)
+    //     const onboardings: IPaginatedSearch<IOnboarding> = await onboardingRepository.list(1, OnboardingTypes.RequestStatus.PENDING)
 
-        if (onboardings.count == 0) return
+    //     if (onboardings.count == 0) return
 
-        for (let index = 0; index <= onboardings.count; index++) {
-            const onboarding = onboardings.data[index]
+    //     for (let index = 0; index <= onboardings.count; index++) {
+    //         const onboarding = onboardings.data[index]
 
-            if (onboarding == null) return
+    //         if (onboarding == null) return
 
-            const updatedAnalysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse =
-                await onboardingService.getAnalysis(onboarding)
+    //         const updatedAnalysis: OnboardingTypes.ILegalPersonGetResponse | OnboardingTypes.INaturalPersonGetResponse =
+    //             await onboardingService.getAnalysis(onboarding)
 
-            if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
-                const account = await accountRepository.getByDocument(onboarding.document)
+    //         if (this.analysisToAproveOnboarding.includes(updatedAnalysis.analysis_status)) {
+    //             const account = await accountRepository.getByDocument(onboarding.document)
 
-                if (!account) {
-                    throw new NotFoundError('Nenhuma conta encontrada para este documento')
-                }
+    //             if (!account) {
+    //                 throw new NotFoundError('Nenhuma conta encontrada para este documento')
+    //             }
 
-                await this.createAccountOnboardingOk(
-                    onboarding.document,
-                    account?.request as QiTechTypes.Account.ICreate,
-                    account.apiUserId
-                )
-                await onboardingService.updateOnboarding(onboarding)
-            }
-        }
-    }
+    //             await this.createAccountOnboardingOk(
+    //                 onboarding.document,
+    //                 account?.request as QiTechTypes.Account.ICreate,
+    //                 account.apiUserId
+    //             )
+    //             await onboardingService.updateOnboarding(onboarding)
+    //         }
+    //     }
+    // }
 
     public async createAccountOnboardingOk(document: string, payload: QiTechTypes.Account.ICreate, apiUserId: Schema.Types.ObjectId) {
         const userRepository = ApiUserRepository.getInstance()
@@ -589,6 +587,12 @@ export class QiTechService {
                 totalPages: result.totalPages,
             },
         }
+    }
+
+    public async listAccountsQiTech(document: string, page: number, pageSize: number):
+        Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
+        
+        return await this.client.listAccounts(document, page, pageSize)
     }
 
     public async cancelAccount(accountKey: string) {

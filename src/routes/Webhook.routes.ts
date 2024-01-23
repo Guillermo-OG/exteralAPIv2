@@ -18,7 +18,7 @@ export class WebhookRouter {
         this.router.post('/onboarding', this.authMiddleware.authOnboardingWebhook, this.controller.handleOnboardingWebhook)
         this.router.post('/account', this.authMiddleware.authQiTechWebhook, this.controller.handleQITechBaaSWebhook)
 
-        this.router.get('/onboarding/analysis', this.controller.handlePendingAnalysis)
+        // this.router.get('/onboarding/analysis', this.controller.handlePendingAnalysis)
         this.router.get('/onboarding/accountCreation', this.controller.handleAccountCreation)
     }
 }
