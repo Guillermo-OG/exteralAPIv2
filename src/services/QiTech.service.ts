@@ -66,7 +66,10 @@ export class QiTechService {
 
         const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
         const callbackURL = payload.callbackURL || ''
+        
         delete payload.callbackURL
+        delete payload.external_id
+
         this.formatPayload(payload)
 
         let account = await accountRepository.getByDocument(document)
@@ -676,6 +679,43 @@ export class QiTechService {
         return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
 
+    
+
+    public async getBillingConfigurations(documents: string[]): Promise<IBillingResults> {
+        const accountRepository = AccountRepository.getInstance()
+        const results: IBillingResults = { configurations: {}, errors: {} }
+    
+        for (const document of documents) {
+            try {
+                const account = await accountRepository.getByDocument(document)
+                if (!account) {
+                    throw new ValidationError('Não foi encontrada conta para esse documento.')
+                }
+    
+                const accountKey = (account.data as QiTechTypes.Account.IList).account_key
+                const config = await this.client.getBillingConfigurationByAccountKey(accountKey) as IBillingConfiguration
+                
+                // Armazenar apenas as partes relevantes da configuração
+                results.configurations[document] = {
+                    account_maintenance: config.billing_configuration_data.account_maintenance,
+                    pix: config.billing_configuration_data.pix
+                }
+            } catch (error) {
+                // Checagem de tipo para error
+                if(error instanceof Error){
+                    const errorCode = 'unknown'
+                    const errorMessage = typeof error === 'string' ? error : error.message || 'Unknown error'
+        
+                    if (!results.errors[errorCode]) {
+                        results.errors[errorCode] = { documents: [], message: errorMessage }
+                    }
+                    results.errors[errorCode].documents.push(document)
+                }
+            }
+        }
+        return results
+    }
+
     public async updateAndGetBillingConfiguration(document: string) {
         try {
             const billingConfiguration = await this.getBillingConfigurationByDocument(document)
@@ -863,4 +903,9 @@ export class QiTechService {
 interface ISectionData {
     billing_account_key: string
     // Add other fields as necessary
+}
+
+interface IBillingResults {
+    configurations: Record<string, Partial<IBillingConfigurationData>>;
+    errors: Record<string, { documents: string[]; message: string; }>;
 }
