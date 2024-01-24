@@ -26,6 +26,7 @@ export class PixKeyRouter {
         this.router.get('/limits_request/:document', this.controller.getPixLimitsRequest)
         this.router.get('/billing_compare', this.controller.billingKeysCompare)
         this.router.get('/billing_configuration/:document', this.controller.getBillingConfiguration)
+        this.router.post('/bulk_billing_configuration/', this.controller.postBulkBillingConfiguration)
         //IMPORTANTE a qitech desabilitou a rota logo a função dessa rota abaixo PUT /billing_configuration/:document é alterada temporariamente para a rota de CRON
         this.router.put('/billing_configuration/:document', this.controller.updateBillingConfigurationRequest)
         this.router.put('/billing_configuration_cron/:document', this.controller.updateBillingConfigurationRequest)
