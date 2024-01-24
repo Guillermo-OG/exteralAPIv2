@@ -154,6 +154,21 @@ export class PixKeyController {
         }
     }
 
+    public async postBulkBillingConfiguration(req: Request, res: Response, next: NextFunction) {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const documents = req.body.documents // Recebe array de documentos do body
+            if (!documents || documents.length === 0) {
+                throw new ValidationError('No documents specified')
+            }
+    
+            const results = await qiTechService.getBillingConfigurations(documents)
+            res.json(results)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
+
     public async billingKeysCompare(_req: Request, res: Response, next: NextFunction) {
         const qiTechService = QiTechService.getInstance()
         try {
