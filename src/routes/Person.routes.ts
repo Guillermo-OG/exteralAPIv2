@@ -59,24 +59,14 @@ export class PersonRouter {
         )
 
         this.router.post(
-            '/updateProfessionalDataContactTokenRequest',
-            this.validator.validate({ body: UpdateProfessionalDataContactSchema, context: { isTokenRequired: false } }),
-            this.controller.updateProfessionalDataContactTokenRequest
+            '/changeDataContactTokenRequest',
+            this.validator.validate({ body: ChangeDataContactSchema, context: { isTokenRequired: false } }),
+            this.controller.changeDataContactTokenRequest
         )
         this.router.post(
-            '/validateProfessionalUpdateDataContactToken',
-            this.validator.validate({ body: UpdateProfessionalDataContactSchema, context: { isTokenRequired: true } }),
-            this.controller.validateProfessionalUpdateDataContactToken
-        )
-        this.router.post(
-            '/updateProfessionalDataContactTokenRequest',
-            this.validator.validate({ body: UpdatePersonDataContactSchema, context: { isTokenRequired: false } }),
-            this.controller.updatePersonDataContactTokenRequest
-        )
-        this.router.post(
-            '/validateProfessionalUpdateDataContactToken',
-            this.validator.validate({ body: UpdatePersonDataContactSchema, context: { isTokenRequired: true } }),
-            this.controller.validatePersonUpdateDataContactToken
+            '/validateChangeDataContactToken',
+            this.validator.validate({ body: ChangeDataContactSchema, context: { isTokenRequired: true } }),
+            this.controller.validateChangeDataContactToken
         )
     }
 }

@@ -29,13 +29,13 @@ type tokenRequestTypes =
     | QiTechTypes.Person.IPersonCreateRequest
     | QiTechTypes.Person.IProfessionalCreateRequest
     | QiTechTypes.Person.IProfessionalDeleteRequest
-    | QiTechTypes.Person.IProfessionalDataContactUpdateRequest
+    | QiTechTypes.Person.IDataContactUpdateRequest
 
 type tokenValidateTypes =
     | QiTechTypes.Person.IPersonCreateValidate
     | QiTechTypes.Person.IProfessionalCreateValidate
     | QiTechTypes.Person.IProfessionalDeleteValidate
-    | QiTechTypes.Person.IProfessionalDataContactUpdateValidate
+    | QiTechTypes.Person.IDataContactUpdateValidate
 
 export class QiTechClient {
     private readonly api: AxiosInstance
