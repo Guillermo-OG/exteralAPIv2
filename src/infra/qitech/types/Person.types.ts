@@ -91,3 +91,22 @@ export interface IProfessionalDeleteValidate {
     token: string
     professional_data_deletion: IProfessionalDataDeletion
 }
+
+export interface IDataContactUpdateRequest {
+    contact_type: string
+    professional_data_contact_update: IProfessionalDataContact
+    agent_document_number: string
+}
+
+export interface IProfessionalDataContact {
+    pjDocument?: string
+    pfDocument?: string
+    email: string
+    phone_number: IPhoneNumber
+}
+
+export interface IDataContactUpdateValidate {
+    token: string
+    professional_data_contact_update: IProfessionalDataContact
+}
+

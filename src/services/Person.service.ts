@@ -110,6 +110,33 @@ export class PersonService {
         return this.client.validateMovement(modifiedPayload)
     }
 
+    public async handleChangeDataContactTokenRequest(payload: QiTechTypes.Person.IDataContactUpdateRequest) {
+        // Extrair os dados necessários do payload
+        const { professional_data_contact_update } = payload;
+        const { pjDocument, pfDocument, email, phone_number } = professional_data_contact_update;
+    
+        // Realizar verificações ou obter IDs (ajustar conforme a necessidade)
+        const naturalPersonId = await this.findIdByDocument(pfDocument);
+        const legalPersonId = await this.findIdByDocument(pjDocument);
+    
+        // Construir um payload modificado
+        const modifiedPayload = {
+            ...payload,
+            professional_data_contact_update: {
+                ...professional_data_contact_update,
+                natural_person: naturalPersonId,
+                legal_person: legalPersonId,
+                contact_info: {
+                    email,
+                    phone_number,
+                },
+            },
+        };
+    
+        // Enviar o payload modificado para o cliente QiTech
+        return this.client.sendTokenRequest(modifiedPayload);
+    }
+
     private async findIdByDocument(document: string | undefined): Promise<string> {
         const repository = OnboardingRepository.getInstance()
         // const onboardingSrvice = OnboardingService.getInstance()

@@ -69,4 +69,28 @@ export class PersonController {
             next(await personService.decodeError(error))
         }
     }
+
+    public async changeDataContactTokenRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const personService = PersonService.getInstance()
+        try {
+            const payload: QiTechTypes.Person.IDataContactUpdateRequest = req.body
+
+            const result = await personService.handleChangeDataContactTokenRequest(payload)
+            res.json(result)
+        } catch (error) {
+            next(await personService.decodeError(error))
+        }
+    }
+
+    public async validateChangeDataContactToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const personService = PersonService.getInstance()
+        try {
+            const payload: QiTechTypes.Person.IDataContactUpdateValidate = req.body
+
+            const result = await personService.handleValidateChangeDataContactToken(payload)
+            res.json(result)
+        } catch (error) {
+            next(await personService.decodeError(error))
+        }
+    }
 }
