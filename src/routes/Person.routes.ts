@@ -57,5 +57,16 @@ export class PersonRouter {
             this.validator.validate({ body: UnlinkPersonToCompanySchema, context: { isTokenRequired: true } }),
             this.controller.validateDeletePersonLinkToken
         )
+
+        this.router.post(
+            '/changeDataContactTokenRequest',
+            this.validator.validate({ body: ChangeDataContactSchema, context: { isTokenRequired: false } }),
+            this.controller.changeDataContactTokenRequest
+        )
+        this.router.post(
+            '/validateChangeDataContactToken',
+            this.validator.validate({ body: ChangeDataContactSchema, context: { isTokenRequired: true } }),
+            this.controller.validateChangeDataContactToken
+        )
     }
 }
