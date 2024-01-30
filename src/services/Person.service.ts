@@ -2,7 +2,7 @@
 
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
-import { OnboardingRepository } from '../repository'
+import { OnboardingRepository, AccountRepository } from '../repository'
 
 export class PersonService {
     private static instance: PersonService
@@ -110,15 +110,15 @@ export class PersonService {
         return this.client.validateMovement(modifiedPayload)
     }
 
-    public async handleChangeDataContactTokenRequest(payload: QiTechTypes.Person.IDataContactUpdateRequest) {
+    public async handleUpdateProfessionalDataContactTokenRequest(payload: QiTechTypes.Person.IProfessionalDataContactUpdateRequest) {
         // Extrair os dados necessários do payload
-        const { professional_data_contact_update } = payload;
-        const { pjDocument, pfDocument, email, phone_number } = professional_data_contact_update;
-    
+        const { professional_data_contact_update } = payload
+        const { pjDocument, pfDocument, email, phone_number } = professional_data_contact_update
+
         // Realizar verificações ou obter IDs (ajustar conforme a necessidade)
-        const naturalPersonId = await this.findIdByDocument(pfDocument);
-        const legalPersonId = await this.findIdByDocument(pjDocument);
-    
+        const naturalPersonId = await this.findIdByDocument(pfDocument)
+        const legalPersonId = await this.findIdByDocument(pjDocument)
+
         // Construir um payload modificado
         const modifiedPayload = {
             ...payload,
@@ -131,32 +131,104 @@ export class PersonService {
                     phone_number,
                 },
             },
-        };
-    
+        }
+
         // Enviar o payload modificado para o cliente QiTech
-        return this.client.sendTokenRequest(modifiedPayload);
+        return this.client.sendTokenRequest(modifiedPayload)
+    }
+
+    public async handleValidateProfessionalUpdateDataContactToken(payload: QiTechTypes.Person.IProfessionalDataContactUpdateValidate) {
+        // Extrair os dados necessários do payload
+        const { professional_data_contact_update } = payload
+        const { pjDocument, pfDocument, email, phone_number } = professional_data_contact_update
+
+        // Realizar verificações ou obter IDs (ajustar conforme a necessidade)
+        const naturalPersonId = await this.findIdByDocument(pfDocument)
+        const legalPersonId = await this.findIdByDocument(pjDocument)
+
+        // Construir um payload modificado
+        const modifiedPayload = {
+            ...payload,
+            professional_data_contact_update: {
+                ...professional_data_contact_update,
+                natural_person: naturalPersonId,
+                legal_person: legalPersonId,
+                contact_info: {
+                    email,
+                    phone_number,
+                },
+            },
+        }
+
+        // Enviar o payload modificado para validação através do cliente QiTech
+        return this.client.validateMovement(modifiedPayload)
+    }
+
+    public async handleUpdatePersonDataContactTokenRequest(payload: QiTechTypes.Person.IPersonDataContactUpdateRequest) {
+        // Extrair os dados necessários do payload
+        const { person_contact_update } = payload
+        const { pfDocument, email, phone_number } = person_contact_update
+
+        // Realizar verificações ou obter IDs (ajustar conforme a necessidade)
+        const person_key = await this.findKeyByDocument(pfDocument)
+
+        // Construir um payload modificado
+        const modifiedPayload = {
+            ...payload,
+            person_contact_update: {
+                ...person_contact_update,
+                person_key: person_key,
+                contact_info: {
+                    email,
+                    phone_number,
+                },
+            },
+        }
+
+        // Enviar o payload modificado para o cliente QiTech
+        return this.client.sendTokenRequest(modifiedPayload)
+    }
+
+    public async handleValidatePersonUpdateDataContactToken(payload: QiTechTypes.Person.IPersonDataContactUpdateValidate) {
+        // Extrair os dados necessários do payload
+        const { person_contact_update } = payload
+        const { pfDocument, email, phone_number } = person_contact_update
+
+        // Realizar verificações ou obter IDs (ajustar conforme a necessidade)
+        const person_key = await this.findKeyByDocument(pfDocument)
+        //TODOOOO person_key
+        // Construir um payload modificado
+        const modifiedPayload = {
+            ...payload,
+            person_contact_update: {
+                ...person_contact_update,
+                person_key: person_key,
+                contact_info: {
+                    email,
+                    phone_number,
+                },
+            },
+        }
+
+        // Enviar o payload modificado para validação através do cliente QiTech
+        return this.client.validateMovement(modifiedPayload)
     }
 
     private async findIdByDocument(document: string | undefined): Promise<string> {
-        const repository = OnboardingRepository.getInstance()
+        const repository = AccountRepository.getInstance()
         // const onboardingSrvice = OnboardingService.getInstance()
         let entityKey = ''
         if (!document) {
-            throw new Error('Erro no documento.')
+            throw new Error('Falta o documento.')
         }
 
-        const onboarding = await repository.getByDocument(document)
-        if (!onboarding || !onboarding.response) {
-            throw new Error('Onboarding do Documento não encontrado.')
+        const account = await repository.getByDocument(document)
+        if (!account || !account.response) {
+            throw new Error('Account do Documento não encontrado.')
         }
 
-        if ('natural_person_key' in onboarding.response) {
-            entityKey = onboarding.response.natural_person_key
-        } else if ('legal_person_key' in onboarding.response) {
-            entityKey = onboarding.response.legal_person_key
-        }
-        // const analisis = await onboardingSrvice.getAnalysis(onboarding)
-        // console.log({ document, analisis })
+        entityKey = (account.data as QiTechTypes.Account.IList).owner_person_key
+
         return entityKey
     }
 
