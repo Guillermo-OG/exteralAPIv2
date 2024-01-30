@@ -1,7 +1,7 @@
 ﻿import { Router } from 'express'
 import { PersonController } from '../controllers'
 import { AuthMiddleware, ValidationMiddleware } from '../middleware'
-import { PersonCreationSchema, LinkPersonToCompanySchema, UnlinkPersonToCompanySchema } from '../utils/schemas'
+import { PersonCreationSchema, LinkPersonToCompanySchema, UnlinkPersonToCompanySchema, UpdateProfessionalDataContactSchema, UpdatePersonDataContactSchema } from '../utils/schemas'
 
 export class PersonRouter {
     public readonly router: Router
@@ -59,14 +59,24 @@ export class PersonRouter {
         )
 
         this.router.post(
-            '/changeDataContactTokenRequest',
-            this.validator.validate({ body: ChangeDataContactSchema, context: { isTokenRequired: false } }),
-            this.controller.changeDataContactTokenRequest
+            '/updateProfessionalDataContactTokenRequest',
+            this.validator.validate({ body: UpdateProfessionalDataContactSchema, context: { isTokenRequired: false } }),
+            this.controller.updateProfessionalDataContactTokenRequest
         )
         this.router.post(
-            '/validateChangeDataContactToken',
-            this.validator.validate({ body: ChangeDataContactSchema, context: { isTokenRequired: true } }),
-            this.controller.validateChangeDataContactToken
+            '/validateProfessionalUpdateDataContactToken',
+            this.validator.validate({ body: UpdateProfessionalDataContactSchema, context: { isTokenRequired: true } }),
+            this.controller.validateProfessionalUpdateDataContactToken
+        )
+        this.router.post(
+            '/updateProfessionalDataContactTokenRequest',
+            this.validator.validate({ body: UpdatePersonDataContactSchema, context: { isTokenRequired: false } }),
+            this.controller.updatePersonDataContactTokenRequest
+        )
+        this.router.post(
+            '/validateProfessionalUpdateDataContactToken',
+            this.validator.validate({ body: UpdatePersonDataContactSchema, context: { isTokenRequired: true } }),
+            this.controller.validatePersonUpdateDataContactToken
         )
     }
 }

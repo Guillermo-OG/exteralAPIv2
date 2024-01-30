@@ -32,4 +32,4 @@ const ProfessionalDataContactUpdateSchema = yup.object().shape({
     .required('Dados profissionais para atualização de contato são obrigatórios')
 });
 
-export const LinkPersonToCompanySchema = BaseSchema.concat(ProfessionalDataContactUpdateSchema);
+export const UpdateProfessionalDataContactSchema = BaseSchema.concat(ProfessionalDataContactUpdateSchema);
