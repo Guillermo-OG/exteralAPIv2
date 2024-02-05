@@ -32,7 +32,7 @@ class Server {
             .setAutoCollectRequests(false)
             .setAutoCollectPerformance(true)
             .setAutoCollectExceptions(true)
-            .setAutoCollectDependencies(true)
+            .setAutoCollectDependencies(false)
             .setAutoCollectConsole(true, true)
             .start()
 
