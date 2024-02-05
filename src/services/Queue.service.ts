@@ -7,7 +7,7 @@ export class QueueService {
     private client: ServiceBusClient
     private sender
     private receiver
-    private receiving: boolean = false // Flag para controlar o estado de recebimento
+    private receiving = false // Flag para controlar o estado de recebimento
 
     constructor() {
         this.client = new ServiceBusClient(serviceBusConfig.connectionString)

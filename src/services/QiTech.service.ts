@@ -403,47 +403,28 @@ export class QiTechService {
     }
 
     public async handleWebhook(data: IWebhookData): Promise<void> {
-        try {
-            const { headers, body } = data
-            if (!body.encoded_body) {
-                throw new ValidationError('Corpo da requisição inválido.')
-            }
-
-            const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
-
-            switch (decodedBody.webhook_type) {
-                case 'account':
-                    await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
-                    break
-                case 'key_inclusion':
-                    await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
-                    break
-                case 'account_transaction':
-                    await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
-                    break
-                case 'baas.pix.limits.account_limit_config.updated':
-                    await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
-                    break
-                default:
-                    break
-            }
-        } catch (err) {
-            throw err
+        const { headers, body } = data
+        if (!body.encoded_body) {
+            throw new ValidationError('Corpo da requisição inválido.')
         }
-    }
 
-    public async handleWebhookTEST(data: IWebhookData): Promise<void> {
-        try {
-            const { headers, body } = data
-            if (!body.encoded_body) {
-                throw new ValidationError('Corpo da requisição inválido.')
-            }
+        const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
 
-            const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
-
-            console.log('decodedBody', decodedBody)
-        } catch (err) {
-            throw err
+        switch (decodedBody.webhook_type) {
+            case 'account':
+                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                break
+            case 'key_inclusion':
+                await this.handlePixWebhook(decodedBody as QiTechTypes.Pix.IPixKeyWebhook)
+                break
+            case 'account_transaction':
+                await this.handleAccountWebhook(decodedBody as QiTechTypes.Account.IAccountWebhook)
+                break
+            case 'baas.pix.limits.account_limit_config.updated':
+                await this.handlePixLimitWebhook(decodedBody as QiTechTypes.Pix.IPixLimitRequestWebhook)
+                break
+            default:
+                break
         }
     }
 
@@ -789,7 +770,7 @@ export class QiTechService {
             for (const section of sections) {
                 if (mergedBillingConfigurationData[section]) {
                     // por algum motivo a linha abaixo não deveria ter semi-colon, mas como não consegui configurar adicionei uma exceção
-                    // eslint-disable-next-line @typescript-eslint/semi
+                    // eslint-disable-next-line @typescript-eslint/no-extra-semi
                     ;(mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
                 }
             }

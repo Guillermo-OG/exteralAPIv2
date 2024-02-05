@@ -35,8 +35,6 @@ export class QueueWorker {
                 const completionTime = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                 console.log(`Mensagem completada às ${completionTime}`)
             }
-        } else {
-            // Nenhuma mensagem para processar nesta iteração.
         }
     }
 
@@ -82,21 +80,6 @@ export class QueueWorker {
             await QiTechService.getInstance().handleWebhook(webhookData)
         } catch (error) {
             console.error(await qiTechService.decodeError(error))
-        }
-    }
-
-    private async testCRONWebhook(data: ISignedResponse, headers: { [key: string]: string | string[] | undefined }): Promise<void> {
-        // const qiTechService = QiTechService.getInstance()
-        try {
-            const webhookData: IWebhookData = {
-                body: data,
-                headers: headers,
-            }
-
-            await QiTechService.getInstance().handleWebhookTEST(webhookData)
-        } catch (error) {
-            // console.error(await qiTechService.decodeError(error))
-            throw error
         }
     }
 }

@@ -41,16 +41,15 @@ export class CronService {
     }
 
     private setupQueueProcessingCron(): void {
+        // Este cron job roda a cada 10 segundos
         new CronJob(
             '*/10 * * * * *', // Executa a cada 10 segundos
-            () => {
-                setTimeout(async () => {
-                    try {
-                        await this.queueWorker.processQueue()
-                    } catch (error) {
-                        console.error('Failed to process queue', error)
-                    }
-                }, 10000) // Atrasa a execução do processamento em 10 segundos
+            async () => {
+                try {
+                    await this.queueWorker.processQueue()
+                } catch (error) {
+                    console.error('Failed to process queue', error)
+                }
             },
             null,
             true,
