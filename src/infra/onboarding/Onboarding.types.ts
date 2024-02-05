@@ -321,5 +321,5 @@ export interface IWebhookBody {
 }
 
 export type IPersonCreateWithExternalId = {
-    external_id?: string;
-} & (INaturalPersonCreate | ILegalPersonCreate);
+    external_id?: string
+} & (INaturalPersonCreate | ILegalPersonCreate)

@@ -31,6 +31,7 @@ import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
 import { IBillingConfigurationResponse } from '../infra/qitech/types/BillingConfiguration.types'
 import { IDeletePix } from '../infra/qitech/types/Pix.types'
+import { IWebhookData } from '../infra/qitech/types/Common.types'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -401,9 +402,9 @@ export class QiTechService {
         }
     }
 
-    public async handleWebhook(req: Request): Promise<void> {
+    public async handleWebhook(data: IWebhookData): Promise<void> {
         try {
-            const { headers, body } = req
+            const { headers, body } = data
             if (!body.encoded_body) {
                 throw new ValidationError('Corpo da requisição inválido.')
             }
@@ -427,7 +428,21 @@ export class QiTechService {
                     break
             }
         } catch (err) {
-            console.error('Erro webhooks', err)
+            throw err
+        }
+    }
+
+    public async handleWebhookTEST(data: IWebhookData): Promise<void> {
+        try {
+            const { headers, body } = data
+            if (!body.encoded_body) {
+                throw new ValidationError('Corpo da requisição inválido.')
+            }
+
+            const decodedBody = await this.client.decodeMessage<QiTechTypes.Common.IWebhook>('/webhook/account', 'POST', headers, body)
+
+            console.log('decodedBody', decodedBody)
+        } catch (err) {
             throw err
         }
     }
@@ -589,9 +604,11 @@ export class QiTechService {
         }
     }
 
-    public async listAccountsQiTech(document: string, page: number, pageSize: number):
-        Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
-        
+    public async listAccountsQiTech(
+        document: string,
+        page: number,
+        pageSize: number
+    ): Promise<QiTechTypes.Common.IPaginatedSearch<QiTechTypes.Account.IList>> {
         return await this.client.listAccounts(document, page, pageSize)
     }
 
@@ -676,33 +693,31 @@ export class QiTechService {
         return await this.client.getBillingConfigurationByAccountKey(accountKey)
     }
 
-    
-
     public async getBillingConfigurations(documents: string[]): Promise<IBillingResults> {
         const accountRepository = AccountRepository.getInstance()
         const results: IBillingResults = { configurations: {}, errors: {} }
-    
+
         for (const document of documents) {
             try {
                 const account = await accountRepository.getByDocument(document)
                 if (!account) {
                     throw new ValidationError('Não foi encontrada conta para esse documento.')
                 }
-    
+
                 const accountKey = (account.data as QiTechTypes.Account.IList).account_key
-                const config = await this.client.getBillingConfigurationByAccountKey(accountKey) as IBillingConfiguration
-                
+                const config = (await this.client.getBillingConfigurationByAccountKey(accountKey)) as IBillingConfiguration
+
                 // Armazenar apenas as partes relevantes da configuração
                 results.configurations[document] = {
                     account_maintenance: config.billing_configuration_data.account_maintenance,
-                    pix: config.billing_configuration_data.pix
+                    pix: config.billing_configuration_data.pix,
                 }
             } catch (error) {
                 // Checagem de tipo para error
-                if(error instanceof Error){
+                if (error instanceof Error) {
                     const errorCode = 'unknown'
                     const errorMessage = typeof error === 'string' ? error : error.message || 'Unknown error'
-        
+
                     if (!results.errors[errorCode]) {
                         results.errors[errorCode] = { documents: [], message: errorMessage }
                     }
@@ -773,8 +788,8 @@ export class QiTechService {
             for (const section of sections) {
                 if (mergedBillingConfigurationData[section]) {
                     // por algum motivo a linha abaixo não deveria ter semi-colon, mas como não consegui configurar adicionei uma exceção
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
+                    // eslint-disable-next-line @typescript-eslint/semi
+                    ;(mergedBillingConfigurationData[section] as ISectionData).billing_account_key = billingAccountKeyToUse
                 }
             }
 
@@ -902,6 +917,6 @@ interface ISectionData {
 }
 
 interface IBillingResults {
-    configurations: Record<string, Partial<IBillingConfigurationData>>;
-    errors: Record<string, { documents: string[]; message: string; }>;
+    configurations: Record<string, Partial<IBillingConfigurationData>>
+    errors: Record<string, { documents: string[]; message: string }>
 }
