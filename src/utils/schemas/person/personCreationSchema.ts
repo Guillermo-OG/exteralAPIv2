@@ -23,7 +23,7 @@ const PersonSchema = yup.object().shape({
             father_name: yup.string().required('Nome do pai é obrigatório'),
             address: addressSchema,
             nationality: yup.string().required('Nacionalidade é obrigatória'),
-            document_identification_number: yup.string().required('Número de identificação do documento é obrigatório'),
+            document_identification_number: yup.string().nullable().notRequired(),
             mother_name: yup.string().required('Nome da mãe é obrigatório'),
             person_type: yup.string().required('Tipo de pessoa é obrigatório').oneOf(['natural'], 'Tipo de pessoa deve ser "natural"'),
             name: yup.string().required('Nome é obrigatório'),
