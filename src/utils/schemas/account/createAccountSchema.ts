@@ -4,11 +4,9 @@ import { PfCreateSchema } from './pfSchemas'
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
 export const CreateAccountSchema: any = yup.lazy(value => {
-    if ('allowed_user' in value && !!value.allowed_user) {
+    if ('account_owner.company_document_number' in value && !!value.allowed_user) {
         return PjCreateSchema
     } else {
         return PfCreateSchema
     }
 })
-
-
