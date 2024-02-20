@@ -250,7 +250,7 @@ export class OnboardingService {
     }
 
     public mapQiTechPayload(data: QiTechTypes.Account.ICreate): OnboardingTypes.INaturalPersonCreate | OnboardingTypes.ILegalPersonCreate {
-        if ('account_owner.company_document_number' in data && data.allowed_user) {
+        if ('company_document_number' in data.account_owner && data.allowed_user) {
             const owner = data.account_owner as QiTechTypes.Account.IOwnerPJ
 
             // Este map gostaria que seguisse a seguinte interfaace (deixando string vazia os que não tem)
