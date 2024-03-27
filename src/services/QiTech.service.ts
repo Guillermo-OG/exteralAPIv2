@@ -31,7 +31,6 @@ import { NotificationService } from './Notification.service'
 import { OnboardingService } from './Onboarding.service'
 import { IBillingConfigurationResponse } from '../infra/qitech/types/BillingConfiguration.types'
 import { IDeletePix } from '../infra/qitech/types/Pix.types'
-import { IWebhookData } from '../infra/qitech/types/Common.types'
 
 export class QiTechService {
     private static instance: QiTechService
@@ -67,6 +66,7 @@ export class QiTechService {
 
         const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
         const callbackURL = payload.callbackURL || ''
+
         delete payload.callbackURL
         this.formatPayload(payload)
 
@@ -402,8 +402,8 @@ export class QiTechService {
         }
     }
 
-    public async handleWebhook(data: IWebhookData): Promise<void> {
-        const { headers, body } = data
+    public async handleWebhook(req: Request): Promise<void> {
+        const { headers, body } = req
         if (!body.encoded_body) {
             throw new ValidationError('Corpo da requisição inválido.')
         }
