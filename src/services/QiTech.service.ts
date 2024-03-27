@@ -67,7 +67,10 @@ export class QiTechService {
 
         const accountType = unMask(document).length === 11 ? AccountType.PF : AccountType.PJ
         const callbackURL = payload.callbackURL || ''
+        
         delete payload.callbackURL
+        delete payload.external_id
+
         this.formatPayload(payload)
 
         let account = await accountRepository.getByDocument(document)

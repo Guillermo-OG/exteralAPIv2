@@ -59,6 +59,13 @@ stages:
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
+        script: 'Remove-item package-lock.json'
+#        workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/'
+        workingDirectory: '$(Build.SourcesDirectory)/' 
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
         script: 'type .env'
 #        workingDirectory: '$(Build.SourcesDirectory)/$(diretorioProjeto)/' 
         workingDirectory: '$(Build.SourcesDirectory)/' 
