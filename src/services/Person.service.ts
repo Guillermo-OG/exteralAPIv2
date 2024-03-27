@@ -2,7 +2,7 @@
 
 import env from '../config/env'
 import { QiTechClient, QiTechTypes } from '../infra'
-import { OnboardingRepository, AccountRepository } from '../repository'
+import { AccountRepository } from '../repository'
 
 export class PersonService {
     private static instance: PersonService

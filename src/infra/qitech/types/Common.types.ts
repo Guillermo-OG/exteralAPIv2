@@ -16,9 +16,3 @@ export interface IPaginatedSearch<T> {
 export interface IWebhook {
     webhook_type: string
 }
-
-
-export interface IWebhookData {
-    body: ISignedResponse;
-    headers: { [key: string]: string | string[] | undefined };
-}
