@@ -15,7 +15,7 @@ export class PersonController {
         }
     }
 
-    public async validatePersonToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    public async validateCreatePersonToken(req: Request, res: Response, next: NextFunction): Promise<void> {
         const personService = PersonService.getInstance()
         try {
             const payload: QiTechTypes.Person.IPersonCreateValidate = req.body
@@ -93,25 +93,36 @@ export class PersonController {
             next(await personService.decodeError(error))
         }
     }
-    public async updatePersonDataContactTokenRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    // public async updatePersonDataContactTokenRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    //     const personService = PersonService.getInstance()
+    //     try {
+    //         const payload: QiTechTypes.Person.IPersonDataContactUpdateRequest = req.body
+
+    //         const result = await personService.handleUpdatePersonDataContactTokenRequest(payload)
+    //         res.json(result)
+    //     } catch (error) {
+    //         next(await personService.decodeError(error))
+    //     }
+    // }
+
+    // public async validatePersonUpdateDataContactToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    //     const personService = PersonService.getInstance()
+    //     try {
+    //         const payload: QiTechTypes.Person.IPersonDataContactUpdateValidate = req.body
+
+    //         const result = await personService.handleValidatePersonUpdateDataContactToken(payload)
+    //         res.json(result)
+    //     } catch (error) {
+    //         next(await personService.decodeError(error))
+    //     }
+    // }
+
+    public async getRelatedPersonsByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
         const personService = PersonService.getInstance()
         try {
-            const payload: QiTechTypes.Person.IPersonDataContactUpdateRequest = req.body
-
-            const result = await personService.handleUpdatePersonDataContactTokenRequest(payload)
-            res.json(result)
-        } catch (error) {
-            next(await personService.decodeError(error))
-        }
-    }
-
-    public async validatePersonUpdateDataContactToken(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const personService = PersonService.getInstance()
-        try {
-            const payload: QiTechTypes.Person.IPersonDataContactUpdateValidate = req.body
-
-            const result = await personService.handleValidatePersonUpdateDataContactToken(payload)
-            res.json(result)
+            const document = req.params.document
+            const relatedPersons = await personService.getRelatedPersonsByDocument(document)
+            res.status(200).json(relatedPersons)
         } catch (error) {
             next(await personService.decodeError(error))
         }

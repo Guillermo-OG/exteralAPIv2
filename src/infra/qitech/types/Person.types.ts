@@ -126,3 +126,17 @@ export interface IPersonDataContactUpdateValidate {
     token: string
     person_contact_update: IPersonDataContact
 }
+
+export interface IAllowedNaturalPerson {
+    natural_person_document_number: string
+    natural_person_key: string
+    natural_person_name: string
+    professional_data_key: string
+}
+
+export interface IRelatedPersonsResponse {
+    allowed_users: IAllowedNaturalPerson[]
+    legal_person_key: string
+    owner_document_number: string
+    owner_name: string
+}

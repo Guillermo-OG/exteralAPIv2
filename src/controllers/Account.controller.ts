@@ -41,10 +41,24 @@ export class AccountController {
             const page = Number(req.query.page) || 1
             const pageSize = Number(req.query.pageSize) || 100
             const document = req.params.document
-    
+
             const accounts = await qiTechService.listAccountsQiTech(document, page, pageSize)
-    
+
             res.status(200).json(accounts)
+        } catch (error) {
+            next(await qiTechService.decodeError(error))
+        }
+    }
+
+    //recupera os dados do contato pelo documento
+    public async getContactDetailsByDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const qiTechService = QiTechService.getInstance()
+        try {
+            const document = unMask(req.params.document)
+
+            const details = await qiTechService.getContactData(document)
+
+            res.status(200).json(details)
         } catch (error) {
             next(await qiTechService.decodeError(error))
         }

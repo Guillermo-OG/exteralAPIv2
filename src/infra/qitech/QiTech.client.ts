@@ -309,7 +309,7 @@ export class QiTechClient {
         const config = await this.signMessage(endpoint, 'POST', payload, contentType)
 
         const res = await this.api.post(endpoint, config.body, { headers: config.headers })
-        return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
+        return this.decodeMessage<object>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
     public async validateMovement(payload: tokenValidateTypes) {
@@ -318,7 +318,7 @@ export class QiTechClient {
         const config = await this.signMessage(endpoint, 'POST', payload, contentType)
 
         const res = await this.api.post(endpoint, config.body, { headers: config.headers })
-        return this.decodeMessage<string>(endpoint, 'POST', res.headers as IHeaders, res.data)
+        return this.decodeMessage<object>(endpoint, 'POST', res.headers as IHeaders, res.data)
     }
 
     public async getPixLimitsRequest(accountKey: string, requestStatus: QiTechTypes.Pix.IPixRequestStatus, page = 1, pageSize = 10) {
@@ -365,5 +365,13 @@ export class QiTechClient {
             res.headers as IHeaders,
             res.data
         )
+    }
+
+    public async getRelatedPersons(accountKey: string): Promise<QiTechTypes.Person.IRelatedPersonsResponse> {
+        const endpoint = `/account/${accountKey}/related_parties`
+        const contentType = 'application/json'
+        const config = await this.signMessage(endpoint, 'GET', undefined, contentType)
+        const res = await this.api.get(endpoint, { headers: config.headers })
+        return await this.decodeMessage<QiTechTypes.Person.IRelatedPersonsResponse>(endpoint, 'GET', res.headers, res.data)
     }
 }
