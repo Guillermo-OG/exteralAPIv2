@@ -13,14 +13,14 @@ const PersonSchema = yup.object().shape({
                     return isValid(new Date(value))
                 }),
             spouse_name: yup.string().nullable(),
-            birth_place: yup.string().required('Local de nascimento é obrigatório'),
+            birth_place: yup.string().nullable().notRequired(),
             phone_number: yup.object().shape({
                 country_code: yup.string().required('Código do país é obrigatório'),
                 area_code: yup.string().required('DDD é obrigatório'),
                 number: yup.string().required('Número de telefone é obrigatório'),
             }),
             representative: yup.mixed().nullable(),
-            father_name: yup.string().required('Nome do pai é obrigatório'),
+            father_name: yup.string().nullable().notRequired(),
             address: addressSchema,
             nationality: yup.string().required('Nacionalidade é obrigatória'),
             document_identification_number: yup.string().nullable().notRequired(),

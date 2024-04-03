@@ -212,3 +212,17 @@ export interface IAccountWebhook {
     webhook_type: string
     event_datetime: string
 }
+
+interface IContact {
+    name: string
+    contact: {
+        email: string
+        phone: string
+    }
+}
+
+export interface IContactDetailsResponse {
+    document: string
+    details: IContact
+    company_representatives: IContact[]
+}

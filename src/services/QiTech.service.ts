@@ -595,6 +595,68 @@ export class QiTechService {
         return await this.client.listAccounts(document, page, pageSize)
     }
 
+    public async getContactData(document: string): Promise<QiTechTypes.Account.IContactDetailsResponse> {
+        // Utility function to format phone number
+        const formatPhone = (phone: QiTechTypes.Account.IPhone): string => `${phone.country_code}${phone.area_code}${phone.number}`
+
+        // Identify whether the provided document is a CPF or CNPJ based on its length
+        const isCPF = document.length <= 11
+
+        // Initialize the repository to access account data
+        const accountRepository = AccountRepository.getInstance()
+
+        // Retrieve account information based on the document
+        const account = await accountRepository.getByDocument(document)
+        if (!account) {
+            throw new ValidationError('Account not found for this document')
+        }
+        const accRequest = account.request as QiTechTypes.Account.ICreate
+
+        // Prepare the base response structure
+        let response: QiTechTypes.Account.IContactDetailsResponse = {
+            document: document,
+            details: { name: '', contact: { email: '', phone: '' } },
+            company_representatives: [],
+        }
+        if (isCPF) {
+            // If document is CPF, cast account owner to PF type and fill the details
+            const owner = accRequest.account_owner as QiTechTypes.Account.IOwnerPF
+            response.details = {
+                name: owner.name,
+                contact: {
+                    email: owner.email,
+                    phone: formatPhone(owner.phone as QiTechTypes.Account.IPhone),
+                },
+            }
+        } else {
+            // If document is CNPJ, process as a company
+            const owner = accRequest.account_owner as QiTechTypes.Account.IOwnerPJ
+
+            // Add company owner details
+            response.details = {
+                name: owner.name,
+                contact: {
+                    email: owner.email,
+                    phone: formatPhone(owner.phone as QiTechTypes.Account.IPhone),
+                },
+            }
+
+            // Process company representatives
+            const representatives = owner.company_representatives.map(rep => ({
+                name: rep.name,
+                contact: {
+                    email: rep.email,
+                    phone: formatPhone(rep.phone as QiTechTypes.Account.IPhone),
+                },
+            }))
+
+            response.company_representatives = representatives
+        }
+
+        // Return the assembled response
+        return response
+    }
+
     public async cancelAccount(accountKey: string) {
         const result = await this.client.cancelAccount(accountKey)
         // const account = await AccountRepository.getInstance().getByAccountKey(accountKey)
